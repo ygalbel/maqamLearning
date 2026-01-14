@@ -1,0 +1,1530 @@
+{
+  "rast": {
+    "tonic": "C",
+    "lower_jins": "Rast",
+    "upper_jins": "Rast / Nahawand on G",
+    "scale": [
+      {
+        "note": "A3",
+        "frequency": 220
+      },
+      {
+        "note": "B3-Koron",
+        "frequency": 241
+      },
+      {
+        "note": "C4",
+        "frequency": 260.74
+      },
+      {
+        "note": "D4",
+        "frequency": 293.33
+      },
+      {
+        "note": "E4-Koron",
+        "frequency": 320
+      },
+      {
+        "note": "F4",
+        "frequency": 347.65
+      },
+      {
+        "note": "G4",
+        "frequency": 391.11
+      },
+      {
+        "note": "A4\u266d",
+        "frequency": 422
+      },
+      {
+        "note": "A4",
+        "frequency": 440
+      },
+      {
+        "note": "B4\u266d",
+        "frequency": 463.54
+      },
+      {
+        "note": "B4-Koron",
+        "frequency": 482
+      },
+      {
+        "note": "C5",
+        "frequency": 521.48
+      }
+    ]
+  },
+  "suznak": {
+    "tonic": "C",
+    "lower_jins": "Rast",
+    "upper_jins": "Hijaz on G",
+    "scale": [
+      {
+        "note": "C4",
+        "frequency": 260.74
+      },
+      {
+        "note": "D4",
+        "frequency": 293.33
+      },
+      {
+        "note": "E4-Koron",
+        "frequency": 320
+      },
+      {
+        "note": "F4",
+        "frequency": 347.65
+      },
+      {
+        "note": "G4",
+        "frequency": 391.11
+      },
+      {
+        "note": "A4\u266d",
+        "frequency": 423
+      },
+      {
+        "note": "B4\u266e",
+        "frequency": 492
+      },
+      {
+        "note": "C5",
+        "frequency": 521.48
+      }
+    ]
+  },
+  "mahur": {
+    "tonic": "C",
+    "lower_jins": "Rast",
+    "upper_jins": "Ajam on G",
+    "scale": [
+      {
+        "note": "C4",
+        "frequency": 260.74
+      },
+      {
+        "note": "D4\u266e",
+        "frequency": 293.33
+      },
+      {
+        "note": "E4-Koron",
+        "frequency": 320
+      },
+      {
+        "note": "F4",
+        "frequency": 347.65
+      },
+      {
+        "note": "G4",
+        "frequency": 391.11
+      },
+      {
+        "note": "A4",
+        "frequency": 440
+      },
+      {
+        "note": "B4\u266e",
+        "frequency": 495
+      },
+      {
+        "note": "C5",
+        "frequency": 521.48
+      }
+    ]
+  },
+  "nairuz": {
+    "tonic": "C",
+    "lower_jins": "Rast",
+    "upper_jins": "Nahawand on G",
+    "scale": [
+      {
+        "note": "C4",
+        "frequency": 260.74
+      },
+      {
+        "note": "D4",
+        "frequency": 293.33
+      },
+      {
+        "note": "E4-Koron",
+        "frequency": 320
+      },
+      {
+        "note": "F4",
+        "frequency": 347.65
+      },
+      {
+        "note": "G4",
+        "frequency": 391.11
+      },
+      {
+        "note": "A4-Koron",
+        "frequency": 426.67
+      },
+      {
+        "note": "B4\u266d",
+        "frequency": 463.54
+      },
+      {
+        "note": "C5",
+        "frequency": 521.48
+      }
+    ]
+  },
+  "jiharkah": {
+    "tonic": "C",
+    "lower_jins": "Rast",
+    "upper_jins": "Ajam on G",
+    "scale": [
+      {
+        "note": "D4",
+        "frequency": 293.33
+      },
+      {
+        "note": "E4-Koron",
+        "frequency": 321.33
+      },
+      {
+        "note": "F4",
+        "frequency": 347.65
+      },
+      {
+        "note": "G4",
+        "frequency": 391.11
+      },
+      {
+        "note": "A4\u266e\u2193",
+        "frequency": 433
+      },
+      {
+        "note": "B4\u266d\u2193",
+        "frequency": 454
+      },
+      {
+        "note": "C5",
+        "frequency": 521.48
+      },
+      {
+        "note": "D5",
+        "frequency": 586.66
+      },
+      {
+        "note": "E5-Koron",
+        "frequency": 642.66
+      },
+      {
+        "note": "F5",
+        "frequency": 695.3
+      }
+    ]
+  },
+  "kirdan": {
+    "tonic": "C",
+    "lower_jins": "Rast",
+    "upper_jins": "Ajam on G",
+    "scale": [
+      {
+        "note": "C4",
+        "frequency": 260.74
+      },
+      {
+        "note": "D4\u266e",
+        "frequency": 293.33
+      },
+      {
+        "note": "D4\u266f",
+        "frequency": 310
+      },
+      {
+        "note": "E4-Koron",
+        "frequency": 320
+      },
+      {
+        "note": "F4",
+        "frequency": 347.65
+      },
+      {
+        "note": "G4",
+        "frequency": 391.11
+      },
+      {
+        "note": "A4",
+        "frequency": 440
+      },
+      {
+        "note": "B4-Koron",
+        "frequency": 482
+      },
+      {
+        "note": "C5",
+        "frequency": 521.48
+      }
+    ]
+  },
+  "bayati": {
+    "tonic": "D",
+    "lower_jins": "Bayati",
+    "upper_jins": "Nahawand / Rast on G",
+    "scale": [
+      {
+        "note": "B3-Koron",
+        "frequency": 243
+      },
+      {
+        "note": "C4",
+        "frequency": 260.74
+      },
+      {
+        "note": "D4",
+        "frequency": 293.33
+      },
+      {
+        "note": "E4-Koron",
+        "frequency": 320
+      },
+      {
+        "note": "F4",
+        "frequency": 345
+      },
+      {
+        "note": "F4",
+        "frequency": 347.65
+      },
+      {
+        "note": "G4",
+        "frequency": 391.11
+      },
+      {
+        "note": "A4",
+        "frequency": 440
+      },
+      {
+        "note": "B4\u266d",
+        "frequency": 463.54
+      },
+      {
+        "note": "B4-Koron",
+        "frequency": 482
+      },
+      {
+        "note": "C5",
+        "frequency": 521.48
+      },
+      {
+        "note": "D5",
+        "frequency": 586.66
+      }
+    ]
+  },
+  "husayni": {
+    "tonic": "D",
+    "lower_jins": "Bayati",
+    "upper_jins": "Nahawand on A",
+    "scale": [
+      {
+        "note": "D4",
+        "frequency": 293.33
+      },
+      {
+        "note": "E4-Koron",
+        "frequency": 320
+      },
+      {
+        "note": "F4",
+        "frequency": 347.65
+      },
+      {
+        "note": "G4",
+        "frequency": 391.11
+      },
+      {
+        "note": "A4",
+        "frequency": 440
+      },
+      {
+        "note": "B4\u266d",
+        "frequency": 463.54
+      },
+      {
+        "note": "B4-Koron",
+        "frequency": 480
+      },
+      {
+        "note": "C5",
+        "frequency": 521.48
+      },
+      {
+        "note": "D5",
+        "frequency": 586.66
+      }
+    ]
+  },
+  "ushaq masri": {
+    "tonic": "D",
+    "lower_jins": "Bayati",
+    "upper_jins": "Rast on A",
+    "scale": [
+      {
+        "note": "D4",
+        "frequency": 293.33
+      },
+      {
+        "note": "E4",
+        "frequency": 330
+      },
+      {
+        "note": "F4",
+        "frequency": 347.65
+      },
+      {
+        "note": "G4",
+        "frequency": 391.11
+      },
+      {
+        "note": "A4",
+        "frequency": 440
+      },
+      {
+        "note": "B4-Koron",
+        "frequency": 480
+      },
+      {
+        "note": "C5",
+        "frequency": 521.48
+      },
+      {
+        "note": "D5",
+        "frequency": 586.66
+      }
+    ]
+  },
+  "bayati shuri": {
+    "tonic": "D",
+    "lower_jins": "Bayati",
+    "upper_jins": "Hijaz on G",
+    "scale": [
+      {
+        "note": "D4",
+        "frequency": 293.33
+      },
+      {
+        "note": "E4-Koron",
+        "frequency": 320
+      },
+      {
+        "note": "F4",
+        "frequency": 347.65
+      },
+      {
+        "note": "G4",
+        "frequency": 391.11
+      },
+      {
+        "note": "A4\u266d",
+        "frequency": 423
+      },
+      {
+        "note": "B4\u266e",
+        "frequency": 492
+      },
+      {
+        "note": "C5",
+        "frequency": 521.48
+      },
+      {
+        "note": "D5",
+        "frequency": 586.66
+      }
+    ]
+  },
+  "saba": {
+    "tonic": "D",
+    "lower_jins": "Saba",
+    "upper_jins": "Hijaz on G",
+    "scale": [
+      {
+        "note": "B3-Koron",
+        "frequency": 243
+      },
+      {
+        "note": "C4",
+        "frequency": 260.74
+      },
+      {
+        "note": "D4",
+        "frequency": 293.33
+      },
+      {
+        "note": "E4-Koron",
+        "frequency": 320
+      },
+      {
+        "note": "F4",
+        "frequency": 347.65
+      },
+      {
+        "note": "G4\u266d",
+        "frequency": 368
+      },
+      {
+        "note": "A4\u266e",
+        "frequency": 437
+      },
+      {
+        "note": "B4\u266d",
+        "frequency": 463.54
+      },
+      {
+        "note": "C5",
+        "frequency": 521.48
+      },
+      {
+        "note": "D5\u266d",
+        "frequency": 548
+      },
+      {
+        "note": "D5\u266e",
+        "frequency": 586.66
+      },
+      {
+        "note": "E5\u266e",
+        "frequency": 660
+      },
+      {
+        "note": "F5",
+        "frequency": 695.31
+      }
+    ]
+  },
+  "saba zamzam": {
+    "tonic": "D",
+    "lower_jins": "Saba",
+    "upper_jins": "Bayati on G",
+    "scale": [
+      {
+        "note": "C4",
+        "frequency": 260.74
+      },
+      {
+        "note": "D4",
+        "frequency": 293.33
+      },
+      {
+        "note": "E4\u266d",
+        "frequency": 308.25
+      },
+      {
+        "note": "F4",
+        "frequency": 347.65
+      },
+      {
+        "note": "G4\u266d",
+        "frequency": 368
+      },
+      {
+        "note": "A4\u266e",
+        "frequency": 437
+      },
+      {
+        "note": "B4\u266d",
+        "frequency": 463.54
+      },
+      {
+        "note": "C5",
+        "frequency": 521.48
+      },
+      {
+        "note": "D5\u266d",
+        "frequency": 548
+      },
+      {
+        "note": "D5\u266e",
+        "frequency": 586.66
+      },
+      {
+        "note": "E5\u266e",
+        "frequency": 660
+      },
+      {
+        "note": "F5",
+        "frequency": 695.31
+      }
+    ]
+  },
+  "sikah": {
+    "tonic": "E half-flat",
+    "lower_jins": "Sikah",
+    "upper_jins": "Rast / Hijaz on A\u266d",
+    "scale": [
+      {
+        "note": "C4",
+        "frequency": 260.74
+      },
+      {
+        "note": "D4\u266e",
+        "frequency": 293.33
+      },
+      {
+        "note": "D4\u266f",
+        "frequency": 310
+      },
+      {
+        "note": "E4-Koron",
+        "frequency": 320
+      },
+      {
+        "note": "E4-Koron",
+        "frequency": 322
+      },
+      {
+        "note": "F4",
+        "frequency": 347.65
+      },
+      {
+        "note": "G4",
+        "frequency": 391.11
+      },
+      {
+        "note": "A4\u266d",
+        "frequency": 422
+      },
+      {
+        "note": "A4\u266e",
+        "frequency": 440
+      },
+      {
+        "note": "B4-Koron",
+        "frequency": 482
+      },
+      {
+        "note": "C5",
+        "frequency": 521.48
+      },
+      {
+        "note": "D5",
+        "frequency": 586.66
+      },
+      {
+        "note": "E5-Koron",
+        "frequency": 644
+      }
+    ]
+  },
+  "huzam": {
+    "tonic": "E half-flat",
+    "lower_jins": "Sikah",
+    "upper_jins": "Hijaz on A\u266d",
+    "scale": [
+      {
+        "note": "E4-Koron",
+        "frequency": 322
+      },
+      {
+        "note": "F4",
+        "frequency": 347.65
+      },
+      {
+        "note": "G4",
+        "frequency": 391.11
+      },
+      {
+        "note": "A4\u266d",
+        "frequency": 423
+      },
+      {
+        "note": "B4\u266e",
+        "frequency": 492
+      },
+      {
+        "note": "C5",
+        "frequency": 521.48
+      },
+      {
+        "note": "D5",
+        "frequency": 586.66
+      },
+      {
+        "note": "E4-Koron",
+        "frequency": 644
+      }
+    ]
+  },
+  "iraq": {
+    "tonic": "E half-flat",
+    "lower_jins": "Sikah",
+    "upper_jins": "Hijaz then Rast",
+    "scale": [
+      {
+        "note": "B3-Koron",
+        "frequency": 241
+      },
+      {
+        "note": "C4",
+        "frequency": 260.74
+      },
+      {
+        "note": "D4",
+        "frequency": 293.33
+      },
+      {
+        "note": "E4-Koron",
+        "frequency": 320
+      },
+      {
+        "note": "F4",
+        "frequency": 347.65
+      },
+      {
+        "note": "G4",
+        "frequency": 391.11
+      },
+      {
+        "note": "A4",
+        "frequency": 440
+      },
+      {
+        "note": "B4-Koron",
+        "frequency": 482
+      }
+    ]
+  },
+  "mustaar": {
+    "tonic": "E half-flat",
+    "lower_jins": "Sikah",
+    "upper_jins": "Hijaz on A\u266d",
+    "scale": [
+      {
+        "note": "D4\u266f",
+        "frequency": 308.25
+      },
+      {
+        "note": "E4-Koron",
+        "frequency": 320
+      },
+      {
+        "note": "F4\u266f",
+        "frequency": 375
+      },
+      {
+        "note": "G4",
+        "frequency": 391.11
+      },
+      {
+        "note": "A4\u266e",
+        "frequency": 440
+      },
+      {
+        "note": "B4\u266d",
+        "frequency": 463.54
+      },
+      {
+        "note": "C5",
+        "frequency": 521.48
+      },
+      {
+        "note": "D5",
+        "frequency": 586.66
+      },
+      {
+        "note": "E5-Koron",
+        "frequency": 640
+      }
+    ]
+  },
+  "hijaz": {
+    "tonic": "D",
+    "lower_jins": "Hijaz",
+    "upper_jins": "Nahawand on A",
+    "scale": [
+      {
+        "note": "B3-Koron",
+        "frequency": 243
+      },
+      {
+        "note": "C4",
+        "frequency": 260.74
+      },
+      {
+        "note": "D4",
+        "frequency": 293.33
+      },
+      {
+        "note": "E4\u266d",
+        "frequency": 315
+      },
+      {
+        "note": "F4\u266f",
+        "frequency": 375
+      },
+      {
+        "note": "G4",
+        "frequency": 391.11
+      },
+      {
+        "note": "A4",
+        "frequency": 440
+      },
+      {
+        "note": "B4\u266d",
+        "frequency": 463.54
+      },
+      {
+        "note": "B4-Koron",
+        "frequency": 482
+      },
+      {
+        "note": "C5",
+        "frequency": 521.48
+      },
+      {
+        "note": "D5",
+        "frequency": 586.66
+      }
+    ]
+  },
+  "shadd araban": {
+    "tonic": "D",
+    "lower_jins": "Hijaz",
+    "upper_jins": "Rast on A",
+    "scale": null
+  },
+  "shahnaz": {
+    "tonic": "D",
+    "lower_jins": "Hijaz",
+    "upper_jins": "Rast on A",
+    "scale": null
+  },
+  "zanjaran": {
+    "tonic": "D",
+    "lower_jins": "Hijaz",
+    "upper_jins": "Nahawand on A",
+    "scale": [
+      {
+        "note": "C4",
+        "frequency": 260.74
+      },
+      {
+        "note": "D4\u266d",
+        "frequency": 277
+      },
+      {
+        "note": "E4\u266e",
+        "frequency": 328
+      },
+      {
+        "note": "F4",
+        "frequency": 347.65
+      },
+      {
+        "note": "G4",
+        "frequency": 391.11
+      },
+      {
+        "note": "A4\u266e",
+        "frequency": 440
+      },
+      {
+        "note": "B4\u266d",
+        "frequency": 463.54
+      },
+      {
+        "note": "C5",
+        "frequency": 521.48
+      }
+    ]
+  },
+  "hijazkar": {
+    "tonic": "D",
+    "lower_jins": "Hijazkar",
+    "upper_jins": "Nahawand on A",
+    "scale": [
+      {
+        "note": "C4",
+        "frequency": 260.74
+      },
+      {
+        "note": "D4\u266d",
+        "frequency": 277
+      },
+      {
+        "note": "E4\u266e",
+        "frequency": 328
+      },
+      {
+        "note": "F4",
+        "frequency": 347.65
+      },
+      {
+        "note": "G4",
+        "frequency": 391.11
+      },
+      {
+        "note": "A4\u266d",
+        "frequency": 420
+      },
+      {
+        "note": "B4\u266e",
+        "frequency": 493.33
+      },
+      {
+        "note": "C5",
+        "frequency": 521.48
+      },
+      {
+        "note": "D5\u266d",
+        "frequency": 554
+      },
+      {
+        "note": "E5\u266e",
+        "frequency": 656
+      },
+      {
+        "note": "F5",
+        "frequency": 695.3
+      }
+    ]
+  },
+  "hijazkar kurd": {
+    "tonic": "D",
+    "lower_jins": "Hijazkar",
+    "upper_jins": "Kurd on A",
+    "scale": [
+      {
+        "note": "C4",
+        "frequency": 260.74
+      },
+      {
+        "note": "D4\u266d",
+        "frequency": 274
+      },
+      {
+        "note": "E4\u266d",
+        "frequency": 308.25
+      },
+      {
+        "note": "F4",
+        "frequency": 347.65
+      },
+      {
+        "note": "G4",
+        "frequency": 391.11
+      },
+      {
+        "note": "A4\u266d",
+        "frequency": 420
+      },
+      {
+        "note": "B4\u266d",
+        "frequency": 463.54
+      },
+      {
+        "note": "B4\u266e",
+        "frequency": 493.33
+      },
+      {
+        "note": "C5",
+        "frequency": 521.48
+      },
+      {
+        "note": "D5\u266d",
+        "frequency": 554
+      },
+      {
+        "note": "E5\u266e",
+        "frequency": 656
+      }
+    ]
+  },
+  "nahawand": {
+    "tonic": "C",
+    "lower_jins": "Nahawand",
+    "upper_jins": "Rast / Hijaz on G",
+    "scale": [
+      {
+        "note": "A3\u266d",
+        "frequency": 209
+      },
+      {
+        "note": "A3\u266e",
+        "frequency": 220
+      },
+      {
+        "note": "B3\u266e",
+        "frequency": 247.5
+      },
+      {
+        "note": "C4",
+        "frequency": 260.74
+      },
+      {
+        "note": "D4",
+        "frequency": 293.33
+      },
+      {
+        "note": "E4\u266d",
+        "frequency": 308.25
+      },
+      {
+        "note": "F4",
+        "frequency": 347.65
+      },
+      {
+        "note": "G4",
+        "frequency": 391.11
+      },
+      {
+        "note": "A4\u266d",
+        "frequency": 411
+      },
+      {
+        "note": "A4\u266d",
+        "frequency": 420
+      },
+      {
+        "note": "A4\u266d",
+        "frequency": 423
+      },
+      {
+        "note": "B4\u266d",
+        "frequency": 463.54
+      },
+      {
+        "note": "B4\u266e",
+        "frequency": 492
+      },
+      {
+        "note": "C5",
+        "frequency": 521.48
+      }
+    ]
+  },
+  "farahfaza": {
+    "tonic": "C",
+    "lower_jins": "Nahawand",
+    "upper_jins": "Hijazkar on G",
+    "scale": null
+  },
+  "nawa athar": {
+    "tonic": "C",
+    "lower_jins": "Nahawand",
+    "upper_jins": "Hijaz on G",
+    "scale": [
+      {
+        "note": "C4",
+        "frequency": 260.74
+      },
+      {
+        "note": "D4",
+        "frequency": 293.33
+      },
+      {
+        "note": "E4\u266d",
+        "frequency": 315
+      },
+      {
+        "note": "F4\u266f",
+        "frequency": 375
+      },
+      {
+        "note": "G4",
+        "frequency": 391.11
+      },
+      {
+        "note": "A4\u266d",
+        "frequency": 423
+      },
+      {
+        "note": "B4\u266e",
+        "frequency": 492
+      },
+      {
+        "note": "C5",
+        "frequency": 521.48
+      }
+    ]
+  },
+  "nahawand murassa": {
+    "tonic": "C",
+    "lower_jins": "Nahawand",
+    "upper_jins": "Ajam on G",
+    "scale": null
+  },
+  "kurd": {
+    "tonic": "D",
+    "lower_jins": "Kurd",
+    "upper_jins": "Nahawand on A",
+    "scale": [
+      {
+        "note": "C4",
+        "frequency": 260.74
+      },
+      {
+        "note": "D4",
+        "frequency": 293.33
+      },
+      {
+        "note": "E4\u266d",
+        "frequency": 308.25
+      },
+      {
+        "note": "F4\u266e",
+        "frequency": 347.65
+      },
+      {
+        "note": "F4",
+        "frequency": 347.65
+      },
+      {
+        "note": "G4",
+        "frequency": 391.11
+      },
+      {
+        "note": "A4",
+        "frequency": 440
+      },
+      {
+        "note": "B4\u266d",
+        "frequency": 463.54
+      },
+      {
+        "note": "C5",
+        "frequency": 521.48
+      },
+      {
+        "note": "D5",
+        "frequency": 586.66
+      }
+    ]
+  },
+  "lami": {
+    "tonic": "D",
+    "lower_jins": "Kurd",
+    "upper_jins": "Hijaz on G",
+    "scale": [
+      {
+        "note": "D4",
+        "frequency": 293.33
+      },
+      {
+        "note": "E4\u266d",
+        "frequency": 308.25
+      },
+      {
+        "note": "F4",
+        "frequency": 347.65
+      },
+      {
+        "note": "G4",
+        "frequency": 391.11
+      },
+      {
+        "note": "A4\u266d",
+        "frequency": 411
+      },
+      {
+        "note": "A4\u266d",
+        "frequency": 420
+      },
+      {
+        "note": "B4\u266d",
+        "frequency": 463.54
+      },
+      {
+        "note": "C5",
+        "frequency": 521.48
+      },
+      {
+        "note": "D5",
+        "frequency": 586.66
+      }
+    ]
+  },
+  "athar kurd": {
+    "tonic": "D",
+    "lower_jins": "Athar Kurd",
+    "upper_jins": "Hijazkar on A",
+    "scale": [
+      {
+        "note": "A3\u266d",
+        "frequency": 211
+      },
+      {
+        "note": "B3\u266e",
+        "frequency": 247.5
+      },
+      {
+        "note": "C4",
+        "frequency": 260.74
+      },
+      {
+        "note": "D4\u266d",
+        "frequency": 274
+      },
+      {
+        "note": "E4\u266d",
+        "frequency": 308.25
+      },
+      {
+        "note": "E4\u266d",
+        "frequency": 309
+      },
+      {
+        "note": "F4\u266f",
+        "frequency": 375
+      },
+      {
+        "note": "G4",
+        "frequency": 391.11
+      },
+      {
+        "note": "A4\u266d",
+        "frequency": 423
+      },
+      {
+        "note": "B4\u266e",
+        "frequency": 492
+      },
+      {
+        "note": "C5",
+        "frequency": 521.48
+      }
+    ]
+  },
+  "ajam": {
+    "tonic": "C",
+    "lower_jins": "Ajam",
+    "upper_jins": "Ajam / Nahawand on G",
+    "scale": [
+      {
+        "note": "A3",
+        "frequency": 220
+      },
+      {
+        "note": "B3",
+        "frequency": 247.5
+      },
+      {
+        "note": "C4",
+        "frequency": 260.74
+      },
+      {
+        "note": "D4",
+        "frequency": 293.33
+      },
+      {
+        "note": "E4",
+        "frequency": 328
+      },
+      {
+        "note": "F4",
+        "frequency": 347.65
+      },
+      {
+        "note": "G4",
+        "frequency": 391.11
+      },
+      {
+        "note": "A4",
+        "frequency": 440
+      },
+      {
+        "note": "B4\u266d",
+        "frequency": 463.54
+      },
+      {
+        "note": "B4",
+        "frequency": 495
+      },
+      {
+        "note": "C5",
+        "frequency": 521.48
+      },
+      {
+        "note": "D5",
+        "frequency": 586.66
+      },
+      {
+        "note": "E5\u266d",
+        "frequency": 616.5
+      },
+      {
+        "note": "F5",
+        "frequency": 695.31
+      }
+    ]
+  },
+  "ajam ushayran": {
+    "tonic": "C",
+    "lower_jins": "Ajam",
+    "upper_jins": "Kurd then Nahawand",
+    "scale": [
+      {
+        "note": "B3\u266d",
+        "frequency": 231.77
+      },
+      {
+        "note": "C4",
+        "frequency": 260.74
+      },
+      {
+        "note": "D4",
+        "frequency": 293.33
+      },
+      {
+        "note": "E4\u266d",
+        "frequency": 308.25
+      },
+      {
+        "note": "F4",
+        "frequency": 347.65
+      },
+      {
+        "note": "G4",
+        "frequency": 391.11
+      },
+      {
+        "note": "A4",
+        "frequency": 440
+      },
+      {
+        "note": "B4\u266d",
+        "frequency": 463.54
+      }
+    ]
+  },
+  "shawq afza": {
+    "tonic": "C",
+    "lower_jins": "Ajam",
+    "upper_jins": "Nahawand on G",
+    "scale": [
+      {
+        "note": "C4",
+        "frequency": 260.74
+      },
+      {
+        "note": "D4",
+        "frequency": 293.33
+      },
+      {
+        "note": "E4",
+        "frequency": 328
+      },
+      {
+        "note": "F4",
+        "frequency": 347.65
+      },
+      {
+        "note": "G4",
+        "frequency": 391.11
+      },
+      {
+        "note": "A4\u266d",
+        "frequency": 423
+      },
+      {
+        "note": "B4\u266e",
+        "frequency": 492
+      },
+      {
+        "note": "C5",
+        "frequency": 521.48
+      }
+    ]
+  },
+  "nikriz": {
+    "tonic": "C",
+    "lower_jins": "Nikriz",
+    "upper_jins": "Rast / Nahawand on G",
+    "scale": [
+      {
+        "note": "A3\u266d",
+        "frequency": 209
+      },
+      {
+        "note": "B3\u266e",
+        "frequency": 247.5
+      },
+      {
+        "note": "C4",
+        "frequency": 260.74
+      },
+      {
+        "note": "D4",
+        "frequency": 293.33
+      },
+      {
+        "note": "E4\u266d",
+        "frequency": 315
+      },
+      {
+        "note": "F4\u266f",
+        "frequency": 375
+      },
+      {
+        "note": "G4",
+        "frequency": 391.11
+      },
+      {
+        "note": "A4\u266d",
+        "frequency": 414
+      },
+      {
+        "note": "A4\u266e",
+        "frequency": 440
+      },
+      {
+        "note": "B4\u266d",
+        "frequency": 463.54
+      },
+      {
+        "note": "C5",
+        "frequency": 521.48
+      },
+      {
+        "note": "D5",
+        "frequency": 586.66
+      }
+    ]
+  },
+  "bastanikar": {
+    "tonic": "E half-flat",
+    "lower_jins": "Sikah",
+    "upper_jins": "Saba / Hijaz / Nikriz",
+    "scale": [
+      {
+        "note": "B3-Koron",
+        "frequency": 243
+      },
+      {
+        "note": "C4",
+        "frequency": 260.74
+      },
+      {
+        "note": "D4",
+        "frequency": 293.33
+      },
+      {
+        "note": "E4-Koron",
+        "frequency": 320
+      },
+      {
+        "note": "F4",
+        "frequency": 347.65
+      },
+      {
+        "note": "G4\u266d",
+        "frequency": 368
+      },
+      {
+        "note": "A4\u266e",
+        "frequency": 437
+      },
+      {
+        "note": "B4\u266d",
+        "frequency": 463.54
+      },
+      {
+        "note": "C5",
+        "frequency": 521.48
+      },
+      {
+        "note": "D5\u266d",
+        "frequency": 548
+      },
+      {
+        "note": "E5\u266e",
+        "frequency": 660
+      },
+      {
+        "note": "F5",
+        "frequency": 695.3
+      }
+    ]
+  },
+  "dalanshin": {
+    "tonic": "C",
+    "lower_jins": "Saba Dalanshin",
+    "upper_jins": "Rast on G",
+    "scale": [
+      {
+        "note": "C4",
+        "frequency": 260.74
+      },
+      {
+        "note": "D4\u266e",
+        "frequency": 293.33
+      },
+      {
+        "note": "E4-Koron",
+        "frequency": 320
+      },
+      {
+        "note": "F4",
+        "frequency": 347.65
+      },
+      {
+        "note": "G4",
+        "frequency": 391.11
+      },
+      {
+        "note": "A4",
+        "frequency": 440
+      },
+      {
+        "note": "B4-Koron",
+        "frequency": 482
+      },
+      {
+        "note": "C5",
+        "frequency": 521.48
+      },
+      {
+        "note": "D5\u266d",
+        "frequency": 560
+      },
+      {
+        "note": "E5\u266e",
+        "frequency": 660
+      }
+    ]
+  },
+  "suzdalara": {
+    "tonic": "C",
+    "lower_jins": "Rast",
+    "upper_jins": "Hijaz on F",
+    "scale": [
+      {
+        "note": "C4",
+        "frequency": 260.74
+      },
+      {
+        "note": "D4",
+        "frequency": 293.33
+      },
+      {
+        "note": "E4-Koron",
+        "frequency": 320
+      },
+      {
+        "note": "F4",
+        "frequency": 347.65
+      },
+      {
+        "note": "G4",
+        "frequency": 391.11
+      },
+      {
+        "note": "A4",
+        "frequency": 440
+      },
+      {
+        "note": "B4\u266d",
+        "frequency": 463.54
+      },
+      {
+        "note": "C5",
+        "frequency": 521.48
+      }
+    ]
+  }
+}
