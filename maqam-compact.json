@@ -999,10 +999,43 @@
     ]
   },
   "farahfaza": {
-    "tonic": "C",
+    "tonic": "G",
     "lower_jins": "Nahawand",
-    "upper_jins": "Hijazkar on G",
-    "scale": null
+    "upper_jins": "Nahwand on C",
+    "scale": [
+      {
+        "note": "G3",
+        "frequency": 196.0
+      },
+      {
+        "note": "A3",
+        "frequency": 220.0
+      },
+      {
+        "note": "B3♭",
+        "frequency": 233.08
+      },
+      {
+        "note": "C4",
+        "frequency": 261.63
+      },
+      {
+        "note": "D4",
+        "frequency": 293.66
+      },
+      {
+        "note": "E4♭",
+        "frequency": 311.13
+      },
+      {
+        "note": "F4",
+        "frequency": 349.23
+      },
+      {
+        "note": "G4",
+        "frequency": 392.0
+      }
+    ]
   },
   "nawa athar": {
     "tonic": "C",
