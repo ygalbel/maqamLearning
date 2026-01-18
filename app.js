@@ -49,6 +49,7 @@ let currentLang = "en";
 let currentMaqamName = "";
 let currentMaqamKey = "";
 let audioStatusKey = "";
+let pitchOffsetSemitones = 0;
 
 const appEl = document.getElementById("app");
 const audioStatusEl = document.getElementById("audioStatus");
@@ -292,6 +293,8 @@ function playTone(frequency, durationMs) {
   ensureAudio();
 
   const now = audioCtx.currentTime;
+  const offsetFactor = Math.pow(2, pitchOffsetSemitones / 12);
+  const adjustedFrequency = frequency * offsetFactor;
 
   const osc = audioCtx.createOscillator();
   const osc2 = audioCtx.createOscillator();
@@ -301,10 +304,10 @@ function playTone(frequency, durationMs) {
   const filter = audioCtx.createBiquadFilter();
 
   osc.type = "triangle";
-  osc.frequency.value = frequency;
+  osc.frequency.value = adjustedFrequency;
 
   osc2.type = "sine";
-  osc2.frequency.value = frequency * 2;
+  osc2.frequency.value = adjustedFrequency * 2;
   osc2.detune.value = 6;
 
   gain1.gain.value = 0.9;
@@ -713,6 +716,12 @@ function renderMaqamPage(maqamKeyRaw) {
               <option value="down">${escapeHtml(t("controls.loopDown"))}</option>
             </select>
           </label>
+
+          <label class="row" style="gap:8px;">
+            <span class="pill">${escapeHtml(t("controls.pitchOffset"))}</span>
+            <input id="pitchOffset" type="range" min="-2" max="2" value="0" step="0.5" />
+            <span id="pitchOffsetLabel"><strong>0</strong> ${escapeHtml(t("controls.semitones"))}</span>
+          </label>
         </div>
       </div>
     </div>
@@ -790,6 +799,8 @@ function renderMaqamPage(maqamKeyRaw) {
   const noteLen = document.getElementById("noteLen");
   const noteLenLabel = document.getElementById("noteLenLabel");
   const loopOrder = document.getElementById("loopOrder");
+  const pitchOffset = document.getElementById("pitchOffset");
+  const pitchOffsetLabel = document.getElementById("pitchOffsetLabel");
   const selectedCount = document.getElementById("selectedCount");
   const selectAll = document.getElementById("selectAll");
   const selectNone = document.getElementById("selectNone");
@@ -850,10 +861,11 @@ function renderMaqamPage(maqamKeyRaw) {
 
   function getSelectedNotes() {
     const idxs = getSelectedIndexes();
+    const offsetFactor = Math.pow(2, pitchOffsetSemitones / 12);
     return idxs
       .map((i) => data[i])
       .filter((n) => n && Number.isFinite(Number(n.frequency)))
-      .map((n) => ({ note: n.note, frequency: Number(n.frequency) }));
+      .map((n) => ({ note: n.note, frequency: Number(n.frequency) * offsetFactor }));
   }
 
   function setLoopButtonState(isRunning) {
@@ -898,6 +910,14 @@ function renderMaqamPage(maqamKeyRaw) {
     noteLenLabel.innerHTML = `<strong>${noteLen.value}</strong> ms`;
     if (noteLenMiniValue) noteLenMiniValue.innerHTML = `<strong>${noteLen.value}</strong> ms`;
   };
+
+  if (pitchOffset && pitchOffsetLabel) {
+    pitchOffset.oninput = () => {
+      pitchOffsetSemitones = Number(pitchOffset.value) || 0;
+      const sign = pitchOffsetSemitones > 0 ? "+" : "";
+      pitchOffsetLabel.innerHTML = `<strong>${sign}${pitchOffsetSemitones}</strong> ${escapeHtml(t("controls.semitones"))}`;
+    };
+  }
 
   function stepRange(input, delta) {
     const min = Number(input.min);
@@ -954,6 +974,7 @@ function renderMaqamPage(maqamKeyRaw) {
   });
 
   updateSelectedCount();
+  if (pitchOffset && pitchOffsetLabel) pitchOffset.oninput();
   updateNotesScale();
 
   btnPlaySelected.onclick = async () => {
