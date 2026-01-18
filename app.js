@@ -338,6 +338,15 @@ function renderMaqamPage(maqamKeyRaw) {
         <input id="noteLen" type="range" min="80" max="1200" value="220" />
         <span id="noteLenLabel"><strong>220</strong> ms</span>
       </label>
+
+      <label class="row" style="gap:8px;">
+        <span class="pill">Loop order</span>
+        <select id="loopOrder">
+          <option value="upDown" selected>Up then down</option>
+          <option value="up">Up only</option>
+          <option value="down">Down only</option>
+        </select>
+      </label>
     </div>
 
     <div class="mobileBar">
@@ -391,6 +400,7 @@ function renderMaqamPage(maqamKeyRaw) {
   const repeat = document.getElementById("repeat");
   const noteLen = document.getElementById("noteLen");
   const noteLenLabel = document.getElementById("noteLenLabel");
+  const loopOrder = document.getElementById("loopOrder");
   const selectedCount = document.getElementById("selectedCount");
   const selectAll = document.getElementById("selectAll");
   const selectNone = document.getElementById("selectNone");
@@ -426,6 +436,16 @@ function renderMaqamPage(maqamKeyRaw) {
       .map((c) => Number(c.getAttribute("data-idx")))
       .filter((n) => Number.isFinite(n))
       .sort((a, b) => a - b);
+  }
+
+  function getLoopSequence() {
+    const idxs = getSelectedIndexes();
+    if (idxs.length === 0) return [];
+    const mode = loopOrder?.value || "upDown";
+
+    if (mode === "down") return [...idxs].reverse();
+    if (mode === "up") return idxs;
+    return idxs.concat([...idxs].reverse());
   }
 
   function updateSelectedCount() {
@@ -464,6 +484,15 @@ function renderMaqamPage(maqamKeyRaw) {
     noteLenLabel.innerHTML = `<strong>${noteLen.value}</strong> ms`;
   };
 
+  if (loopOrder) {
+    loopOrder.onchange = () => {
+      if (!isLooping) return;
+      currentLoopStep = 0;
+      loopTick();
+      restartLoopTimer();
+    };
+  }
+
   selectAll.onclick = () => {
     [...appEl.querySelectorAll(".notePad")].forEach((btn) => {
       btn.classList.add("selected");
@@ -498,14 +527,14 @@ function renderMaqamPage(maqamKeyRaw) {
     ensureAudio();
     stopLoop();
 
-    const idxs = getSelectedIndexes();
-    if (idxs.length === 0) return;
+    const seq = getLoopSequence();
+    if (seq.length === 0) return;
 
     const intervalMs = getBpmIntervalMs(tempo.value);
     const dur = getNoteDurationMs();
 
-    for (let i = 0; i < idxs.length; i++) {
-      const n = data[idxs[i]];
+    for (let i = 0; i < seq.length; i++) {
+      const n = data[seq[i]];
       if (n && Number.isFinite(Number(n.frequency))) playTone(Number(n.frequency), dur);
       await sleep(intervalMs);
     }
@@ -521,15 +550,15 @@ function renderMaqamPage(maqamKeyRaw) {
   }
 
   function loopTick() {
-    const idxs = getSelectedIndexes();
-    if (idxs.length === 0) {
+    const seq = getLoopSequence();
+    if (seq.length === 0) {
       setActiveLoopIndex(null);
       return;
     }
 
     const dur = getNoteDurationMs();
-    const i = currentLoopStep % idxs.length;
-    const noteIdx = idxs[i];
+    const i = currentLoopStep % seq.length;
+    const noteIdx = seq[i];
     const note = data[noteIdx];
 
     setActiveLoopIndex(noteIdx);
@@ -540,7 +569,7 @@ function renderMaqamPage(maqamKeyRaw) {
 
     currentLoopStep += 1;
 
-    if (!repeat.checked && currentLoopStep >= idxs.length) {
+    if (!repeat.checked && currentLoopStep >= seq.length) {
       stopLoop();
       setLoopButtonState(false);
       setActiveLoopIndex(null);
