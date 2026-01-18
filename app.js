@@ -454,9 +454,9 @@ function renderListPage(keepSearchFocus = false) {
 
       return `
         <a class="card" href="${buildHash(`/maqam/${encodeURIComponent(k)}`)}" style="color:inherit;">
-          <div style="display:flex; justify-content:space-between; align-items:center;">
-            <strong>${escapeHtml(displayName)}</strong>
-            <span class="pill">${escapeHtml(t("list.notesCount", { count: scale.length }))}</span>
+          <div class="cardHeaderRow">
+            <strong class="cardTitle">${escapeHtml(displayName)}</strong>
+            <span class="pill cardPill">${escapeHtml(t("list.notesCount", { count: scale.length }))}</span>
           </div>
           <div class="muted small" style="margin-top:6px;">
             <div><strong>${escapeHtml(t("maqam.tonicLabel"))}</strong> ${escapeHtml(tonic)}</div>

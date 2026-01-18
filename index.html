@@ -109,6 +109,14 @@
       background: var(--card);
       box-shadow: 0 10px 20px rgba(83, 49, 15, 0.08);
     }
+    .cardHeaderRow {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 8px;
+    }
+    .cardTitle { flex: 1; min-width: 0; }
+    .cardPill { white-space: nowrap; }
     .card:hover { border-color: var(--gold); }
     .muted { color: var(--muted); font-size: 0.95rem; }
     .row { display:flex; gap:12px; flex-wrap: wrap; align-items: center; }
@@ -266,7 +274,7 @@
 
   <main id="app"></main>
   <footer class="siteFooter">
-    <span>Created by Ygal Bellaiche · <a href="mailto:ygalbel@gmail.com">ygalbel@gmail.com</a></span>
+    <span>Created by Ygal Bellaiche · <a href="mailto:ygalbel@proton.me">ygalbel@proton.me</a></span>
   </footer>
 
   <script src="app.js"></script>
