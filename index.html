@@ -54,6 +54,20 @@
     .titleGroup { display:flex; align-items:baseline; gap:8px; flex-wrap:wrap; }
     .compactHeader .headerTagline { display: none; }
     .compactHeader #headerMaqam { font-size: 1.05rem; font-weight: 700; }
+    .siteFooter {
+      position: sticky;
+      bottom: 0;
+      width: 100%;
+      padding: 8px 12px;
+      text-align: center;
+      font-size: 0.85rem;
+      color: var(--muted);
+      background: rgba(251, 242, 229, 0.96);
+      border-top: 1px solid var(--line);
+      backdrop-filter: blur(6px);
+      z-index: 4;
+    }
+    .siteFooter a { color: var(--accent); text-decoration: none; }
     header strong {
       font-family: "Gloock", "Amiri", serif;
       letter-spacing: 0.4px;
@@ -229,6 +243,9 @@
   </header>
 
   <main id="app"></main>
+  <footer class="siteFooter">
+    <span>Created by Ygal Bellaiche · <a href="mailto:ygalbel@gmail.com">ygalbel@gmail.com</a></span>
+  </footer>
 
   <script src="app.js"></script>
 </body>
