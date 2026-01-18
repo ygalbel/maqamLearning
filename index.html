@@ -228,7 +228,11 @@
       border-color: var(--gold);
       box-shadow: 0 0 0 4px rgba(211, 165, 91, 0.35);
     }
-    .notePad.active { box-shadow: 0 0 0 3px rgba(179, 88, 42, 0.45) inset; border-color: var(--accent); }
+    .notePad.active {
+      border-color: var(--accent);
+      outline: 6px solid var(--accent);
+      outline-offset: -6px;
+    }
     .pill {
       font-size: 0.85rem;
       padding: 2px 8px;
