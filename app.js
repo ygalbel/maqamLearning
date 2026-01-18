@@ -114,27 +114,48 @@ function playTone(frequency, durationMs) {
   const now = audioCtx.currentTime;
 
   const osc = audioCtx.createOscillator();
-  const gain = audioCtx.createGain();
+  const osc2 = audioCtx.createOscillator();
+  const gain1 = audioCtx.createGain();
+  const gain2 = audioCtx.createGain();
+  const amp = audioCtx.createGain();
+  const filter = audioCtx.createBiquadFilter();
 
-  osc.type = "sine";
+  osc.type = "triangle";
   osc.frequency.value = frequency;
 
-  // Envelope for click-free audio
-  const attack = 0.01;
-  const durSec = Math.max(0.05, durationMs / 1000);
-  const release = Math.min(0.06, Math.max(0.02, durSec * 0.25));
-  const releaseStart = Math.max(now + attack, now + durSec - release);
+  osc2.type = "sine";
+  osc2.frequency.value = frequency * 2;
+  osc2.detune.value = 6;
 
-  gain.gain.setValueAtTime(0.0001, now);
-  gain.gain.exponentialRampToValueAtTime(0.25, now + attack);
-  gain.gain.setValueAtTime(0.25, releaseStart);
-  gain.gain.exponentialRampToValueAtTime(0.0001, now + durSec);
+  gain1.gain.value = 0.9;
+  gain2.gain.value = 0.25;
 
-  osc.connect(gain);
-  gain.connect(masterGain);
+  // Plucked envelope + gentle low-pass for an oud-like timbre
+  const attack = 0.005;
+  const durSec = Math.max(0.06, durationMs / 1000);
+  const decay = Math.min(0.2, Math.max(0.06, durSec * 0.6));
+  const endTime = now + durSec;
+
+  amp.gain.setValueAtTime(0.0001, now);
+  amp.gain.exponentialRampToValueAtTime(0.35, now + attack);
+  amp.gain.exponentialRampToValueAtTime(0.0001, endTime);
+
+  filter.type = "lowpass";
+  filter.Q.value = 0.6;
+  filter.frequency.setValueAtTime(1600, now);
+  filter.frequency.exponentialRampToValueAtTime(900, now + decay);
+
+  osc.connect(gain1);
+  osc2.connect(gain2);
+  gain1.connect(amp);
+  gain2.connect(amp);
+  amp.connect(filter);
+  filter.connect(masterGain);
 
   osc.start(now);
-  osc.stop(now + durSec + 0.02);
+  osc2.start(now);
+  osc.stop(endTime + 0.02);
+  osc2.stop(endTime + 0.02);
 }
 
 function parseRoute() {
