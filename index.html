@@ -50,6 +50,10 @@
     }
 
     header a { text-decoration: none; color: inherit; }
+    a.card { text-decoration: none; }
+    .titleGroup { display:flex; align-items:baseline; gap:8px; flex-wrap:wrap; }
+    .compactHeader .headerTagline { display: none; }
+    .compactHeader #headerMaqam { font-size: 1.05rem; font-weight: 700; }
     header strong {
       font-family: "Gloock", "Amiri", serif;
       letter-spacing: 0.4px;
@@ -214,9 +218,12 @@
   </style>
 </head>
 <body>
-  <header>
-    <a href="#/"><strong>Maqam Notes Player</strong></a>
-    <span class="muted">Pick a maqam → choose notes → play with tempo/repeat</span>
+  <header id="siteHeader">
+    <div class="titleGroup">
+      <a href="#/"><strong>Maqam Notes Player</strong></a>
+      <span class="muted small" id="headerMaqam"></span>
+    </div>
+    <span class="muted headerTagline">Pick a maqam → choose notes → play with tempo/repeat</span>
     <span class="spacer"></span>
     <span class="muted small" id="audioStatus">Audio: not started</span>
   </header>

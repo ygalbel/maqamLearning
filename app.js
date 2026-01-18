@@ -40,9 +40,22 @@ let listSearchSelEnd = 0;
 
 const appEl = document.getElementById("app");
 const audioStatusEl = document.getElementById("audioStatus");
+const headerMaqamEl = document.getElementById("headerMaqam");
+const siteHeaderEl = document.getElementById("siteHeader");
 
 function setAudioStatus(text) {
   if (audioStatusEl) audioStatusEl.textContent = `Audio: ${text}`;
+}
+
+function setHeaderMaqam(text) {
+  if (!headerMaqamEl) return;
+  headerMaqamEl.textContent = text ? `Maqam: ${text}` : "";
+}
+
+function updateHeaderCompact() {
+  if (!siteHeaderEl) return;
+  const compact = window.scrollY > 20;
+  siteHeaderEl.classList.toggle("compactHeader", compact);
 }
 
 async function loadData() {
@@ -234,6 +247,7 @@ function autoCorrelate(buffer, sampleRate) {
 function renderListPage(keepSearchFocus = false) {
   stopLoop();
   stopMic();
+  setHeaderMaqam("");
 
   const keys = Object.keys(maqamsData);
 
@@ -364,6 +378,7 @@ function renderMaqamPage(maqamKeyRaw) {
 
   const key = decodeURIComponent(maqamKeyRaw);
   const maqamObj = maqamsData[key];
+  setHeaderMaqam(key);
 
   if (!maqamObj) {
     appEl.innerHTML = `
@@ -909,7 +924,9 @@ async function boot() {
   try {
     maqamsData = await loadData();
     window.addEventListener("hashchange", render);
+    window.addEventListener("scroll", updateHeaderCompact, { passive: true });
     render();
+    updateHeaderCompact();
   } catch (err) {
     appEl.innerHTML = `
       <div class="card danger">
