@@ -48,7 +48,7 @@ let listSearchSelEnd = 0;
 let currentLang = "en";
 let currentMaqamName = "";
 let currentMaqamKey = "";
-let audioStatusKey = "audio.notStarted";
+let audioStatusKey = "";
 
 const appEl = document.getElementById("app");
 const audioStatusEl = document.getElementById("audioStatus");
@@ -119,11 +119,20 @@ function updateLangSwitch() {
 
 function setAudioStatusByKey(key) {
   audioStatusKey = key;
+  if (!key) {
+    setAudioStatusText("");
+    return;
+  }
   setAudioStatusText(t(key));
 }
 
 function setAudioStatusText(text) {
-  if (audioStatusEl) audioStatusEl.textContent = t("audio.label", { status: text });
+  if (!audioStatusEl) return;
+  if (!text) {
+    audioStatusEl.textContent = "";
+    return;
+  }
+  audioStatusEl.textContent = t("audio.label", { status: text });
 }
 
 function setHeaderMaqam(text) {
@@ -137,6 +146,7 @@ function updateHeaderCompact() {
   if (!siteHeaderEl) return;
   const compact = window.scrollY > 20;
   siteHeaderEl.classList.toggle("compactHeader", compact);
+  updateHeaderOffset();
 }
 
 function updateNotesScale() {
@@ -178,6 +188,15 @@ function updateNotesScale() {
 
     notesEl.style.setProperty("--noteScale", scale2.toFixed(3));
   });
+}
+
+function updateHeaderOffset() {
+  if (!siteHeaderEl) return;
+  const vv = window.visualViewport;
+  const safeTop = vv ? Math.max(0, vv.offsetTop || 0) : 0;
+  document.documentElement.style.setProperty("--safe-top", `${safeTop}px`);
+  const height = siteHeaderEl.getBoundingClientRect().height;
+  document.documentElement.style.setProperty("--header-offset", `${height}px`);
 }
 
 async function loadData() {
@@ -1221,12 +1240,18 @@ async function boot() {
     [maqamsData, translations] = await Promise.all([loadData(), loadTranslations()]);
     currentLang = getStoredLang() || "en";
     applyLang();
-    setAudioStatusByKey("audio.notStarted");
+    setAudioStatusByKey("");
     window.addEventListener("hashchange", render);
     window.addEventListener("scroll", updateHeaderCompact, { passive: true });
     window.addEventListener("resize", updateNotesScale, { passive: true });
+    window.addEventListener("resize", updateHeaderOffset, { passive: true });
+    if (window.visualViewport) {
+      window.visualViewport.addEventListener("resize", updateHeaderOffset, { passive: true });
+      window.visualViewport.addEventListener("scroll", updateHeaderOffset, { passive: true });
+    }
     render();
     updateHeaderCompact();
+    updateHeaderOffset();
   } catch (err) {
     appEl.innerHTML = `
       <div class="card danger">

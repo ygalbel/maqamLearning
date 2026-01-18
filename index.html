@@ -29,24 +29,28 @@
       --accent-soft: #f3d6b4;
     }
 
+    * { box-sizing: border-box; }
     body {
       font-family: "Amiri", "Noto Naskh Arabic", "Georgia", serif;
       margin: 0;
       padding: 0;
       color: var(--ink);
       background: var(--parchment);
+      overflow-x: hidden;
     }
 
     header {
-      padding: calc(16px + env(safe-area-inset-top)) 16px 16px;
+      padding: 16px;
+      padding-top: calc(16px + env(safe-area-inset-top, 0px));
       border-bottom: 1px solid var(--line);
       display:flex;
       gap:12px;
       align-items:center;
       background: linear-gradient(90deg, rgba(255, 248, 238, 0.95), rgba(244, 227, 206, 0.9));
       position: sticky;
-      top: 0;
+      top: env(safe-area-inset-top, 0px);
       z-index: 5;
+      box-sizing: border-box;
     }
 
     header a { text-decoration: none; color: inherit; }
@@ -247,9 +251,18 @@
     .mobileBar { display: none; }
 
     @media (max-width: 720px) {
-      header { flex-wrap: wrap; gap: 8px; }
+      header {
+        flex-wrap: wrap;
+        gap: 8px;
+        padding-top: calc(20px + env(safe-area-inset-top, 0px));
+        position: fixed;
+        top: var(--safe-top, 0px);
+        left: 0;
+        right: 0;
+        z-index: 20;
+      }
       header .spacer { display: none; }
-      main { padding: 12px; }
+      main { padding: 12px; padding-top: calc(12px + var(--header-offset, 0px) + var(--safe-top, 0px)); }
       .controls { flex-direction: column; align-items: stretch; }
       .controls button { width: 100%; padding: 12px 14px; font-size: 1rem; }
       .controls input[type="range"] { width: 100%; }
@@ -284,7 +297,7 @@
         right: 0;
         gap: 10px;
         padding: 10px;
-        margin: 12px -12px -12px;
+        margin: 12px 0 0;
         background: rgba(251, 242, 229, 0.96);
         border-top: 1px solid var(--line);
         backdrop-filter: blur(6px);
@@ -307,7 +320,7 @@
       <a href="#/ar" data-lang="ar">AR</a>
     </div>
     <span class="spacer"></span>
-    <span class="muted small" id="audioStatus">Audio: not started</span>
+    <span class="muted small" id="audioStatus"></span>
   </header>
 
   <main id="app"></main>
