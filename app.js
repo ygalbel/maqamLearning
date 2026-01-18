@@ -13,8 +13,11 @@
 // }
 
 const DATA_URL = "./maqam-compact.json";
+const I18N_URL = "./i18n.json";
+const SUPPORTED_LANGS = ["en", "he", "ar"];
 
 let maqamsData = null;
+let translations = null;
 
 // Audio playback
 let audioCtx = null;
@@ -41,19 +44,92 @@ let listSortDir = "asc";
 let listQuery = "";
 let listSearchSelStart = 0;
 let listSearchSelEnd = 0;
+let currentLang = "en";
+let currentMaqamName = "";
+let currentMaqamKey = "";
+let audioStatusKey = "audio.notStarted";
 
 const appEl = document.getElementById("app");
 const audioStatusEl = document.getElementById("audioStatus");
 const headerMaqamEl = document.getElementById("headerMaqam");
 const siteHeaderEl = document.getElementById("siteHeader");
+const headerTitleEl = document.getElementById("headerTitle");
+const headerTaglineEl = document.getElementById("headerTagline");
+const langSwitchEl = document.getElementById("langSwitch");
 
-function setAudioStatus(text) {
-  if (audioStatusEl) audioStatusEl.textContent = `Audio: ${text}`;
+function t(key, vars = null) {
+  const dict = (translations && translations[currentLang]) || (translations && translations.en) || {};
+  let str = dict[key] || (translations && translations.en && translations.en[key]) || key;
+  if (vars) {
+    for (const [k, v] of Object.entries(vars)) {
+      str = str.replaceAll(`{${k}}`, String(v));
+    }
+  }
+  return str;
+}
+
+function getMaqamDisplayName(key) {
+  if (!key) return "";
+  const dict = translations && translations[currentLang];
+  const fallback = translations && translations.en;
+  const translated =
+    (dict && dict.maqamNames && dict.maqamNames[key]) ||
+    (fallback && fallback.maqamNames && fallback.maqamNames[key]) ||
+    "";
+  return translated || key;
+}
+
+function getJinsDisplayName(name) {
+  if (!name) return "";
+  const dict = translations && translations[currentLang];
+  const fallback = translations && translations.en;
+  const translated =
+    (dict && dict.jinsNames && dict.jinsNames[name]) ||
+    (fallback && fallback.jinsNames && fallback.jinsNames[name]) ||
+    "";
+  return translated || name;
+}
+
+function isRtlLang(lang) {
+  return lang === "he" || lang === "ar";
+}
+
+function applyLang() {
+  document.documentElement.lang = currentLang;
+  document.documentElement.dir = isRtlLang(currentLang) ? "rtl" : "ltr";
+  if (headerTitleEl) headerTitleEl.textContent = t("app.title");
+  if (headerTitleEl) headerTitleEl.setAttribute("href", buildHash());
+  if (headerTaglineEl) headerTaglineEl.textContent = t("header.tagline");
+  document.title = t("app.title");
+  setHeaderMaqam(currentMaqamKey);
+  setAudioStatusByKey(audioStatusKey);
+  updateLangSwitch();
+}
+
+function updateLangSwitch() {
+  if (!langSwitchEl) return;
+  const links = [...langSwitchEl.querySelectorAll("a[data-lang]")];
+  links.forEach((a) => {
+    const lang = a.getAttribute("data-lang");
+    a.classList.toggle("active", lang === currentLang);
+    a.setAttribute("href", buildLangHash(lang));
+  });
+}
+
+function setAudioStatusByKey(key) {
+  audioStatusKey = key;
+  setAudioStatusText(t(key));
+}
+
+function setAudioStatusText(text) {
+  if (audioStatusEl) audioStatusEl.textContent = t("audio.label", { status: text });
 }
 
 function setHeaderMaqam(text) {
   if (!headerMaqamEl) return;
-  headerMaqamEl.textContent = text ? `Maqam: ${text}` : "";
+  currentMaqamKey = text;
+  const display = getMaqamDisplayName(text);
+  headerMaqamEl.textContent = display ? t("header.maqamLabel", { name: display }) : "";
 }
 
 function updateHeaderCompact() {
@@ -70,13 +146,37 @@ async function loadData() {
   return json;
 }
 
+async function loadTranslations() {
+  const res = await fetch(I18N_URL, { cache: "no-store" });
+  if (!res.ok) throw new Error(`Failed to load ${I18N_URL}: ${res.status}`);
+  const json = await res.json();
+  if (!json || typeof json !== "object") throw new Error("i18n JSON is not an object");
+  return json;
+}
+
+function getStoredLang() {
+  const stored = localStorage.getItem("lang");
+  return SUPPORTED_LANGS.includes(stored) ? stored : null;
+}
+
+function buildLangHash(lang, path = "") {
+  const prefix = lang === "en" ? "" : `/${lang}`;
+  if (!path) return `#${prefix || "/"}`;
+  const clean = path.startsWith("/") ? path : `/${path}`;
+  return `#${prefix}${clean}`;
+}
+
+function buildHash(path = "") {
+  return buildLangHash(currentLang, path);
+}
+
 function ensureAudio() {
   if (!audioCtx) {
     audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     masterGain = audioCtx.createGain();
     masterGain.gain.value = 0.2;
     masterGain.connect(audioCtx.destination);
-    setAudioStatus("ready");
+    setAudioStatusByKey("audio.ready");
   }
   if (audioCtx.state === "suspended") audioCtx.resume();
 }
@@ -189,9 +289,13 @@ function parseRoute() {
   // #/ or #/maqam/bayati
   const hash = location.hash || "#/";
   const parts = hash.replace(/^#\/?/, "").split("/").filter(Boolean);
-  if (parts.length === 0) return { page: "list" };
-  if (parts[0] === "maqam" && parts[1]) return { page: "maqam", maqam: parts[1] };
-  return { page: "list" };
+  let lang = null;
+  if (parts.length > 0 && SUPPORTED_LANGS.includes(parts[0])) {
+    lang = parts.shift();
+  }
+  if (parts.length === 0) return { page: "list", lang };
+  if (parts[0] === "maqam" && parts[1]) return { page: "maqam", maqam: parts[1], lang };
+  return { page: "list", lang };
 }
 
 function normalizeKey(k) {
@@ -303,11 +407,17 @@ function renderListPage(keepSearchFocus = false) {
   const filteredKeys = query
     ? keys.filter((k) => {
         const obj = maqamsData[k] || {};
+        const displayName = getMaqamDisplayName(k);
+        const lower = obj.lower_jins || "";
+        const upper = obj.upper_jins || "";
         const haystack = [
           k,
+          displayName,
           obj.tonic || "",
-          obj.lower_jins || "",
-          obj.upper_jins || ""
+          lower,
+          upper,
+          getJinsDisplayName(lower),
+          getJinsDisplayName(upper)
         ]
           .join(" ")
           .toLowerCase();
@@ -334,21 +444,24 @@ function renderListPage(keepSearchFocus = false) {
   const cards = filteredKeys
     .map((k) => {
       const obj = maqamsData[k] || {};
+      const displayName = getMaqamDisplayName(k);
       const scale = Array.isArray(obj.scale) ? obj.scale : [];
       const tonic = obj.tonic ? String(obj.tonic) : "?";
       const lower = obj.lower_jins ? String(obj.lower_jins) : "";
       const upper = obj.upper_jins ? String(obj.upper_jins) : "";
+      const lowerDisplay = getJinsDisplayName(lower);
+      const upperDisplay = getJinsDisplayName(upper);
 
       return `
-        <a class="card" href="#/maqam/${encodeURIComponent(k)}" style="color:inherit;">
+        <a class="card" href="${buildHash(`/maqam/${encodeURIComponent(k)}`)}" style="color:inherit;">
           <div style="display:flex; justify-content:space-between; align-items:center;">
-            <strong>${escapeHtml(k)}</strong>
-            <span class="pill">${scale.length} notes</span>
+            <strong>${escapeHtml(displayName)}</strong>
+            <span class="pill">${escapeHtml(t("list.notesCount", { count: scale.length }))}</span>
           </div>
           <div class="muted small" style="margin-top:6px;">
-            <div><strong>Tonic:</strong> ${escapeHtml(tonic)}</div>
-            ${lower ? `<div><strong>Lower jins:</strong> ${escapeHtml(lower)}</div>` : ""}
-            ${upper ? `<div><strong>Upper jins:</strong> ${escapeHtml(upper)}</div>` : ""}
+            <div><strong>${escapeHtml(t("maqam.tonicLabel"))}</strong> ${escapeHtml(tonic)}</div>
+            ${lower ? `<div><strong>${escapeHtml(t("maqam.lowerJinsLabel"))}</strong> ${escapeHtml(lowerDisplay)}</div>` : ""}
+            ${upper ? `<div><strong>${escapeHtml(t("maqam.upperJinsLabel"))}</strong> ${escapeHtml(upperDisplay)}</div>` : ""}
           </div>
         </a>
       `;
@@ -358,27 +471,29 @@ function renderListPage(keepSearchFocus = false) {
   appEl.innerHTML = `
     <div class="row" style="margin-bottom:8px;">
       <label class="row" style="gap:8px;">
-        <span class="pill">Search</span>
-        <input id="listSearch" type="search" placeholder="Maqam, tonic, jins" value="${escapeHtml(listQuery)}" />
+        <span class="pill">${escapeHtml(t("list.search"))}</span>
+        <input id="listSearch" type="search" placeholder="${escapeHtml(t("list.searchPlaceholder"))}" value="${escapeHtml(listQuery)}" />
       </label>
       <span class="spacer"></span>
       <label class="row" style="gap:8px;">
-        <span class="pill">Order</span>
+        <span class="pill">${escapeHtml(t("list.order"))}</span>
         <select id="listSort">
-          <option value="alpha">Alphabet</option>
-          <option value="tonic">Tonic</option>
-          <option value="lower">Lower jins</option>
+          <option value="alpha">${escapeHtml(t("list.alphabet"))}</option>
+          <option value="tonic">${escapeHtml(t("list.tonic"))}</option>
+          <option value="lower">${escapeHtml(t("list.lowerJins"))}</option>
         </select>
       </label>
       <label class="row" style="gap:8px;">
-        <span class="pill">Direction</span>
+        <span class="pill">${escapeHtml(t("list.direction"))}</span>
         <select id="listSortDir">
-          <option value="asc">Up</option>
-          <option value="desc">Down</option>
+          <option value="asc">${escapeHtml(t("list.up"))}</option>
+          <option value="desc">${escapeHtml(t("list.down"))}</option>
         </select>
       </label>
     </div>
-    <div class="muted small" style="margin-bottom:12px;">Showing ${filteredKeys.length} of ${keys.length} maqams.</div>
+    <div class="muted small" style="margin-bottom:12px;">${escapeHtml(
+      t("list.showing", { shown: filteredKeys.length, total: keys.length })
+    )}</div>
     <div class="grid">${cards}</div>
   `;
 
@@ -431,8 +546,8 @@ function renderMaqamPage(maqamKeyRaw) {
   if (!maqamObj) {
     appEl.innerHTML = `
       <div class="card danger">
-        <strong>Unknown maqam:</strong> ${escapeHtml(key)}
-        <div style="margin-top:10px;"><a href="#/">Back</a></div>
+        <strong>${escapeHtml(t("maqam.unknown"))}</strong> ${escapeHtml(key)}
+        <div style="margin-top:10px;"><a href="${buildHash()}">${escapeHtml(t("maqam.back"))}</a></div>
       </div>
     `;
     return;
@@ -441,6 +556,8 @@ function renderMaqamPage(maqamKeyRaw) {
   const tonic = maqamObj.tonic ? String(maqamObj.tonic) : "";
   const lowerJins = maqamObj.lower_jins ? String(maqamObj.lower_jins) : "";
   const upperJins = maqamObj.upper_jins ? String(maqamObj.upper_jins) : "";
+  const lowerJinsDisplay = getJinsDisplayName(lowerJins);
+  const upperJinsDisplay = getJinsDisplayName(upperJins);
   const data = Array.isArray(maqamObj.scale) ? maqamObj.scale : [];
 
   const noteRows = data
@@ -459,77 +576,78 @@ function renderMaqamPage(maqamKeyRaw) {
     })
     .join("");
 
+  const displayName = getMaqamDisplayName(key);
   appEl.innerHTML = `
     <div class="row" style="margin-bottom: 10px;">
-      <a href="#/">← All maqams</a>
-      <span class="pill">Maqam</span>
-      <h2 style="margin:0;">${escapeHtml(key)}</h2>
+      <a href="${buildHash()}">&larr; ${escapeHtml(t("maqam.all"))}</a>
+      <span class="pill">${escapeHtml(t("maqam.label"))}</span>
+      <h2 style="margin:0;">${escapeHtml(displayName)}</h2>
     </div>
 
     <div class="card" style="margin:10px 0;">
-      ${tonic ? `<div><strong>Tonic:</strong> ${escapeHtml(tonic)}</div>` : ""}
-      ${lowerJins ? `<div><strong>Lower jins:</strong> ${escapeHtml(lowerJins)}</div>` : ""}
-      ${upperJins ? `<div><strong>Upper jins:</strong> ${escapeHtml(upperJins)}</div>` : ""}
+      ${tonic ? `<div><strong>${escapeHtml(t("maqam.tonicLabel"))}</strong> ${escapeHtml(tonic)}</div>` : ""}
+      ${lowerJins ? `<div><strong>${escapeHtml(t("maqam.lowerJinsLabel"))}</strong> ${escapeHtml(lowerJinsDisplay)}</div>` : ""}
+      ${upperJins ? `<div><strong>${escapeHtml(t("maqam.upperJinsLabel"))}</strong> ${escapeHtml(upperJinsDisplay)}</div>` : ""}
     </div>
 
     <div class="controls">
       <div class="row controlsHeader" style="align-items:center; justify-content:space-between; width:100%;">
         <div>
-          <strong>Playback Controls</strong>
-          <span class="muted small">(tempo, loop, selection)</span>
+          <strong>${escapeHtml(t("controls.playbackTitle"))}</strong>
+          <span class="muted small">${escapeHtml(t("controls.playbackSubtitle"))}</span>
         </div>
-        <button id="toggleControls" class="miniToggle" aria-label="Toggle controls">▼</button>
+        <button id="toggleControls" class="miniToggle" aria-label="${escapeHtml(t("aria.toggleControls"))}">v</button>
       </div>
 
       <div id="miniControls" class="row miniControls" style="margin-top:8px; width:100%;">
         <label class="row miniGroup" style="gap:6px;">
-          <span class="pill">Tempo</span>
-          <button id="tempoDown" class="miniBtn" aria-label="Decrease tempo">-</button>
+          <span class="pill">${escapeHtml(t("controls.tempo"))}</span>
+          <button id="tempoDown" class="miniBtn" aria-label="${escapeHtml(t("aria.decreaseTempo"))}">-</button>
           <span id="tempoMiniValue"><strong>120</strong> BPM</span>
-          <button id="tempoUp" class="miniBtn" aria-label="Increase tempo">+</button>
+          <button id="tempoUp" class="miniBtn" aria-label="${escapeHtml(t("aria.increaseTempo"))}">+</button>
         </label>
 
         <label class="row miniGroup" style="gap:6px;">
-          <span class="pill">Length</span>
-          <button id="noteLenDown" class="miniBtn" aria-label="Decrease note length">-</button>
+          <span class="pill">${escapeHtml(t("controls.length"))}</span>
+          <button id="noteLenDown" class="miniBtn" aria-label="${escapeHtml(t("aria.decreaseLength"))}">-</button>
           <span id="noteLenMiniValue"><strong>220</strong> ms</span>
-          <button id="noteLenUp" class="miniBtn" aria-label="Increase note length">+</button>
+          <button id="noteLenUp" class="miniBtn" aria-label="${escapeHtml(t("aria.increaseLength"))}">+</button>
         </label>
       </div>
 
       <div id="controlsPanel" style="display:none; width:100%;">
         <div class="row" style="margin-top:8px;">
-          <button id="btnInitAudio">Enable Audio</button>
-          <button id="btnPlaySelected">Play Selected (Once)</button>
-          <button id="btnStartLoop">Start Loop</button>
-          <button id="btnStopLoop" disabled>Stop</button>
-          <button id="btnPause" disabled>Pause</button>
+          <button id="btnInitAudio">${escapeHtml(t("controls.enableAudio"))}</button>
+          <button id="btnPlaySelected">${escapeHtml(t("controls.playSelectedOnce"))}</button>
+          <button id="btnStartLoop">${escapeHtml(t("controls.startLoop"))}</button>
+          <button id="btnStopLoop" disabled>${escapeHtml(t("controls.stop"))}</button>
+          <button id="btnPause" disabled>${escapeHtml(t("controls.pause"))}</button>
         </div>
 
         <div class="row" style="margin-top:8px;">
           <label class="row" style="gap:8px;">
-            <span class="pill">Tempo</span>
+            <span class="pill">${escapeHtml(t("controls.tempo"))}</span>
             <input id="tempo" type="range" min="30" max="240" value="120" />
             <span id="tempoLabel"><strong>120</strong> BPM</span>
           </label>
 
           <label class="row" style="gap:8px;">
-            <span class="pill">Note length</span>
+            <span class="pill">${escapeHtml(t("controls.noteLength"))}</span>
             <input id="noteLen" type="range" min="80" max="1200" value="220" />
             <span id="noteLenLabel"><strong>220</strong> ms</span>
           </label>
 
           <label class="row" style="gap:8px;">
             <input id="repeat" type="checkbox" checked />
-            <span class="pill">Repeat</span>
+            <span class="pill">${escapeHtml(t("controls.repeat"))}</span>
           </label>
 
           <label class="row" style="gap:8px;">
-            <span class="pill">Loop order</span>
+            <span class="pill">${escapeHtml(t("controls.loopOrder"))}</span>
             <select id="loopOrder">
-              <option value="upDown" selected>Up then down</option>
-              <option value="up">Up only</option>
-              <option value="down">Down only</option>
+              <option value="upDown" selected>${escapeHtml(t("controls.loopUpDown"))}</option>
+              <option value="up">${escapeHtml(t("controls.loopUp"))}</option>
+              <option value="down">${escapeHtml(t("controls.loopDown"))}</option>
             </select>
           </label>
         </div>
@@ -537,43 +655,43 @@ function renderMaqamPage(maqamKeyRaw) {
     </div>
 
     <div class="mobileBar">
-      <button id="btnPlaySelectedMobile">Play Selected</button>
-      <button id="btnStartLoopMobile">Loop</button>
-      <button id="btnStopLoopMobile" disabled>Stop</button>
-      <button id="btnPauseMobile" disabled>Pause</button>
+      <button id="btnPlaySelectedMobile">${escapeHtml(t("controls.playSelected"))}</button>
+      <button id="btnStartLoopMobile">${escapeHtml(t("controls.loopShort"))}</button>
+      <button id="btnStopLoopMobile" disabled>${escapeHtml(t("controls.stop"))}</button>
+      <button id="btnPauseMobile" disabled>${escapeHtml(t("controls.pause"))}</button>
     </div>
 
     <div class="card" style="margin-top:12px;">
       <div class="row" style="align-items:center; justify-content:space-between;">
         <div>
-          <strong>Live Pitch</strong>
-          <span class="muted small">(sing or play a note)</span>
+          <strong>${escapeHtml(t("live.title"))}</strong>
+          <span class="muted small">${escapeHtml(t("live.subtitle"))}</span>
         </div>
-        <button id="toggleMicPanel" class="small">Show</button>
+        <button id="toggleMicPanel" class="small">${escapeHtml(t("common.show"))}</button>
       </div>
 
       <div id="micPanel" style="display:none; margin-top:10px;">
         <div class="row" style="margin-top:6px;">
-          <button id="btnEnableMic">Enable Mic</button>
-          <button id="btnDisableMic" disabled>Disable Mic</button>
+          <button id="btnEnableMic">${escapeHtml(t("live.enableMic"))}</button>
+          <button id="btnDisableMic" disabled>${escapeHtml(t("live.disableMic"))}</button>
         </div>
 
         <div style="margin-top:10px;">
-          <div class="muted small">Detected</div>
+          <div class="muted small">${escapeHtml(t("live.detected"))}</div>
           <div id="detectedHz" style="font-size:1.3rem;"><strong>-</strong></div>
 
-          <div class="muted small" style="margin-top:10px;">Nearest selected note</div>
+          <div class="muted small" style="margin-top:10px;">${escapeHtml(t("live.nearest"))}</div>
           <div id="nearestNote" style="font-size:1.3rem;"><strong>-</strong></div>
 
-          <div class="muted small" style="margin-top:10px;">Offset</div>
+          <div class="muted small" style="margin-top:10px;">${escapeHtml(t("live.offset"))}</div>
           <div id="centsOffset" style="font-size:1.3rem;"><strong>-</strong></div>
         </div>
       </div>
     </div>
 
     <div class="row" style="margin-top: 10px;">
-      <button id="selectAll">Select all</button>
-      <button id="selectNone">Select none</button>
+      <button id="selectAll">${escapeHtml(t("selection.selectAll"))}</button>
+      <button id="selectNone">${escapeHtml(t("selection.selectNone"))}</button>
       <span class="muted small" id="selectedCount"></span>
     </div>
 
@@ -655,7 +773,7 @@ function renderMaqamPage(maqamKeyRaw) {
   }
 
   function updateSelectedCount() {
-    selectedCount.textContent = `${getSelectedIndexes().length} selected`;
+    selectedCount.textContent = t("selection.selectedCount", { count: getSelectedIndexes().length });
   }
 
   function getNoteDurationMs() {
@@ -679,7 +797,7 @@ function renderMaqamPage(maqamKeyRaw) {
   }
 
   function setPauseButtonState(paused) {
-    const label = paused ? "Resume" : "Pause";
+    const label = paused ? t("controls.resume") : t("controls.pause");
     if (btnPause) btnPause.textContent = label;
     if (btnPauseMobile) btnPauseMobile.textContent = label;
   }
@@ -696,7 +814,7 @@ function renderMaqamPage(maqamKeyRaw) {
       const isOpen = controlsPanel.style.display !== "none";
       controlsPanel.style.display = isOpen ? "none" : "block";
       miniControls.style.display = isOpen ? "flex" : "none";
-      toggleControls.textContent = isOpen ? "▼" : "▲";
+      toggleControls.textContent = isOpen ? "v" : "^";
     };
   }
 
@@ -919,9 +1037,10 @@ function renderMaqamPage(maqamKeyRaw) {
 
     const rounded = Math.round(cents);
     const sign = rounded > 0 ? "+" : ""; // negative already has '-'
-    const label = rounded === 0 ? "(in tune)" : rounded > 0 ? "(sharp)" : "(flat)";
+    const label =
+      rounded === 0 ? t("live.inTune") : rounded > 0 ? t("live.sharp") : t("live.flat");
 
-    centsOffsetEl.innerHTML = `<strong>${sign}${rounded} cents</strong> <span class="muted small">${label}</span>`;
+    centsOffsetEl.innerHTML = `<strong>${sign}${rounded} cents</strong> <span class="muted small">${escapeHtml(label)}</span>`;
   }
 
   async function enableMic() {
@@ -970,7 +1089,7 @@ function renderMaqamPage(maqamKeyRaw) {
 
       const selected = getSelectedNotes();
       if (selected.length === 0) {
-        lastPitch = { detectedHz: hz, noteName: "(no notes selected)", targetHz: hz, cents: 0 };
+        lastPitch = { detectedHz: hz, noteName: t("live.noNotesSelected"), targetHz: hz, cents: 0 };
         lastPitchAt = now;
         setPitchUI(lastPitch);
         pitchRaf = requestAnimationFrame(tick);
@@ -1014,7 +1133,7 @@ function renderMaqamPage(maqamKeyRaw) {
   btnEnableMic.onclick = () =>
     enableMic().catch((e) => {
       console.error(e);
-      alert(`Mic failed: ${e.message}`);
+      alert(t("errors.micFailed", { error: e.message }));
     });
 
   btnDisableMic.onclick = () => disableMic();
@@ -1023,7 +1142,7 @@ function renderMaqamPage(maqamKeyRaw) {
     toggleMicPanel.onclick = () => {
       const isOpen = micPanel.style.display !== "none";
       micPanel.style.display = isOpen ? "none" : "block";
-      toggleMicPanel.textContent = isOpen ? "Show" : "Hide";
+      toggleMicPanel.textContent = isOpen ? t("common.show") : t("common.hide");
     };
   }
 
@@ -1033,6 +1152,12 @@ function renderMaqamPage(maqamKeyRaw) {
 
 function render() {
   const route = parseRoute();
+  const nextLang = route.lang || "en";
+  if (nextLang !== currentLang) {
+    currentLang = nextLang;
+    localStorage.setItem("lang", currentLang);
+    applyLang();
+  }
   if (route.page === "list") return renderListPage();
   if (route.page === "maqam") return renderMaqamPage(normalizeKey(route.maqam));
   renderListPage();
@@ -1040,7 +1165,10 @@ function render() {
 
 async function boot() {
   try {
-    maqamsData = await loadData();
+    [maqamsData, translations] = await Promise.all([loadData(), loadTranslations()]);
+    currentLang = getStoredLang() || "en";
+    applyLang();
+    setAudioStatusByKey("audio.notStarted");
     window.addEventListener("hashchange", render);
     window.addEventListener("scroll", updateHeaderCompact, { passive: true });
     render();
@@ -1048,10 +1176,10 @@ async function boot() {
   } catch (err) {
     appEl.innerHTML = `
       <div class="card danger">
-        <strong>Failed to load data</strong>
+        <strong>${escapeHtml(t("errors.loadFailed"))}</strong>
         <div class="muted small" style="margin-top:6px;">${escapeHtml(err.message)}</div>
         <div class="muted small" style="margin-top:6px;">
-          Run a local server (not file://). Example: <code>python3 -m http.server 8080</code>
+          ${escapeHtml(t("errors.runServer"))} <code>python3 -m http.server 8080</code>
         </div>
       </div>
     `;

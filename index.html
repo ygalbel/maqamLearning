@@ -54,6 +54,16 @@
     .titleGroup { display:flex; align-items:baseline; gap:8px; flex-wrap:wrap; }
     .compactHeader .headerTagline { display: none; }
     .compactHeader #headerMaqam { font-size: 1.05rem; font-weight: 700; }
+    .langSwitch { display:flex; gap:6px; align-items:center; }
+    .langSwitch a {
+      font-size: 0.8rem;
+      padding: 2px 6px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      color: var(--muted);
+      text-decoration: none;
+    }
+    .langSwitch a.active { color: var(--ink); border-color: var(--gold); background: var(--accent-soft); }
     .siteFooter {
       position: sticky;
       bottom: 0;
@@ -68,6 +78,13 @@
       z-index: 4;
     }
     .siteFooter a { color: var(--accent); text-decoration: none; }
+
+    html[dir="rtl"] body { direction: rtl; }
+    html[dir="rtl"] .row { flex-direction: row-reverse; }
+    html[dir="rtl"] .titleGroup { flex-direction: row-reverse; }
+    html[dir="rtl"] .langSwitch { flex-direction: row-reverse; }
+    html[dir="rtl"] .card,
+    html[dir="rtl"] .notePad { text-align: right; }
     header strong {
       font-family: "Gloock", "Amiri", serif;
       letter-spacing: 0.4px;
@@ -234,10 +251,15 @@
 <body>
   <header id="siteHeader">
     <div class="titleGroup">
-      <a href="#/"><strong>Maqam Notes Player</strong></a>
+      <a href="#/" id="headerTitle"><strong>Maqam Notes Player</strong></a>
       <span class="muted small" id="headerMaqam"></span>
     </div>
-    <span class="muted headerTagline">Pick a maqam → choose notes → play with tempo/repeat</span>
+    <span class="muted headerTagline" id="headerTagline">Pick a maqam → choose notes → play with tempo/repeat</span>
+    <div class="langSwitch" id="langSwitch">
+      <a href="#/" data-lang="en">EN</a>
+      <a href="#/he" data-lang="he">HE</a>
+      <a href="#/ar" data-lang="ar">AR</a>
+    </div>
     <span class="spacer"></span>
     <span class="muted small" id="audioStatus">Audio: not started</span>
   </header>
