@@ -361,7 +361,7 @@
   },
   "ushaq masri": {
     "tonic": "D",
-    "lower_jins": "Nahwand",
+    "lower_jins": "Nahawand",
     "upper_jins": "Bayati on A",
     "scale": [
       {
@@ -1001,7 +1001,7 @@
   "farahfaza": {
     "tonic": "G",
     "lower_jins": "Nahawand",
-    "upper_jins": "Nahwand on C",
+    "upper_jins": "Nahawand on C",
     "scale": [
       {
         "note": "G3",
