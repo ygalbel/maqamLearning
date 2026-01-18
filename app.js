@@ -139,6 +139,47 @@ function updateHeaderCompact() {
   siteHeaderEl.classList.toggle("compactHeader", compact);
 }
 
+function updateNotesScale() {
+  if (!document.body.classList.contains("pageMaqam")) return;
+  if (window.innerWidth > 720) {
+    const notesEl = appEl && appEl.querySelector(".notes");
+    if (notesEl) notesEl.style.setProperty("--noteScale", "1");
+    return;
+  }
+
+  const notesEl = appEl && appEl.querySelector(".notes");
+  if (!notesEl) return;
+
+  notesEl.style.setProperty("--noteScale", "1");
+
+  requestAnimationFrame(() => {
+    const notePad = notesEl.querySelector(".notePad");
+    if (!notePad) return;
+
+    const notesRect = notesEl.getBoundingClientRect();
+    const padRect = notePad.getBoundingClientRect();
+    const styles = getComputedStyle(notesEl);
+    const gap = parseFloat(styles.rowGap || styles.gap || "0");
+    const count = notesEl.querySelectorAll(".notePad").length;
+
+    const minCol = 150;
+    const cols1 = Math.max(1, Math.floor(notesRect.width / minCol));
+    const rows1 = Math.ceil(count / cols1);
+    const total1 = rows1 * padRect.height + Math.max(0, rows1 - 1) * gap;
+
+    const available = window.innerHeight - notesRect.top - 16;
+    if (available <= 0 || total1 <= 0) return;
+
+    const scale1 = Math.max(0.55, Math.min(1, available / total1));
+    const cols2 = Math.max(1, Math.floor(notesRect.width / (minCol * scale1)));
+    const rows2 = Math.ceil(count / cols2);
+    const total2 = rows2 * padRect.height * scale1 + Math.max(0, rows2 - 1) * gap * scale1;
+    const scale2 = Math.max(0.55, Math.min(1, available / total2));
+
+    notesEl.style.setProperty("--noteScale", scale2.toFixed(3));
+  });
+}
+
 async function loadData() {
   const res = await fetch(DATA_URL, { cache: "no-store" });
   if (!res.ok) throw new Error(`Failed to load ${DATA_URL}: ${res.status}`);
@@ -822,6 +863,7 @@ function renderMaqamPage(maqamKeyRaw) {
       controlsPanel.style.display = isOpen ? "none" : "block";
       miniControls.style.display = isOpen ? "flex" : "none";
       toggleControls.textContent = isOpen ? "v" : "^";
+      updateNotesScale();
     };
   }
 
@@ -893,6 +935,7 @@ function renderMaqamPage(maqamKeyRaw) {
   });
 
   updateSelectedCount();
+  updateNotesScale();
 
   btnPlaySelected.onclick = async () => {
     if (isPlayingSequence) return;
@@ -1181,6 +1224,7 @@ async function boot() {
     setAudioStatusByKey("audio.notStarted");
     window.addEventListener("hashchange", render);
     window.addEventListener("scroll", updateHeaderCompact, { passive: true });
+    window.addEventListener("resize", updateNotesScale, { passive: true });
     render();
     updateHeaderCompact();
   } catch (err) {

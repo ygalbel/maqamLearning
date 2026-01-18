@@ -256,11 +256,25 @@
 
       .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 
-      .notes { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
+      .notes {
+        --noteScale: 1;
+        grid-template-columns: repeat(auto-fit, minmax(calc(150px * var(--noteScale)), 1fr));
+        gap: calc(10px * var(--noteScale));
+      }
       .noteItem { flex-direction: column; align-items: stretch; }
-      .notePad { padding: 22px; font-size: 1.25rem; text-align: center; align-items: center; }
+      .notePad {
+        padding: calc(22px * var(--noteScale));
+        font-size: calc(1.25rem * var(--noteScale));
+        text-align: center;
+        align-items: center;
+      }
       .notePad .noteTitle { text-align: center; width: 100%; }
-      .notePad .noteMeta { display: flex; justify-content: center; width: 100%; font-size: 1.4rem; }
+      .notePad .noteMeta {
+        display: flex;
+        justify-content: center;
+        width: 100%;
+        font-size: calc(1.4rem * var(--noteScale));
+      }
 
       .mobileBar {
         display: flex;
