@@ -287,20 +287,15 @@ function renderMaqamPage(maqamKeyRaw) {
 
   const noteRows = data
     .map((n, idx) => {
-      const id = `n_${idx}`;
       const note = n?.note ?? "";
       const freq = Number(n?.frequency);
       const freqText = Number.isFinite(freq) ? `${freq.toFixed(2)} Hz` : "—";
       return `
         <div class="noteItem">
-          <div class="noteLeft">
-            <input type="checkbox" id="${id}" data-idx="${idx}" checked />
-            <label for="${id}">
-              <strong>[${idx}]</strong> ${escapeHtml(note)}
-              <span class="pill">${escapeHtml(freqText)}</span>
-            </label>
-          </div>
-          <button class="playOne" data-idx="${idx}">Play</button>
+          <button class="notePad selected" data-idx="${idx}" aria-pressed="true">
+            <div class="noteTitle"><strong>[${idx}]</strong> ${escapeHtml(note)}</div>
+            <div class="noteMeta"><span class="pill">${escapeHtml(freqText)}</span></div>
+          </button>
         </div>
       `;
     })
@@ -345,6 +340,12 @@ function renderMaqamPage(maqamKeyRaw) {
       </label>
     </div>
 
+    <div class="mobileBar">
+      <button id="btnPlaySelectedMobile">Play Selected</button>
+      <button id="btnStartLoopMobile">Loop</button>
+      <button id="btnStopLoopMobile" disabled>Stop</button>
+    </div>
+
     <div class="card" style="margin-top:12px;">
       <div class="row" style="align-items:center;">
         <strong>Live Pitch</strong>
@@ -382,6 +383,9 @@ function renderMaqamPage(maqamKeyRaw) {
   const btnPlaySelected = document.getElementById("btnPlaySelected");
   const btnStartLoop = document.getElementById("btnStartLoop");
   const btnStopLoop = document.getElementById("btnStopLoop");
+  const btnPlaySelectedMobile = document.getElementById("btnPlaySelectedMobile");
+  const btnStartLoopMobile = document.getElementById("btnStartLoopMobile");
+  const btnStopLoopMobile = document.getElementById("btnStopLoopMobile");
   const tempo = document.getElementById("tempo");
   const tempoLabel = document.getElementById("tempoLabel");
   const repeat = document.getElementById("repeat");
@@ -398,10 +402,27 @@ function renderMaqamPage(maqamKeyRaw) {
   const nearestNoteEl = document.getElementById("nearestNote");
   const centsOffsetEl = document.getElementById("centsOffset");
 
+  const playButtonsByIdx = new Map();
+  appEl.querySelectorAll(".notePad").forEach((btn) => {
+    const idx = Number(btn.getAttribute("data-idx"));
+    if (Number.isFinite(idx)) playButtonsByIdx.set(idx, btn);
+  });
+
+  let activeLoopBtn = null;
+  function setActiveLoopIndex(idx) {
+    if (activeLoopBtn) activeLoopBtn.classList.remove("active");
+    activeLoopBtn = null;
+
+    if (!Number.isFinite(idx)) return;
+    const btn = playButtonsByIdx.get(idx);
+    if (!btn) return;
+    btn.classList.add("active");
+    activeLoopBtn = btn;
+  }
+
   function getSelectedIndexes() {
-    const checks = [...appEl.querySelectorAll('input[type="checkbox"][data-idx]')];
-    return checks
-      .filter((c) => c.checked)
+    const pads = [...appEl.querySelectorAll(".notePad.selected")];
+    return pads
       .map((c) => Number(c.getAttribute("data-idx")))
       .filter((n) => Number.isFinite(n))
       .sort((a, b) => a - b);
@@ -424,6 +445,13 @@ function renderMaqamPage(maqamKeyRaw) {
       .map((n) => ({ note: n.note, frequency: Number(n.frequency) }));
   }
 
+  function setLoopButtonState(isRunning) {
+    btnStopLoop.disabled = !isRunning;
+    btnStartLoop.disabled = isRunning;
+    btnStopLoopMobile.disabled = !isRunning;
+    btnStartLoopMobile.disabled = isRunning;
+  }
+
   // --- Playback controls ---
   btnInitAudio.onclick = () => ensureAudio();
 
@@ -437,27 +465,33 @@ function renderMaqamPage(maqamKeyRaw) {
   };
 
   selectAll.onclick = () => {
-    [...appEl.querySelectorAll('input[type="checkbox"][data-idx]')].forEach((c) => (c.checked = true));
+    [...appEl.querySelectorAll(".notePad")].forEach((btn) => {
+      btn.classList.add("selected");
+      btn.setAttribute("aria-pressed", "true");
+    });
     updateSelectedCount();
   };
 
   selectNone.onclick = () => {
-    [...appEl.querySelectorAll('input[type="checkbox"][data-idx]')].forEach((c) => (c.checked = false));
+    [...appEl.querySelectorAll(".notePad")].forEach((btn) => {
+      btn.classList.remove("selected");
+      btn.setAttribute("aria-pressed", "false");
+    });
     updateSelectedCount();
   };
 
-  appEl.querySelectorAll(".playOne").forEach((btn) => {
+  appEl.querySelectorAll(".notePad").forEach((btn) => {
     btn.addEventListener("click", () => {
       const idx = Number(btn.getAttribute("data-idx"));
       const note = data[idx];
       if (!note || !Number.isFinite(Number(note.frequency))) return;
+      const isSelected = btn.classList.toggle("selected");
+      btn.setAttribute("aria-pressed", isSelected ? "true" : "false");
+      updateSelectedCount();
       playTone(Number(note.frequency), getNoteDurationMs());
     });
   });
 
-  appEl.querySelectorAll('input[type="checkbox"][data-idx]').forEach((c) => {
-    c.addEventListener("change", updateSelectedCount);
-  });
   updateSelectedCount();
 
   btnPlaySelected.onclick = async () => {
@@ -476,6 +510,7 @@ function renderMaqamPage(maqamKeyRaw) {
       await sleep(intervalMs);
     }
   };
+  btnPlaySelectedMobile.onclick = () => btnPlaySelected.click();
 
   function restartLoopTimer() {
     if (!isLooping) return;
@@ -487,12 +522,17 @@ function renderMaqamPage(maqamKeyRaw) {
 
   function loopTick() {
     const idxs = getSelectedIndexes();
-    if (idxs.length === 0) return;
+    if (idxs.length === 0) {
+      setActiveLoopIndex(null);
+      return;
+    }
 
     const dur = getNoteDurationMs();
     const i = currentLoopStep % idxs.length;
     const noteIdx = idxs[i];
     const note = data[noteIdx];
+
+    setActiveLoopIndex(noteIdx);
 
     if (note && Number.isFinite(Number(note.frequency))) {
       playTone(Number(note.frequency), dur);
@@ -502,8 +542,8 @@ function renderMaqamPage(maqamKeyRaw) {
 
     if (!repeat.checked && currentLoopStep >= idxs.length) {
       stopLoop();
-      btnStopLoop.disabled = true;
-      btnStartLoop.disabled = false;
+      setLoopButtonState(false);
+      setActiveLoopIndex(null);
     }
   }
 
@@ -517,18 +557,19 @@ function renderMaqamPage(maqamKeyRaw) {
     isLooping = true;
     currentLoopStep = 0;
 
-    btnStopLoop.disabled = false;
-    btnStartLoop.disabled = true;
+    setLoopButtonState(true);
 
     loopTick();
     restartLoopTimer();
   };
+  btnStartLoopMobile.onclick = () => btnStartLoop.click();
 
   btnStopLoop.onclick = () => {
     stopLoop();
-    btnStopLoop.disabled = true;
-    btnStartLoop.disabled = false;
+    setLoopButtonState(false);
+    setActiveLoopIndex(null);
   };
+  btnStopLoopMobile.onclick = () => btnStopLoop.click();
 
   // --- Live pitch UI ---
   function setPitchUI({ detectedHz, noteName, targetHz, cents }) {

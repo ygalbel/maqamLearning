@@ -19,12 +19,56 @@
     button:disabled { opacity: 0.5; cursor:not-allowed; }
     input[type="range"] { width: 220px; }
     .notes { display:grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px; margin-top: 12px; }
-    .noteItem { border: 1px solid #eee; border-radius: 10px; padding: 10px; display:flex; justify-content:space-between; gap:10px; align-items:center; }
-    .noteLeft { display:flex; gap:10px; align-items:center; }
+    .noteItem { display:flex; }
+    .notePad {
+      width: 100%;
+      text-align: left;
+      border-radius: 12px;
+      border: 1px solid #e6e6e6;
+      background: #fbfbfb;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+    }
+    .notePad .noteTitle { font-size: 1rem; }
+    .notePad .noteMeta { font-size: 0.9rem; color: #666; }
+    .notePad.selected { background: #e6f3ff; border-color: #6fb1ff; }
+    .notePad.active { box-shadow: 0 0 0 3px #ffe3a3 inset; border-color: #f0b24a; }
     .pill { font-size: 0.85rem; padding: 2px 8px; border-radius: 999px; background:#f3f3f3; border:1px solid #e6e6e6; }
     .danger { border-color:#f2c2c2; background:#fff6f6; }
     .small { font-size: 0.9rem; }
     .spacer { flex: 1; }
+    .mobileBar { display: none; }
+
+    @media (max-width: 720px) {
+      header { flex-wrap: wrap; gap: 8px; }
+      header .spacer { display: none; }
+      main { padding: 12px; }
+      .controls { flex-direction: column; align-items: stretch; }
+      .controls button { width: 100%; padding: 12px 14px; font-size: 1rem; }
+      .controls input[type="range"] { width: 100%; }
+
+      .notes { grid-template-columns: 1fr; }
+      .noteItem { flex-direction: column; align-items: stretch; }
+      .notePad { padding: 16px; font-size: 1.05rem; }
+
+      .mobileBar {
+        display: flex;
+        position: sticky;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        gap: 10px;
+        padding: 10px;
+        margin: 12px -12px -12px;
+        background: rgba(255, 255, 255, 0.95);
+        border-top: 1px solid #ddd;
+        backdrop-filter: blur(6px);
+        z-index: 10;
+      }
+      .mobileBar button { flex: 1; padding: 12px 14px; font-size: 1rem; }
+    }
   </style>
 </head>
 <body>
