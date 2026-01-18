@@ -15,6 +15,7 @@
 const DATA_URL = "./maqam-compact.json";
 const I18N_URL = "./i18n.json";
 const SUPPORTED_LANGS = ["en", "he", "ar"];
+const MIC_ENABLED = false;
 
 let maqamsData = null;
 let translations = null;
@@ -661,6 +662,7 @@ function renderMaqamPage(maqamKeyRaw) {
       <button id="btnPauseMobile" disabled>${escapeHtml(t("controls.pause"))}</button>
     </div>
 
+    ${MIC_ENABLED ? `
     <div class="card" style="margin-top:12px;">
       <div class="row" style="align-items:center; justify-content:space-between;">
         <div>
@@ -688,12 +690,15 @@ function renderMaqamPage(maqamKeyRaw) {
         </div>
       </div>
     </div>
+    ` : ""}
 
     <div class="row" style="margin-top: 10px;">
       <button id="selectAll">${escapeHtml(t("selection.selectAll"))}</button>
       <button id="selectNone">${escapeHtml(t("selection.selectNone"))}</button>
       <span class="muted small" id="selectedCount"></span>
     </div>
+
+    <div class="muted small" style="margin-top:8px;">${escapeHtml(t("notes.toggleHint"))}</div>
 
     <div class="notes">${noteRows}</div>
   `;
@@ -728,13 +733,13 @@ function renderMaqamPage(maqamKeyRaw) {
   const selectNone = document.getElementById("selectNone");
 
   // --- DOM refs (mic/pitch) ---
-  const toggleMicPanel = document.getElementById("toggleMicPanel");
-  const micPanel = document.getElementById("micPanel");
-  const btnEnableMic = document.getElementById("btnEnableMic");
-  const btnDisableMic = document.getElementById("btnDisableMic");
-  const detectedHzEl = document.getElementById("detectedHz");
-  const nearestNoteEl = document.getElementById("nearestNote");
-  const centsOffsetEl = document.getElementById("centsOffset");
+  const toggleMicPanel = MIC_ENABLED ? document.getElementById("toggleMicPanel") : null;
+  const micPanel = MIC_ENABLED ? document.getElementById("micPanel") : null;
+  const btnEnableMic = MIC_ENABLED ? document.getElementById("btnEnableMic") : null;
+  const btnDisableMic = MIC_ENABLED ? document.getElementById("btnDisableMic") : null;
+  const detectedHzEl = MIC_ENABLED ? document.getElementById("detectedHz") : null;
+  const nearestNoteEl = MIC_ENABLED ? document.getElementById("nearestNote") : null;
+  const centsOffsetEl = MIC_ENABLED ? document.getElementById("centsOffset") : null;
 
   const playButtonsByIdx = new Map();
   appEl.querySelectorAll(".notePad").forEach((btn) => {
@@ -1023,7 +1028,8 @@ function renderMaqamPage(maqamKeyRaw) {
 
   // --- Live pitch UI ---
   function setPitchUI({ detectedHz, noteName, targetHz, cents }) {
-    detectedHzEl.innerHTML = detectedHz ? `<strong>${detectedHz.toFixed(2)} Hz</strong>` : `<strong>—</strong>`;
+    if (!MIC_ENABLED) return;
+    detectedHzEl.innerHTML = detectedHz ? `<strong>${detectedHz.toFixed(2)} Hz</strong>` : `<strong>-</strong>`;
 
     if (!noteName) {
       nearestNoteEl.innerHTML = `<strong>—</strong>`;
@@ -1130,24 +1136,26 @@ function renderMaqamPage(maqamKeyRaw) {
     setPitchUI({ detectedHz: null, noteName: null, targetHz: null, cents: 0 });
   }
 
-  btnEnableMic.onclick = () =>
-    enableMic().catch((e) => {
-      console.error(e);
-      alert(t("errors.micFailed", { error: e.message }));
-    });
+  if (MIC_ENABLED) {
+    btnEnableMic.onclick = () =>
+      enableMic().catch((e) => {
+        console.error(e);
+        alert(t("errors.micFailed", { error: e.message }));
+      });
 
-  btnDisableMic.onclick = () => disableMic();
+    btnDisableMic.onclick = () => disableMic();
 
-  if (toggleMicPanel && micPanel) {
-    toggleMicPanel.onclick = () => {
-      const isOpen = micPanel.style.display !== "none";
-      micPanel.style.display = isOpen ? "none" : "block";
-      toggleMicPanel.textContent = isOpen ? t("common.show") : t("common.hide");
-    };
+    if (toggleMicPanel && micPanel) {
+      toggleMicPanel.onclick = () => {
+        const isOpen = micPanel.style.display !== "none";
+        micPanel.style.display = isOpen ? "none" : "block";
+        toggleMicPanel.textContent = isOpen ? t("common.show") : t("common.hide");
+      };
+    }
+
+    // Stop mic if user navigates away
+    window.addEventListener("hashchange", disableMic, { once: true });
   }
-
-  // Stop mic if user navigates away
-  window.addEventListener("hashchange", disableMic, { once: true });
 }
 
 function render() {
