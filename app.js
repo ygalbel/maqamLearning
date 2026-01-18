@@ -32,6 +32,12 @@ let analyser = null;
 let micData = null;
 let pitchRaf = null;
 
+let listSort = "alpha";
+let listSortDir = "asc";
+let listQuery = "";
+let listSearchSelStart = 0;
+let listSearchSelEnd = 0;
+
 const appEl = document.getElementById("app");
 const audioStatusEl = document.getElementById("audioStatus");
 
@@ -225,13 +231,45 @@ function autoCorrelate(buffer, sampleRate) {
 // UI rendering
 // --------------------
 
-function renderListPage() {
+function renderListPage(keepSearchFocus = false) {
   stopLoop();
   stopMic();
 
-  const keys = Object.keys(maqamsData).sort((a, b) => a.localeCompare(b));
+  const keys = Object.keys(maqamsData);
 
-  const cards = keys
+  const query = listQuery.trim().toLowerCase();
+  const filteredKeys = query
+    ? keys.filter((k) => {
+        const obj = maqamsData[k] || {};
+        const haystack = [
+          k,
+          obj.tonic || "",
+          obj.lower_jins || "",
+          obj.upper_jins || ""
+        ]
+          .join(" ")
+          .toLowerCase();
+        return haystack.includes(query);
+      })
+    : keys;
+
+  function getSortValue(key) {
+    const obj = maqamsData[key] || {};
+    if (listSort === "tonic") return String(obj.tonic || "");
+    if (listSort === "lower") return String(obj.lower_jins || "");
+    return String(key);
+  }
+
+  filteredKeys.sort((a, b) => {
+    const av = getSortValue(a);
+    const bv = getSortValue(b);
+    const primary = av.localeCompare(bv);
+    const dir = listSortDir === "desc" ? -1 : 1;
+    if (primary !== 0) return primary * dir;
+    return String(a).localeCompare(String(b)) * dir;
+  });
+
+  const cards = filteredKeys
     .map((k) => {
       const obj = maqamsData[k] || {};
       const scale = Array.isArray(obj.scale) ? obj.scale : [];
@@ -256,11 +294,68 @@ function renderListPage() {
     .join("");
 
   appEl.innerHTML = `
-    <div class="row" style="margin-bottom:12px;">
-      <div class="muted">Loaded ${keys.length} maqams.</div>
+    <div class="row" style="margin-bottom:8px;">
+      <label class="row" style="gap:8px;">
+        <span class="pill">Search</span>
+        <input id="listSearch" type="search" placeholder="Maqam, tonic, jins" value="${escapeHtml(listQuery)}" />
+      </label>
+      <span class="spacer"></span>
+      <label class="row" style="gap:8px;">
+        <span class="pill">Order</span>
+        <select id="listSort">
+          <option value="alpha">Alphabet</option>
+          <option value="tonic">Tonic</option>
+          <option value="lower">Lower jins</option>
+        </select>
+      </label>
+      <label class="row" style="gap:8px;">
+        <span class="pill">Direction</span>
+        <select id="listSortDir">
+          <option value="asc">Up</option>
+          <option value="desc">Down</option>
+        </select>
+      </label>
     </div>
+    <div class="muted small" style="margin-bottom:12px;">Showing ${filteredKeys.length} of ${keys.length} maqams.</div>
     <div class="grid">${cards}</div>
   `;
+
+  const listSortEl = document.getElementById("listSort");
+  if (listSortEl) {
+    listSortEl.value = listSort;
+    listSortEl.onchange = () => {
+      listSort = listSortEl.value;
+      renderListPage();
+    };
+  }
+
+  const listSortDirEl = document.getElementById("listSortDir");
+  if (listSortDirEl) {
+    listSortDirEl.value = listSortDir;
+    listSortDirEl.onchange = () => {
+      listSortDir = listSortDirEl.value;
+      renderListPage();
+    };
+  }
+
+  const listSearchEl = document.getElementById("listSearch");
+  if (listSearchEl) {
+    listSearchEl.oninput = () => {
+      listQuery = listSearchEl.value;
+      listSearchSelStart = listSearchEl.selectionStart ?? listQuery.length;
+      listSearchSelEnd = listSearchEl.selectionEnd ?? listQuery.length;
+      renderListPage(true);
+    };
+
+    if (keepSearchFocus) {
+      const safeEnd = Math.min(listSearchSelEnd, listSearchEl.value.length);
+      const safeStart = Math.min(listSearchSelStart, safeEnd);
+      listSearchEl.focus();
+      try {
+        listSearchEl.setSelectionRange(safeStart, safeEnd);
+      } catch {}
+    }
+  }
 }
 
 function renderMaqamPage(maqamKeyRaw) {
@@ -315,38 +410,66 @@ function renderMaqamPage(maqamKeyRaw) {
     </div>
 
     <div class="controls">
-      <button id="btnInitAudio">Enable Audio</button>
+      <div class="row controlsHeader" style="align-items:center; justify-content:space-between; width:100%;">
+        <div>
+          <strong>Playback Controls</strong>
+          <span class="muted small">(tempo, loop, selection)</span>
+        </div>
+        <button id="toggleControls" class="miniToggle" aria-label="Toggle controls">▼</button>
+      </div>
 
-      <button id="btnPlaySelected">Play Selected (Once)</button>
+      <div id="miniControls" class="row miniControls" style="margin-top:8px; width:100%;">
+        <label class="row miniGroup" style="gap:6px;">
+          <span class="pill">Tempo</span>
+          <button id="tempoDown" class="miniBtn" aria-label="Decrease tempo">-</button>
+          <span id="tempoMiniValue"><strong>120</strong> BPM</span>
+          <button id="tempoUp" class="miniBtn" aria-label="Increase tempo">+</button>
+        </label>
 
-      <button id="btnStartLoop">Start Loop</button>
-      <button id="btnStopLoop" disabled>Stop</button>
+        <label class="row miniGroup" style="gap:6px;">
+          <span class="pill">Length</span>
+          <button id="noteLenDown" class="miniBtn" aria-label="Decrease note length">-</button>
+          <span id="noteLenMiniValue"><strong>220</strong> ms</span>
+          <button id="noteLenUp" class="miniBtn" aria-label="Increase note length">+</button>
+        </label>
+      </div>
 
-      <label class="row" style="gap:8px;">
-        <span class="pill">Tempo</span>
-        <input id="tempo" type="range" min="30" max="240" value="120" />
-        <span id="tempoLabel"><strong>120</strong> BPM</span>
-      </label>
+      <div id="controlsPanel" style="display:none; width:100%;">
+        <div class="row" style="margin-top:8px;">
+          <button id="btnInitAudio">Enable Audio</button>
+          <button id="btnPlaySelected">Play Selected (Once)</button>
+          <button id="btnStartLoop">Start Loop</button>
+          <button id="btnStopLoop" disabled>Stop</button>
+        </div>
 
-      <label class="row" style="gap:8px;">
-        <input id="repeat" type="checkbox" checked />
-        <span class="pill">Repeat</span>
-      </label>
+        <div class="row" style="margin-top:8px;">
+          <label class="row" style="gap:8px;">
+            <span class="pill">Tempo</span>
+            <input id="tempo" type="range" min="30" max="240" value="120" />
+            <span id="tempoLabel"><strong>120</strong> BPM</span>
+          </label>
 
-      <label class="row" style="gap:8px;">
-        <span class="pill">Note length</span>
-        <input id="noteLen" type="range" min="80" max="1200" value="220" />
-        <span id="noteLenLabel"><strong>220</strong> ms</span>
-      </label>
+          <label class="row" style="gap:8px;">
+            <span class="pill">Note length</span>
+            <input id="noteLen" type="range" min="80" max="1200" value="220" />
+            <span id="noteLenLabel"><strong>220</strong> ms</span>
+          </label>
 
-      <label class="row" style="gap:8px;">
-        <span class="pill">Loop order</span>
-        <select id="loopOrder">
-          <option value="upDown" selected>Up then down</option>
-          <option value="up">Up only</option>
-          <option value="down">Down only</option>
-        </select>
-      </label>
+          <label class="row" style="gap:8px;">
+            <input id="repeat" type="checkbox" checked />
+            <span class="pill">Repeat</span>
+          </label>
+
+          <label class="row" style="gap:8px;">
+            <span class="pill">Loop order</span>
+            <select id="loopOrder">
+              <option value="upDown" selected>Up then down</option>
+              <option value="up">Up only</option>
+              <option value="down">Down only</option>
+            </select>
+          </label>
+        </div>
+      </div>
     </div>
 
     <div class="mobileBar">
@@ -356,25 +479,30 @@ function renderMaqamPage(maqamKeyRaw) {
     </div>
 
     <div class="card" style="margin-top:12px;">
-      <div class="row" style="align-items:center;">
-        <strong>Live Pitch</strong>
-        <span class="muted small">(sing or play a note)</span>
+      <div class="row" style="align-items:center; justify-content:space-between;">
+        <div>
+          <strong>Live Pitch</strong>
+          <span class="muted small">(sing or play a note)</span>
+        </div>
+        <button id="toggleMicPanel" class="small">Show</button>
       </div>
 
-      <div class="row" style="margin-top:10px;">
-        <button id="btnEnableMic">Enable Mic</button>
-        <button id="btnDisableMic" disabled>Disable Mic</button>
-      </div>
+      <div id="micPanel" style="display:none; margin-top:10px;">
+        <div class="row" style="margin-top:6px;">
+          <button id="btnEnableMic">Enable Mic</button>
+          <button id="btnDisableMic" disabled>Disable Mic</button>
+        </div>
 
-      <div style="margin-top:10px;">
-        <div class="muted small">Detected</div>
-        <div id="detectedHz" style="font-size:1.3rem;"><strong>—</strong></div>
+        <div style="margin-top:10px;">
+          <div class="muted small">Detected</div>
+          <div id="detectedHz" style="font-size:1.3rem;"><strong>-</strong></div>
 
-        <div class="muted small" style="margin-top:10px;">Nearest selected note</div>
-        <div id="nearestNote" style="font-size:1.3rem;"><strong>—</strong></div>
+          <div class="muted small" style="margin-top:10px;">Nearest selected note</div>
+          <div id="nearestNote" style="font-size:1.3rem;"><strong>-</strong></div>
 
-        <div class="muted small" style="margin-top:10px;">Offset</div>
-        <div id="centsOffset" style="font-size:1.3rem;"><strong>—</strong></div>
+          <div class="muted small" style="margin-top:10px;">Offset</div>
+          <div id="centsOffset" style="font-size:1.3rem;"><strong>-</strong></div>
+        </div>
       </div>
     </div>
 
@@ -388,6 +516,15 @@ function renderMaqamPage(maqamKeyRaw) {
   `;
 
   // --- DOM refs (playback) ---
+  const toggleControls = document.getElementById("toggleControls");
+  const controlsPanel = document.getElementById("controlsPanel");
+  const miniControls = document.getElementById("miniControls");
+  const tempoDown = document.getElementById("tempoDown");
+  const tempoUp = document.getElementById("tempoUp");
+  const noteLenDown = document.getElementById("noteLenDown");
+  const noteLenUp = document.getElementById("noteLenUp");
+  const tempoMiniValue = document.getElementById("tempoMiniValue");
+  const noteLenMiniValue = document.getElementById("noteLenMiniValue");
   const btnInitAudio = document.getElementById("btnInitAudio");
   const btnPlaySelected = document.getElementById("btnPlaySelected");
   const btnStartLoop = document.getElementById("btnStartLoop");
@@ -406,6 +543,8 @@ function renderMaqamPage(maqamKeyRaw) {
   const selectNone = document.getElementById("selectNone");
 
   // --- DOM refs (mic/pitch) ---
+  const toggleMicPanel = document.getElementById("toggleMicPanel");
+  const micPanel = document.getElementById("micPanel");
   const btnEnableMic = document.getElementById("btnEnableMic");
   const btnDisableMic = document.getElementById("btnDisableMic");
   const detectedHzEl = document.getElementById("detectedHz");
@@ -473,16 +612,44 @@ function renderMaqamPage(maqamKeyRaw) {
   }
 
   // --- Playback controls ---
+  if (toggleControls && controlsPanel && miniControls) {
+    toggleControls.onclick = () => {
+      const isOpen = controlsPanel.style.display !== "none";
+      controlsPanel.style.display = isOpen ? "none" : "block";
+      miniControls.style.display = isOpen ? "flex" : "none";
+      toggleControls.textContent = isOpen ? "▼" : "▲";
+    };
+  }
+
   btnInitAudio.onclick = () => ensureAudio();
 
   tempo.oninput = () => {
     tempoLabel.innerHTML = `<strong>${tempo.value}</strong> BPM`;
+    if (tempoMiniValue) tempoMiniValue.innerHTML = `<strong>${tempo.value}</strong> BPM`;
     if (isLooping) restartLoopTimer();
   };
 
   noteLen.oninput = () => {
     noteLenLabel.innerHTML = `<strong>${noteLen.value}</strong> ms`;
+    if (noteLenMiniValue) noteLenMiniValue.innerHTML = `<strong>${noteLen.value}</strong> ms`;
   };
+
+  function stepRange(input, delta) {
+    const min = Number(input.min);
+    const max = Number(input.max);
+    const current = Number(input.value);
+    const next = Math.min(max, Math.max(min, current + delta));
+    if (next === current) return;
+    input.value = String(next);
+    input.oninput();
+  }
+
+  if (tempoDown && tempoUp && noteLenDown && noteLenUp) {
+    tempoDown.onclick = () => stepRange(tempo, -5);
+    tempoUp.onclick = () => stepRange(tempo, 5);
+    noteLenDown.onclick = () => stepRange(noteLen, -20);
+    noteLenUp.onclick = () => stepRange(noteLen, 20);
+  }
 
   if (loopOrder) {
     loopOrder.onchange = () => {
@@ -534,10 +701,13 @@ function renderMaqamPage(maqamKeyRaw) {
     const dur = getNoteDurationMs();
 
     for (let i = 0; i < seq.length; i++) {
-      const n = data[seq[i]];
+      const noteIdx = seq[i];
+      const n = data[noteIdx];
+      setActiveLoopIndex(noteIdx);
       if (n && Number.isFinite(Number(n.frequency))) playTone(Number(n.frequency), dur);
       await sleep(intervalMs);
     }
+    setActiveLoopIndex(null);
   };
   btnPlaySelectedMobile.onclick = () => btnPlaySelected.click();
 
@@ -715,6 +885,14 @@ function renderMaqamPage(maqamKeyRaw) {
     });
 
   btnDisableMic.onclick = () => disableMic();
+
+  if (toggleMicPanel && micPanel) {
+    toggleMicPanel.onclick = () => {
+      const isOpen = micPanel.style.display !== "none";
+      micPanel.style.display = isOpen ? "none" : "block";
+      toggleMicPanel.textContent = isOpen ? "Show" : "Hide";
+    };
+  }
 
   // Stop mic if user navigates away
   window.addEventListener("hashchange", disableMic, { once: true });
