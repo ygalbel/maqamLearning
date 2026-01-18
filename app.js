@@ -24,6 +24,10 @@ let masterGain = null;
 let isLooping = false;
 let loopTimer = null;
 let currentLoopStep = 0;
+let isPlayingSequence = false;
+let isPaused = false;
+let playSequenceToken = 0;
+const activeOscillators = new Set();
 
 // Mic / pitch detection
 let micStream = null;
@@ -84,6 +88,21 @@ function stopLoop() {
     clearInterval(loopTimer);
     loopTimer = null;
   }
+}
+
+function stopAllPlayback() {
+  playSequenceToken += 1;
+  isPlayingSequence = false;
+  stopActiveOscillators();
+}
+
+function stopActiveOscillators() {
+  for (const osc of activeOscillators) {
+    try {
+      osc.stop();
+    } catch {}
+  }
+  activeOscillators.clear();
 }
 
 function stopMic() {
@@ -151,6 +170,14 @@ function playTone(frequency, durationMs) {
   gain2.connect(amp);
   amp.connect(filter);
   filter.connect(masterGain);
+
+  function registerOscillator(node) {
+    activeOscillators.add(node);
+    node.onended = () => activeOscillators.delete(node);
+  }
+
+  registerOscillator(osc);
+  registerOscillator(osc2);
 
   osc.start(now);
   osc2.start(now);
@@ -476,6 +503,7 @@ function renderMaqamPage(maqamKeyRaw) {
           <button id="btnPlaySelected">Play Selected (Once)</button>
           <button id="btnStartLoop">Start Loop</button>
           <button id="btnStopLoop" disabled>Stop</button>
+          <button id="btnPause" disabled>Pause</button>
         </div>
 
         <div class="row" style="margin-top:8px;">
@@ -512,6 +540,7 @@ function renderMaqamPage(maqamKeyRaw) {
       <button id="btnPlaySelectedMobile">Play Selected</button>
       <button id="btnStartLoopMobile">Loop</button>
       <button id="btnStopLoopMobile" disabled>Stop</button>
+      <button id="btnPauseMobile" disabled>Pause</button>
     </div>
 
     <div class="card" style="margin-top:12px;">
@@ -565,9 +594,11 @@ function renderMaqamPage(maqamKeyRaw) {
   const btnPlaySelected = document.getElementById("btnPlaySelected");
   const btnStartLoop = document.getElementById("btnStartLoop");
   const btnStopLoop = document.getElementById("btnStopLoop");
+  const btnPause = document.getElementById("btnPause");
   const btnPlaySelectedMobile = document.getElementById("btnPlaySelectedMobile");
   const btnStartLoopMobile = document.getElementById("btnStartLoopMobile");
   const btnStopLoopMobile = document.getElementById("btnStopLoopMobile");
+  const btnPauseMobile = document.getElementById("btnPauseMobile");
   const tempo = document.getElementById("tempo");
   const tempoLabel = document.getElementById("tempoLabel");
   const repeat = document.getElementById("repeat");
@@ -645,6 +676,18 @@ function renderMaqamPage(maqamKeyRaw) {
     btnStartLoop.disabled = isRunning;
     btnStopLoopMobile.disabled = !isRunning;
     btnStartLoopMobile.disabled = isRunning;
+  }
+
+  function setPauseButtonState(paused) {
+    const label = paused ? "Resume" : "Pause";
+    if (btnPause) btnPause.textContent = label;
+    if (btnPauseMobile) btnPauseMobile.textContent = label;
+  }
+
+  function updatePauseAvailability() {
+    const canPause = isLooping || isPlayingSequence;
+    if (btnPause) btnPause.disabled = !canPause;
+    if (btnPauseMobile) btnPauseMobile.disabled = !canPause;
   }
 
   // --- Playback controls ---
@@ -727,8 +770,10 @@ function renderMaqamPage(maqamKeyRaw) {
   updateSelectedCount();
 
   btnPlaySelected.onclick = async () => {
+    if (isPlayingSequence) return;
     ensureAudio();
     stopLoop();
+    stopAllPlayback();
 
     const seq = getLoopSequence();
     if (seq.length === 0) return;
@@ -736,7 +781,23 @@ function renderMaqamPage(maqamKeyRaw) {
     const intervalMs = getBpmIntervalMs(tempo.value);
     const dur = getNoteDurationMs();
 
+    isPlayingSequence = true;
+    isPaused = false;
+    const token = playSequenceToken + 1;
+    playSequenceToken = token;
+    btnPlaySelected.disabled = true;
+    btnPlaySelectedMobile.disabled = true;
+    btnStopLoop.disabled = false;
+    btnStopLoopMobile.disabled = false;
+    setPauseButtonState(false);
+    updatePauseAvailability();
+
     for (let i = 0; i < seq.length; i++) {
+      if (playSequenceToken !== token) break;
+      while (isPaused && playSequenceToken === token) {
+        await sleep(80);
+      }
+      if (playSequenceToken !== token) break;
       const noteIdx = seq[i];
       const n = data[noteIdx];
       setActiveLoopIndex(noteIdx);
@@ -744,11 +805,20 @@ function renderMaqamPage(maqamKeyRaw) {
       await sleep(intervalMs);
     }
     setActiveLoopIndex(null);
+    isPlayingSequence = false;
+    btnPlaySelected.disabled = false;
+    btnPlaySelectedMobile.disabled = false;
+    if (!isLooping) {
+      btnStopLoop.disabled = true;
+      btnStopLoopMobile.disabled = true;
+    }
+    updatePauseAvailability();
   };
   btnPlaySelectedMobile.onclick = () => btnPlaySelected.click();
 
   function restartLoopTimer() {
     if (!isLooping) return;
+    if (isPaused) return;
     if (loopTimer) clearInterval(loopTimer);
 
     const intervalMs = getBpmIntervalMs(tempo.value);
@@ -756,6 +826,7 @@ function renderMaqamPage(maqamKeyRaw) {
   }
 
   function loopTick() {
+    if (isPaused) return;
     const seq = getLoopSequence();
     if (seq.length === 0) {
       setActiveLoopIndex(null);
@@ -785,6 +856,7 @@ function renderMaqamPage(maqamKeyRaw) {
   btnStartLoop.onclick = () => {
     ensureAudio();
     stopLoop();
+    stopAllPlayback();
 
     const idxs = getSelectedIndexes();
     if (idxs.length === 0) return;
@@ -793,6 +865,8 @@ function renderMaqamPage(maqamKeyRaw) {
     currentLoopStep = 0;
 
     setLoopButtonState(true);
+    setPauseButtonState(false);
+    updatePauseAvailability();
 
     loopTick();
     restartLoopTimer();
@@ -801,10 +875,33 @@ function renderMaqamPage(maqamKeyRaw) {
 
   btnStopLoop.onclick = () => {
     stopLoop();
+    stopAllPlayback();
     setLoopButtonState(false);
     setActiveLoopIndex(null);
+    isPaused = false;
+    setPauseButtonState(false);
+    updatePauseAvailability();
   };
   btnStopLoopMobile.onclick = () => btnStopLoop.click();
+
+  function togglePause() {
+    if (!isLooping && !isPlayingSequence) return;
+    isPaused = !isPaused;
+    setPauseButtonState(isPaused);
+    if (isPaused) {
+      if (loopTimer) {
+        clearInterval(loopTimer);
+        loopTimer = null;
+      }
+      stopActiveOscillators();
+    } else if (isLooping) {
+      loopTick();
+      restartLoopTimer();
+    }
+  }
+
+  if (btnPause) btnPause.onclick = () => togglePause();
+  if (btnPauseMobile) btnPauseMobile.onclick = () => togglePause();
 
   // --- Live pitch UI ---
   function setPitchUI({ detectedHz, noteName, targetHz, cents }) {
