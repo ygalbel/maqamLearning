@@ -625,6 +625,10 @@ function renderMaqamPage(maqamKeyRaw) {
     ensureAudio();
     if (micStream) return;
 
+    const holdMs = 900;
+    let lastPitch = null;
+    let lastPitchAt = 0;
+
     micStream = await navigator.mediaDevices.getUserMedia({
       audio: {
         echoCancellation: false,
@@ -649,16 +653,23 @@ function renderMaqamPage(maqamKeyRaw) {
 
       analyser.getFloatTimeDomainData(micData);
       const hz = autoCorrelate(micData, audioCtx.sampleRate);
+      const now = performance.now();
 
       if (!hz) {
-        setPitchUI({ detectedHz: null, noteName: null, targetHz: null, cents: 0 });
+        if (lastPitch && now - lastPitchAt < holdMs) {
+          setPitchUI(lastPitch);
+        } else {
+          setPitchUI({ detectedHz: null, noteName: null, targetHz: null, cents: 0 });
+        }
         pitchRaf = requestAnimationFrame(tick);
         return;
       }
 
       const selected = getSelectedNotes();
       if (selected.length === 0) {
-        setPitchUI({ detectedHz: hz, noteName: "(no notes selected)", targetHz: hz, cents: 0 });
+        lastPitch = { detectedHz: hz, noteName: "(no notes selected)", targetHz: hz, cents: 0 };
+        lastPitchAt = now;
+        setPitchUI(lastPitch);
         pitchRaf = requestAnimationFrame(tick);
         return;
       }
@@ -675,12 +686,14 @@ function renderMaqamPage(maqamKeyRaw) {
         }
       }
 
-      setPitchUI({
+      lastPitch = {
         detectedHz: hz,
         noteName: best.noteName,
         targetHz: best.targetHz,
         cents: best.cents
-      });
+      };
+      lastPitchAt = now;
+      setPitchUI(lastPitch);
 
       pitchRaf = requestAnimationFrame(tick);
     };
