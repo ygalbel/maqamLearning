@@ -142,7 +142,7 @@
   },
   "he": {
     "app.title": "נגן מקאמים",
-    "header.tagline": "בחר מקאם → בחר תווים → נגן עם קצב/חזרה",
+    "header.tagline": "מסע צלילים במקאם",
     "header.maqamLabel": "מקאם: {name}",
     "audio.label": "אודיו: {status}",
     "audio.notStarted": "לא הופעל",

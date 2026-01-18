@@ -12,7 +12,7 @@
     gtag("config", "G-7823BS2G20");
   </script>
   <style>
-    @import url("https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Gloock&family=Tajawal:wght@400;600&display=swap");
+    @import url("https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Gloock&family=Tajawal:wght@400;600&family=Heebo:wght@400;600;700&display=swap");
 
     :root {
       --ink: #2f2013;
@@ -80,6 +80,9 @@
     .siteFooter a { color: var(--accent); text-decoration: none; }
 
     html[dir="rtl"] body { direction: rtl; }
+    html[dir="rtl"] body { font-family: "Heebo", "Tajawal", "Arial", sans-serif; }
+    html[lang="ar"] body { font-family: "Amiri", "Noto Naskh Arabic", "Tajawal", serif; }
+    html[lang="he"] body { font-family: "Amiri", "Heebo", "Tajawal", "Arial", sans-serif; }
     html[dir="rtl"] .row { flex-direction: row-reverse; }
     html[dir="rtl"] .titleGroup { flex-direction: row-reverse; }
     html[dir="rtl"] .langSwitch { flex-direction: row-reverse; }
@@ -179,13 +182,13 @@
     button:disabled { opacity: 0.5; cursor: not-allowed; box-shadow: none; }
 
     input[type="range"] { width: 220px; accent-color: var(--gold-strong); }
+    input, select, button { font-family: inherit; }
     input[type="search"] {
       padding: 6px 10px;
       border-radius: 10px;
       border: 1px solid var(--wood);
       background: #fff4e3;
       color: var(--ink);
-      font-family: "Tajawal", "Amiri", serif;
       min-width: 200px;
     }
 
