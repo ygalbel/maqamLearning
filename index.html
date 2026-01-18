@@ -88,6 +88,21 @@
     html[dir="rtl"] .langSwitch { flex-direction: row-reverse; }
     html[dir="rtl"] .card,
     html[dir="rtl"] .notePad { text-align: right; }
+    .pageMaqam .card,
+    .pageMaqam .controls,
+    .pageMaqam .notePad {
+      background: rgba(255, 248, 238, 0.7);
+      box-shadow: none;
+    }
+    .pageMaqam .notePad.selected {
+      background: var(--accent-soft);
+      box-shadow: 0 0 0 4px rgba(211, 165, 91, 0.35);
+    }
+    .pageMaqam .notePad .pill {
+      background: transparent;
+      border-color: var(--line);
+      color: var(--muted);
+    }
     header strong {
       font-family: "Gloock", "Amiri", serif;
       letter-spacing: 0.4px;
@@ -239,7 +254,9 @@
 
       .notes { grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); }
       .noteItem { flex-direction: column; align-items: stretch; }
-      .notePad { padding: 14px; font-size: 1.02rem; }
+      .notePad { padding: 22px; font-size: 1.25rem; text-align: center; align-items: center; }
+      .notePad .noteTitle { text-align: center; width: 100%; }
+      .notePad .noteMeta { display: flex; justify-content: center; width: 100%; font-size: 1.4rem; }
 
       .mobileBar {
         display: flex;

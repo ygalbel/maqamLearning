@@ -401,6 +401,7 @@ function renderListPage(keepSearchFocus = false) {
   stopLoop();
   stopMic();
   setHeaderMaqam("");
+  document.body.classList.remove("pageMaqam");
 
   const keys = Object.keys(maqamsData);
 
@@ -539,6 +540,7 @@ function renderListPage(keepSearchFocus = false) {
 function renderMaqamPage(maqamKeyRaw) {
   stopLoop();
   stopMic();
+  document.body.classList.add("pageMaqam");
 
   const key = decodeURIComponent(maqamKeyRaw);
   const maqamObj = maqamsData[key];
