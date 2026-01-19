@@ -835,8 +835,8 @@
   },
   "hijazkar": {
     "tonic": "D",
-    "lower_jins": "Hijazkar",
-    "upper_jins": "Nahawand on A",
+    "lower_jins": "Hijaz",
+    "upper_jins": "Hijaz Kar on A",
     "scale": [
       {
         "note": "C4",
@@ -938,7 +938,7 @@
   "nahawand": {
     "tonic": "C",
     "lower_jins": "Nahawand",
-    "upper_jins": "Rast / Hijaz on G",
+    "upper_jins": "Kurd on G",
     "scale": [
       {
         "note": "A3\u266d",
