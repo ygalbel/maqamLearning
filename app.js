@@ -1266,6 +1266,36 @@ async function boot() {
     window.addEventListener("scroll", updateHeaderCompact, { passive: true });
     window.addEventListener("resize", updateNotesScale, { passive: true });
     window.addEventListener("resize", updateHeaderOffset, { passive: true });
+
+/**
+ * IOS & MOBILE AUDIO UNLOCK
+ * Mobile browsers suspend audio contexts until a user interaction occurs.
+ * This snippet listens for the first touch/click and resumes the context.
+ */
+
+function unlockAudioContext() {
+    // 1. Identify your AudioContext
+    // Check if 'audioCtx' exists (from your existing code), or find the global one
+    const context = window.audioCtx || window.AudioContext || window.webkitAudioContext;
+    
+    // If we found a context and it's suspended, try to resume it
+    if (context && context.state === 'suspended') {
+        context.resume().then(() => {
+            console.log('AudioContext resumed successfully by user interaction.');
+            
+            // Clean up: remove the event listeners so this only runs once
+            ['touchstart', 'touchend', 'click', 'keydown'].forEach(event => {
+                document.body.removeEventListener(event, unlockAudioContext);
+            });
+        });
+    }
+}
+
+// 2. Attach the unlock function to all major interaction events
+['touchstart', 'touchend', 'click', 'keydown'].forEach(event => {
+    document.body.addEventListener(event, unlockAudioContext);
+});
+    
     if (window.visualViewport) {
       window.visualViewport.addEventListener("resize", updateHeaderOffset, { passive: true });
       window.visualViewport.addEventListener("scroll", updateHeaderOffset, { passive: true });
