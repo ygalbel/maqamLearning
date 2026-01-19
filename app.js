@@ -680,6 +680,12 @@ function renderMaqamPage(maqamKeyRaw) {
           <button id="noteLenUp" class="miniBtn" aria-label="${escapeHtml(t("aria.increaseLength"))}">+</button>
         </label>
       </div>
+      <div id="miniActions" class="row miniActions" style="margin-top:8px; width:100%;">
+        <button id="btnPlaySelectedMini">${escapeHtml(t("controls.playSelected"))}</button>
+        <button id="btnStartLoopMini">${escapeHtml(t("controls.loopShort"))}</button>
+        <button id="btnStopMini" disabled>${escapeHtml(t("controls.stop"))}</button>
+        <button id="btnPauseMini" disabled>${escapeHtml(t("controls.pause"))}</button>
+      </div>
 
       <div id="controlsPanel" style="display:none; width:100%;">
         <div class="row" style="margin-top:8px;">
@@ -778,12 +784,17 @@ function renderMaqamPage(maqamKeyRaw) {
   const toggleControls = document.getElementById("toggleControls");
   const controlsPanel = document.getElementById("controlsPanel");
   const miniControls = document.getElementById("miniControls");
+  const miniActions = document.getElementById("miniActions");
   const tempoDown = document.getElementById("tempoDown");
   const tempoUp = document.getElementById("tempoUp");
   const noteLenDown = document.getElementById("noteLenDown");
   const noteLenUp = document.getElementById("noteLenUp");
   const tempoMiniValue = document.getElementById("tempoMiniValue");
   const noteLenMiniValue = document.getElementById("noteLenMiniValue");
+  const btnPlaySelectedMini = document.getElementById("btnPlaySelectedMini");
+  const btnStartLoopMini = document.getElementById("btnStartLoopMini");
+  const btnStopMini = document.getElementById("btnStopMini");
+  const btnPauseMini = document.getElementById("btnPauseMini");
   const btnInitAudio = document.getElementById("btnInitAudio");
   const btnPlaySelected = document.getElementById("btnPlaySelected");
   const btnStartLoop = document.getElementById("btnStartLoop");
@@ -873,18 +884,22 @@ function renderMaqamPage(maqamKeyRaw) {
     btnStartLoop.disabled = isRunning;
     btnStopLoopMobile.disabled = !isRunning;
     btnStartLoopMobile.disabled = isRunning;
+    if (btnStopMini) btnStopMini.disabled = !isRunning && !isPlayingSequence;
+    if (btnStartLoopMini) btnStartLoopMini.disabled = isRunning;
   }
 
   function setPauseButtonState(paused) {
     const label = paused ? t("controls.resume") : t("controls.pause");
     if (btnPause) btnPause.textContent = label;
     if (btnPauseMobile) btnPauseMobile.textContent = label;
+    if (btnPauseMini) btnPauseMini.textContent = label;
   }
 
   function updatePauseAvailability() {
     const canPause = isLooping || isPlayingSequence;
     if (btnPause) btnPause.disabled = !canPause;
     if (btnPauseMobile) btnPauseMobile.disabled = !canPause;
+    if (btnPauseMini) btnPauseMini.disabled = !canPause;
   }
 
   // --- Playback controls ---
@@ -893,6 +908,7 @@ function renderMaqamPage(maqamKeyRaw) {
       const isOpen = controlsPanel.style.display !== "none";
       controlsPanel.style.display = isOpen ? "none" : "block";
       miniControls.style.display = isOpen ? "flex" : "none";
+      if (miniActions) miniActions.style.display = isOpen ? "flex" : "none";
       toggleControls.textContent = isOpen ? "v" : "^";
       updateNotesScale();
     };
@@ -995,8 +1011,10 @@ function renderMaqamPage(maqamKeyRaw) {
     playSequenceToken = token;
     btnPlaySelected.disabled = true;
     btnPlaySelectedMobile.disabled = true;
+    if (btnPlaySelectedMini) btnPlaySelectedMini.disabled = true;
     btnStopLoop.disabled = false;
     btnStopLoopMobile.disabled = false;
+    if (btnStopMini) btnStopMini.disabled = false;
     setPauseButtonState(false);
     updatePauseAvailability();
 
@@ -1016,13 +1034,16 @@ function renderMaqamPage(maqamKeyRaw) {
     isPlayingSequence = false;
     btnPlaySelected.disabled = false;
     btnPlaySelectedMobile.disabled = false;
+    if (btnPlaySelectedMini) btnPlaySelectedMini.disabled = false;
     if (!isLooping) {
       btnStopLoop.disabled = true;
       btnStopLoopMobile.disabled = true;
+      if (btnStopMini) btnStopMini.disabled = true;
     }
     updatePauseAvailability();
   };
   btnPlaySelectedMobile.onclick = () => btnPlaySelected.click();
+  if (btnPlaySelectedMini) btnPlaySelectedMini.onclick = () => btnPlaySelected.click();
 
   function restartLoopTimer() {
     if (!isLooping) return;
@@ -1080,6 +1101,7 @@ function renderMaqamPage(maqamKeyRaw) {
     restartLoopTimer();
   };
   btnStartLoopMobile.onclick = () => btnStartLoop.click();
+  if (btnStartLoopMini) btnStartLoopMini.onclick = () => btnStartLoop.click();
 
   btnStopLoop.onclick = () => {
     stopLoop();
@@ -1091,6 +1113,7 @@ function renderMaqamPage(maqamKeyRaw) {
     updatePauseAvailability();
   };
   btnStopLoopMobile.onclick = () => btnStopLoop.click();
+  if (btnStopMini) btnStopMini.onclick = () => btnStopLoop.click();
 
   function togglePause() {
     if (!isLooping && !isPlayingSequence) return;
@@ -1110,6 +1133,7 @@ function renderMaqamPage(maqamKeyRaw) {
 
   if (btnPause) btnPause.onclick = () => togglePause();
   if (btnPauseMobile) btnPauseMobile.onclick = () => togglePause();
+  if (btnPauseMini) btnPauseMini.onclick = () => togglePause();
 
   // --- Live pitch UI ---
   function setPitchUI({ detectedHz, noteName, targetHz, cents }) {
