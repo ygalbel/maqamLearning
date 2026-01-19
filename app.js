@@ -22,6 +22,10 @@ const DATA_URL = "./maqam-compact.json";
 const I18N_URL = "./i18n.json";
 const SUPPORTED_LANGS = ["en", "he", "ar"];
 const MIC_ENABLED = false;
+const USE_SOUNDFONT = true;
+const SOUNDFONT_NAME = "MusyngKite";
+const SOUNDFONT_INSTRUMENT = "acoustic_guitar_nylon";
+const SOUNDFONT_BASE_URL = "https://gleitz.github.io/midi-js-soundfonts/";
 
 let maqamsData = null;
 let translations = null;
@@ -29,6 +33,8 @@ let translations = null;
 // Audio playback
 let audioCtx = null;
 let masterGain = null;
+let sampleInstrument = null;
+let sampleInstrumentPromise = null;
 
 // Loop playback
 let isLooping = false;
@@ -260,6 +266,7 @@ function ensureAudio() {
     masterGain.connect(audioCtx.destination);
     setAudioStatusByKey("audio.ready");
   }
+  if (USE_SOUNDFONT) loadSampleInstrument();
   if (audioCtx.state === "suspended") audioCtx.resume();
 }
 
@@ -309,12 +316,58 @@ function stopMic() {
   }
 }
 
+function frequencyToMidiAndDetune(frequency) {
+  if (!Number.isFinite(frequency) || frequency <= 0) return null;
+  const midiFloat = 69 + 12 * Math.log2(frequency / 440);
+  const midi = Math.round(midiFloat);
+  const detune = (midiFloat - midi) * 100;
+  return { midi, detune };
+}
+
+function loadSampleInstrument() {
+  if (!window.Soundfont || !audioCtx || !masterGain) return null;
+  if (sampleInstrument) return Promise.resolve(sampleInstrument);
+  if (!sampleInstrumentPromise) {
+    sampleInstrumentPromise = window.Soundfont.instrument(audioCtx, SOUNDFONT_INSTRUMENT, {
+      soundfont: SOUNDFONT_NAME,
+      format: "mp3",
+      baseUrl: SOUNDFONT_BASE_URL,
+      destination: masterGain
+    })
+      .then((inst) => {
+        sampleInstrument = inst;
+        return inst;
+      })
+      .catch((err) => {
+        console.warn("Soundfont load failed, falling back to synth.", err);
+        sampleInstrumentPromise = null;
+        return null;
+      });
+  }
+  return sampleInstrumentPromise;
+}
+
 function playTone(frequency, durationMs) {
   ensureAudio();
 
   const now = audioCtx.currentTime;
   const offsetFactor = Math.pow(2, pitchOffsetSemitones / 12);
   const adjustedFrequency = frequency * offsetFactor;
+  const durSec = Math.max(0.06, durationMs / 1000);
+
+  if (USE_SOUNDFONT && sampleInstrument) {
+    const midiData = frequencyToMidiAndDetune(adjustedFrequency);
+    if (midiData) {
+      sampleInstrument.play(midiData.midi, now, {
+        gain: 0.7,
+        duration: durSec,
+        detune: midiData.detune
+      });
+      return;
+    }
+  } else if (USE_SOUNDFONT) {
+    loadSampleInstrument();
+  }
 
   const osc = audioCtx.createOscillator();
   const osc2 = audioCtx.createOscillator();
@@ -335,7 +388,6 @@ function playTone(frequency, durationMs) {
 
   // Plucked envelope + gentle low-pass for an oud-like timbre
   const attack = 0.005;
-  const durSec = Math.max(0.06, durationMs / 1000);
   const decay = Math.min(0.2, Math.max(0.06, durSec * 0.6));
   const endTime = now + durSec;
 
@@ -805,7 +857,7 @@ function renderMaqamPage(maqamKeyRaw) {
         <label class="row miniGroup" style="gap:6px;">
           <span class="pill">${escapeHtml(t("controls.length"))}</span>
           <button id="noteLenDown" class="miniBtn" aria-label="${escapeHtml(t("aria.decreaseLength"))}">-</button>
-          <span id="noteLenMiniValue"><strong>220</strong> ms</span>
+          <span id="noteLenMiniValue"><strong>500</strong> ms</span>
           <button id="noteLenUp" class="miniBtn" aria-label="${escapeHtml(t("aria.increaseLength"))}">+</button>
         </label>
       </div>
@@ -834,8 +886,8 @@ function renderMaqamPage(maqamKeyRaw) {
 
           <label class="row" style="gap:8px;">
             <span class="pill">${escapeHtml(t("controls.noteLength"))}</span>
-            <input id="noteLen" type="range" min="80" max="1200" value="220" />
-            <span id="noteLenLabel"><strong>220</strong> ms</span>
+            <input id="noteLen" type="range" min="80" max="1200" value="500" />
+            <span id="noteLenLabel"><strong>500</strong> ms</span>
           </label>
 
           <label class="row" style="gap:8px;">
