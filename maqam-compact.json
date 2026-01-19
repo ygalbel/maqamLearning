@@ -23,7 +23,8 @@
       },
       {
         "note": "E4-Koron",
-        "frequency": 320
+        "frequency": 320,
+        "jins": "Sikah"
       },
       {
         "note": "F4",
@@ -284,7 +285,6 @@
       },
       {
         "note": "C4",
-        "jins": "Sikah",
         "frequency": 260.74
       },
       {
