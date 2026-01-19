@@ -674,23 +674,36 @@ function renderMaqamPage(maqamKeyRaw) {
   const upperJinsDisplay = upperNames.map(getJinsDisplayName).join(" / ");
   const data = Array.isArray(maqamObj.scale) ? maqamObj.scale : [];
 
-  function renderNoteItem(n, idx) {
+  const tonicIndex = (() => {
+    const tonic = maqamObj.tonic ? String(maqamObj.tonic) : "";
+    const match = tonic.match(/[A-G]/i);
+    if (!match) return -1;
+    const tonicLetter = match[0].toUpperCase();
+    return data.findIndex((n) => {
+      const note = n?.note ?? "";
+      return typeof note === "string" && note[0].toUpperCase() === tonicLetter;
+    });
+  })();
+
+  function renderNoteItem(n, idx, jinsOverride = "") {
       const note = n?.note ?? "";
       const noteStr = String(note);
       const noteParts = noteStr.split("-");
       const noteBase = noteParts[0] || "";
       const noteSuffix = noteParts.length > 1 ? `-${noteParts.slice(1).join("-")}` : "";
-      const jins = n?.jins ?? "";
+      const jins = jinsOverride || n?.jins || "";
       const jinsDisplay = jins ? getJinsDisplayName(jins) : "";
       const freq = Number(n?.frequency);
       const next = data[idx + 1];
       const intervalText = intervalLabelFromFrequencies(freq, Number(next?.frequency), isRtlLang(currentLang));
+      const displayIndex = Number.isFinite(tonicIndex) && tonicIndex >= 0 ? idx - tonicIndex : idx;
+      const isTonic = displayIndex === 0;
       return `
         <div class="noteItem">
           <button class="notePad selected" data-idx="${idx}" aria-pressed="true">
             <div class="noteTitle">
-              <span class="noteIndex">[${idx}]</span>
-              <span class="noteName">${escapeHtml(noteBase)}${noteSuffix ? `<span class="noteSuffix">${escapeHtml(noteSuffix)}</span>` : ""}</span>
+              <span class="noteIndex">[${displayIndex}]</span>
+              <span class="noteName">${escapeHtml(noteBase)}${noteSuffix ? `<span class="noteSuffix">${escapeHtml(noteSuffix)}</span>` : ""}${isTonic ? `<span class="noteKey" aria-hidden="true"> 🔑</span>` : ""}</span>
             </div>
             <div class="noteMeta"><span class="noteInterval">${escapeHtml(intervalText)}</span></div>
             ${jinsDisplay ? `<div class="noteJins">${escapeHtml(jinsDisplay)}</div>` : ""}
@@ -737,7 +750,11 @@ function renderMaqamPage(maqamKeyRaw) {
       if (label) {
         groupBlocks.push(`<div class="notesGroupTitle">${escapeHtml(label)}</div>`);
       }
-      groupBlocks.push(indices.map((idx) => renderNoteItem(data[idx], idx)).join(""));
+      groupBlocks.push(
+        indices
+          .map((idx, i) => renderNoteItem(data[idx], idx, i === 0 ? group.name : ""))
+          .join("")
+      );
     }
 
     const remaining = allIndices.filter((idx) => !used.has(idx));
@@ -940,7 +957,9 @@ function renderMaqamPage(maqamKeyRaw) {
   const playButtonsByIdx = new Map();
   appEl.querySelectorAll(".notePad").forEach((btn) => {
     const idx = Number(btn.getAttribute("data-idx"));
-    if (Number.isFinite(idx)) playButtonsByIdx.set(idx, btn);
+    if (!Number.isFinite(idx)) return;
+    if (!playButtonsByIdx.has(idx)) playButtonsByIdx.set(idx, []);
+    playButtonsByIdx.get(idx).push(btn);
   });
 
   let activeLoopBtn = null;
@@ -949,10 +968,11 @@ function renderMaqamPage(maqamKeyRaw) {
     activeLoopBtn = null;
 
     if (!Number.isFinite(idx)) return;
-    const btn = playButtonsByIdx.get(idx);
-    if (!btn) return;
-    btn.classList.add("active");
-    activeLoopBtn = btn;
+    const buttons = playButtonsByIdx.get(idx);
+    if (!buttons || buttons.length === 0) return;
+    const preferred = buttons.find((btn) => btn.classList.contains("selected")) || buttons[0];
+    preferred.classList.add("active");
+    activeLoopBtn = preferred;
   }
 
   function getSelectedIndexes() {

@@ -295,12 +295,56 @@
     "lower_jins": "Bayati",
     "upper_jins": [
       {
-        "name": "Nahawand",
-        "scale": []
+        "name": "Nahawand on G",
+        "scale": [
+          {
+        "note": "G4",
+        "frequency": 391.11,
+        "jins": "Nahawand on G"
+      },
+      {
+        "note": "A4",
+        "frequency": 440
+      },
+      {
+        "note": "B4\u266d",
+        "frequency": 463.54
+      },
+      {
+        "note": "C5",
+        "frequency": 521.48
+      },
+      {
+        "note": "D5",
+        "frequency": 586.66
+      }
+        ]
       },
       {
         "name": "Rast on G",
-        "scale": []
+        "scale": [
+          {
+        "note": "G4",
+        "frequency": 391.11,
+        "jins": "Rast on G"
+      },
+      {
+        "note": "A4",
+        "frequency": 440
+      },
+      {
+        "note": "B4-Koron",
+        "frequency": 482
+      },
+      {
+        "note": "C5",
+        "frequency": 521.48
+      },
+      {
+        "note": "D5",
+        "frequency": 586.66
+      }
+        ]
       }
     ],
     "scale": [
@@ -324,10 +368,6 @@
       {
         "note": "F4",
         "frequency": 345
-      },
-      {
-        "note": "F4",
-        "frequency": 347.65
       },
       {
         "note": "G4",
