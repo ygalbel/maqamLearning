@@ -213,6 +213,13 @@
     }
 
     .notes { display:grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px; margin-top: 12px; }
+    .notesGroupTitle {
+      grid-column: 1 / -1;
+      margin-top: 6px;
+      font-weight: 700;
+      color: var(--muted);
+    }
+    .notesGroupTitle:first-child { margin-top: 0; }
     .noteItem { display:flex; align-items: stretch; }
     .notePad {
       width: 100%;
@@ -231,7 +238,15 @@
     .notePad .noteIndex { font-size: 0.7em; color: var(--muted); display: block; }
     .notePad .noteName { display: block; }
     .notePad .noteSuffix { font-size: 0.75em; }
-    .notePad .noteMeta { font-size: 0.9rem; color: var(--muted); }
+    .notePad .noteMeta {
+      font-size: 0.9rem;
+      color: var(--muted);
+      display: flex;
+      justify-content: flex-start;
+      align-items: center;
+      gap: 8px;
+    }
+    .notePad .noteInterval { font-size: 0.85rem; color: var(--muted); }
     .notePad .noteJins { font-size: 0.85rem; color: var(--muted); }
     .notePad.selected {
       background: linear-gradient(180deg, #fff0da, #f0cda0);
@@ -297,9 +312,12 @@
       .notePad .noteSuffix { font-size: 0.6em; }
       .notePad .noteMeta {
         display: flex;
-        justify-content: center;
+        justify-content: space-between;
         width: 100%;
         font-size: calc(1.65rem * var(--noteScale));
+      }
+      .notePad .noteInterval {
+        font-size: calc(0.95rem * var(--noteScale));
       }
       .notePad .noteJins {
         text-align: center;

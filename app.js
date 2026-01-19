@@ -9,6 +9,12 @@
 //     "upper_jins": "Nahawand on A",
 //     "scale": [ { "note": "D4", "frequency": 293.33 }, ... ]
 //   },
+//   "rast": {
+//     "upper_jins": [
+//       { "name": "Rast on G", "scale": [ { "note": "G4", "frequency": 391.11, "index": 6 } ] },
+//       { "name": "Nahawand on G", "scale": [] }
+//     ]
+//   },
 //   ...
 // }
 
@@ -90,6 +96,20 @@ function getJinsDisplayName(name) {
     (fallback && fallback.jinsNames && fallback.jinsNames[name]) ||
     "";
   return translated || name;
+}
+
+function getUpperJinsNames(upperJins) {
+  if (!upperJins) return [];
+  if (Array.isArray(upperJins)) {
+    return upperJins
+      .map((entry) => {
+        if (!entry) return "";
+        if (typeof entry === "string") return entry;
+        return String(entry.name || entry.jins || "");
+      })
+      .filter(Boolean);
+  }
+  return [String(upperJins)];
 }
 
 function isRtlLang(lang) {
@@ -385,6 +405,31 @@ function sleep(ms) {
   return new Promise((res) => setTimeout(res, ms));
 }
 
+function intervalLabelFromFrequencies(currentHz, nextHz, isRtl) {
+  if (!Number.isFinite(currentHz) || !Number.isFinite(nextHz) || nextHz <= 0 || currentHz <= 0) {
+    return "";
+  }
+  if (nextHz <= currentHz) return "";
+  const cents = 1200 * Math.log2(nextHz / currentHz);
+  const options = [
+    { cents: 100, key: "interval.halfTone" },
+    { cents: 150, key: "interval.threeQuarterTone" },
+    { cents: 200, key: "interval.oneTone" },
+    { cents: 300, key: "interval.oneAndHalfTone" }
+  ];
+  let best = options[0];
+  let bestDiff = Math.abs(cents - best.cents);
+  for (let i = 1; i < options.length; i++) {
+    const diff = Math.abs(cents - options[i].cents);
+    if (diff < bestDiff) {
+      best = options[i];
+      bestDiff = diff;
+    }
+  }
+  const arrow = isRtl ? "←" : "→";
+  return `${arrow} ${t(best.key)}`;
+}
+
 // --------------------
 // Pitch detection helpers
 // --------------------
@@ -474,7 +519,8 @@ function renderListPage(keepSearchFocus = false) {
         const obj = maqamsData[k] || {};
         const displayName = getMaqamDisplayName(k);
         const lower = obj.lower_jins || "";
-        const upper = obj.upper_jins || "";
+        const upperNames = getUpperJinsNames(obj.upper_jins || "");
+        const upper = upperNames.join(" / ");
         const haystack = [
           k,
           displayName,
@@ -513,9 +559,10 @@ function renderListPage(keepSearchFocus = false) {
       const scale = Array.isArray(obj.scale) ? obj.scale : [];
       const tonic = obj.tonic ? String(obj.tonic) : "?";
       const lower = obj.lower_jins ? String(obj.lower_jins) : "";
-      const upper = obj.upper_jins ? String(obj.upper_jins) : "";
+      const upperNames = getUpperJinsNames(obj.upper_jins);
+      const upper = upperNames.join(" / ");
       const lowerDisplay = getJinsDisplayName(lower);
-      const upperDisplay = getJinsDisplayName(upper);
+      const upperDisplay = upperNames.map(getJinsDisplayName).join(" / ");
 
       return `
         <a class="card" href="${buildHash(`/maqam/${encodeURIComponent(k)}`)}" style="color:inherit;">
@@ -621,13 +668,13 @@ function renderMaqamPage(maqamKeyRaw) {
 
   const tonic = maqamObj.tonic ? String(maqamObj.tonic) : "";
   const lowerJins = maqamObj.lower_jins ? String(maqamObj.lower_jins) : "";
-  const upperJins = maqamObj.upper_jins ? String(maqamObj.upper_jins) : "";
+  const upperJins = maqamObj.upper_jins || "";
   const lowerJinsDisplay = getJinsDisplayName(lowerJins);
-  const upperJinsDisplay = getJinsDisplayName(upperJins);
+  const upperNames = getUpperJinsNames(upperJins);
+  const upperJinsDisplay = upperNames.map(getJinsDisplayName).join(" / ");
   const data = Array.isArray(maqamObj.scale) ? maqamObj.scale : [];
 
-  const noteRows = data
-    .map((n, idx) => {
+  function renderNoteItem(n, idx) {
       const note = n?.note ?? "";
       const noteStr = String(note);
       const noteParts = noteStr.split("-");
@@ -636,7 +683,8 @@ function renderMaqamPage(maqamKeyRaw) {
       const jins = n?.jins ?? "";
       const jinsDisplay = jins ? getJinsDisplayName(jins) : "";
       const freq = Number(n?.frequency);
-      const freqText = Number.isFinite(freq) ? `${freq.toFixed(2)} Hz` : "—";
+      const next = data[idx + 1];
+      const intervalText = intervalLabelFromFrequencies(freq, Number(next?.frequency), isRtlLang(currentLang));
       return `
         <div class="noteItem">
           <button class="notePad selected" data-idx="${idx}" aria-pressed="true">
@@ -644,13 +692,67 @@ function renderMaqamPage(maqamKeyRaw) {
               <span class="noteIndex">[${idx}]</span>
               <span class="noteName">${escapeHtml(noteBase)}${noteSuffix ? `<span class="noteSuffix">${escapeHtml(noteSuffix)}</span>` : ""}</span>
             </div>
-            <div class="noteMeta"><span class="pill">${escapeHtml(freqText)}</span></div>
+            <div class="noteMeta"><span class="noteInterval">${escapeHtml(intervalText)}</span></div>
             ${jinsDisplay ? `<div class="noteJins">${escapeHtml(jinsDisplay)}</div>` : ""}
           </button>
         </div>
       `;
-    })
-    .join("");
+  }
+
+  function findNoteIndex(entry) {
+    if (!entry) return -1;
+    const idx = Number(entry.index);
+    if (Number.isFinite(idx)) return idx;
+    const note = entry.note ?? "";
+    const freq = Number(entry.frequency);
+    return data.findIndex((n) => {
+      if (!n) return false;
+      if (n.note !== note) return false;
+      if (!Number.isFinite(freq)) return true;
+      const f = Number(n.frequency);
+      return Number.isFinite(f) && Math.abs(f - freq) < 0.01;
+    });
+  }
+
+  let noteRows = "";
+  const upperGroups = Array.isArray(upperJins)
+    ? upperJins.map((entry) => ({
+        name: entry?.name || entry?.jins || "",
+        scale: Array.isArray(entry?.scale) ? entry.scale : []
+      }))
+    : [];
+
+  if (upperGroups.length > 1) {
+    const used = new Set();
+    const groupBlocks = [];
+
+    const allIndices = data.map((_, i) => i);
+
+    for (const group of upperGroups) {
+      const indices = group.scale
+        .map(findNoteIndex)
+        .filter((idx) => Number.isFinite(idx) && idx >= 0);
+      indices.forEach((idx) => used.add(idx));
+      const label = group.name ? `${t("maqam.upperJinsLabel")} ${getJinsDisplayName(group.name)}` : "";
+      if (label) {
+        groupBlocks.push(`<div class="notesGroupTitle">${escapeHtml(label)}</div>`);
+      }
+      groupBlocks.push(indices.map((idx) => renderNoteItem(data[idx], idx)).join(""));
+    }
+
+    const remaining = allIndices.filter((idx) => !used.has(idx));
+    if (remaining.length > 0) {
+      const label = lowerJinsDisplay
+        ? `${t("maqam.lowerJinsLabel")} ${lowerJinsDisplay}`
+        : t("maqam.lowerJinsLabel");
+      groupBlocks.unshift(`<div class="notesGroupTitle">${escapeHtml(label)}</div>`);
+      groupBlocks.splice(1, 0, remaining.map((idx) => renderNoteItem(data[idx], idx)).join(""));
+    }
+
+    noteRows = groupBlocks.join("");
+  } else {
+    noteRows = data.map((n, idx) => renderNoteItem(n, idx)).join("");
+  }
 
   const displayName = getMaqamDisplayName(key);
   appEl.innerHTML = `

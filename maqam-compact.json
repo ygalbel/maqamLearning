@@ -2,7 +2,23 @@
   "rast": {
     "tonic": "C",
     "lower_jins": "Rast",
-    "upper_jins": "Rast / Nahawand on G",
+    "upper_jins": [
+      {
+        "name": "Rast",
+        "scale": [
+          {
+            "note": "C4",
+            "frequency": 260.74,
+            "index": 2,
+            "jins": "Rast"
+          }
+        ]
+      },
+      {
+        "name": "Nahawand on G",
+        "scale": []
+      }
+    ],
     "scale": [
       {
         "note": "A3",
@@ -277,7 +293,16 @@
   "bayati": {
     "tonic": "D",
     "lower_jins": "Bayati",
-    "upper_jins": "Nahawand / Rast on G",
+    "upper_jins": [
+      {
+        "name": "Nahawand",
+        "scale": []
+      },
+      {
+        "name": "Rast on G",
+        "scale": []
+      }
+    ],
     "scale": [
       {
         "note": "B3-Koron",
@@ -579,7 +604,16 @@
   "sikah": {
     "tonic": "E half-flat",
     "lower_jins": "Sikah",
-    "upper_jins": "Rast / Hijaz on A\u266d",
+    "upper_jins": [
+      {
+        "name": "Rast",
+        "scale": []
+      },
+      {
+        "name": "Hijaz on A\u266d",
+        "scale": []
+      }
+    ],
     "scale": [
       {
         "note": "C4",
@@ -1278,7 +1312,23 @@
   "ajam": {
     "tonic": "C",
     "lower_jins": "Ajam",
-    "upper_jins": "Ajam / Nahawand on G",
+    "upper_jins": [
+      {
+        "name": "Ajam",
+        "scale": [
+          {
+            "note": "C4",
+            "frequency": 260.74,
+            "index": 2,
+            "jins": "Ajam"
+          }
+        ]
+      },
+      {
+        "name": "Nahawand on G",
+        "scale": []
+      }
+    ],
     "scale": [
       {
         "note": "A3",
@@ -1424,7 +1474,16 @@
   "nikriz": {
     "tonic": "C",
     "lower_jins": "Nikriz",
-    "upper_jins": "Rast / Nahawand on G",
+    "upper_jins": [
+      {
+        "name": "Rast",
+        "scale": []
+      },
+      {
+        "name": "Nahawand on G",
+        "scale": []
+      }
+    ],
     "scale": [
       {
         "note": "A3\u266d",
@@ -1481,7 +1540,20 @@
   "bastanikar": {
     "tonic": "E half-flat",
     "lower_jins": "Sikah",
-    "upper_jins": "Saba / Hijaz / Nikriz",
+    "upper_jins": [
+      {
+        "name": "Saba",
+        "scale": []
+      },
+      {
+        "name": "Hijaz",
+        "scale": []
+      },
+      {
+        "name": "Nikriz",
+        "scale": []
+      }
+    ],
     "scale": [
       {
         "note": "B3-Koron",
