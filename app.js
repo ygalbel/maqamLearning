@@ -629,13 +629,19 @@ function renderMaqamPage(maqamKeyRaw) {
   const noteRows = data
     .map((n, idx) => {
       const note = n?.note ?? "";
+      const jins = n?.jins ?? "";
+      const jinsDisplay = jins ? getJinsDisplayName(jins) : "";
       const freq = Number(n?.frequency);
       const freqText = Number.isFinite(freq) ? `${freq.toFixed(2)} Hz` : "—";
       return `
         <div class="noteItem">
           <button class="notePad selected" data-idx="${idx}" aria-pressed="true">
-            <div class="noteTitle"><strong>[${idx}]</strong> ${escapeHtml(note)}</div>
+            <div class="noteTitle">
+              <span class="noteIndex">[${idx}]</span>
+              <span class="noteName">${escapeHtml(note)}</span>
+            </div>
             <div class="noteMeta"><span class="pill">${escapeHtml(freqText)}</span></div>
+            ${jinsDisplay ? `<div class="noteJins">${escapeHtml(jinsDisplay)}</div>` : ""}
           </button>
         </div>
       `;

@@ -213,9 +213,10 @@
     }
 
     .notes { display:grid; grid-template-columns: repeat(auto-fill, minmax(260px, 1fr)); gap: 10px; margin-top: 12px; }
-    .noteItem { display:flex; }
+    .noteItem { display:flex; align-items: stretch; }
     .notePad {
       width: 100%;
+      height: 100%;
       text-align: left;
       border-radius: 14px;
       border: 1px solid var(--line);
@@ -227,7 +228,10 @@
       box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
     }
     .notePad .noteTitle { font-size: 1rem; }
+    .notePad .noteIndex { font-size: 0.7em; color: var(--muted); display: block; }
+    .notePad .noteName { display: block; }
     .notePad .noteMeta { font-size: 0.9rem; color: var(--muted); }
+    .notePad .noteJins { font-size: 0.85rem; color: var(--muted); }
     .notePad.selected {
       background: linear-gradient(180deg, #fff0da, #f0cda0);
       border-color: var(--gold);
@@ -277,17 +281,26 @@
       }
       .noteItem { flex-direction: column; align-items: stretch; }
       .notePad {
-        padding: calc(22px * var(--noteScale));
-        font-size: calc(1.25rem * var(--noteScale));
+        padding: calc(28px * var(--noteScale));
+        font-size: calc(1.55rem * var(--noteScale));
         text-align: center;
         align-items: center;
       }
-      .notePad .noteTitle { text-align: center; width: 100%; }
+      .notePad .noteTitle {
+        text-align: center;
+        width: 100%;
+        font-size: calc(2.1rem * var(--noteScale));
+      }
+      .notePad .noteIndex { font-size: 0.55em; }
       .notePad .noteMeta {
         display: flex;
         justify-content: center;
         width: 100%;
-        font-size: calc(1.4rem * var(--noteScale));
+        font-size: calc(1.65rem * var(--noteScale));
+      }
+      .notePad .noteJins {
+        text-align: center;
+        font-size: calc(0.9rem * var(--noteScale));
       }
       .miniActions { display: none; }
 

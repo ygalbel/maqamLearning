@@ -14,7 +14,8 @@
       },
       {
         "note": "C4",
-        "frequency": 260.74
+        "frequency": 260.74,
+        "jins": "Rast"
       },
       {
         "note": "D4",
@@ -30,7 +31,8 @@
       },
       {
         "note": "G4",
-        "frequency": 391.11
+        "frequency": 391.11,
+        "jins": "Rast / Nahawand on G"
       },
       {
         "note": "A4\u266d",
@@ -61,7 +63,8 @@
     "scale": [
       {
         "note": "C4",
-        "frequency": 260.74
+        "frequency": 260.74,
+        "jins": "Rast"
       },
       {
         "note": "D4",
@@ -77,7 +80,8 @@
       },
       {
         "note": "G4",
-        "frequency": 391.11
+        "frequency": 391.11,
+        "jins": "Hijaz on G"
       },
       {
         "note": "A4\u266d",
@@ -100,7 +104,8 @@
     "scale": [
       {
         "note": "C4",
-        "frequency": 260.74
+        "frequency": 260.74,
+        "jins": "Rast"
       },
       {
         "note": "D4\u266e",
@@ -116,7 +121,8 @@
       },
       {
         "note": "G4",
-        "frequency": 391.11
+        "frequency": 391.11,
+        "jins": "Ajam on G"
       },
       {
         "note": "A4",
@@ -139,7 +145,8 @@
     "scale": [
       {
         "note": "C4",
-        "frequency": 260.74
+        "frequency": 260.74,
+        "jins": "Rast"
       },
       {
         "note": "D4",
@@ -155,7 +162,8 @@
       },
       {
         "note": "G4",
-        "frequency": 391.11
+        "frequency": 391.11,
+        "jins": "Nahawand on G"
       },
       {
         "note": "A4-Koron",
@@ -190,7 +198,8 @@
       },
       {
         "note": "G4",
-        "frequency": 391.11
+        "frequency": 391.11,
+        "jins": "Ajam on G"
       },
       {
         "note": "A4\u266e\u2193",
@@ -202,7 +211,8 @@
       },
       {
         "note": "C5",
-        "frequency": 521.48
+        "frequency": 521.48,
+        "jins": "Rast"
       },
       {
         "note": "D5",
@@ -225,7 +235,8 @@
     "scale": [
       {
         "note": "C4",
-        "frequency": 260.74
+        "frequency": 260.74,
+        "jins": "Rast"
       },
       {
         "note": "D4\u266e",
@@ -245,7 +256,8 @@
       },
       {
         "note": "G4",
-        "frequency": 391.11
+        "frequency": 391.11,
+        "jins": "Ajam on G"
       },
       {
         "note": "A4",
@@ -272,11 +284,13 @@
       },
       {
         "note": "C4",
+        "jins": "Sikah",
         "frequency": 260.74
       },
       {
         "note": "D4",
-        "frequency": 293.33
+        "frequency": 293.33,
+        "jins": "Bayati"
       },
       {
         "note": "E4-Koron",
@@ -292,7 +306,8 @@
       },
       {
         "note": "G4",
-        "frequency": 391.11
+        "frequency": 391.11,
+        "jins": "Nahawand / Rast on G"
       },
       {
         "note": "A4",
@@ -323,7 +338,8 @@
     "scale": [
       {
         "note": "D4",
-        "frequency": 293.33
+        "frequency": 293.33,
+        "jins": "Bayati"
       },
       {
         "note": "E4-Koron",
@@ -339,7 +355,8 @@
       },
       {
         "note": "A4",
-        "frequency": 440
+        "frequency": 440,
+        "jins": "Bayati on A"
       },
       {
         "note": "B4\u266d",
@@ -366,7 +383,8 @@
     "scale": [
       {
         "note": "D4",
-        "frequency": 293.33
+        "frequency": 293.33,
+        "jins": "Nahawand"
       },
       {
         "note": "E4",
@@ -382,7 +400,8 @@
       },
       {
         "note": "A4",
-        "frequency": 440
+        "frequency": 440,
+        "jins": "Bayati on A"
       },
       {
         "note": "B4-Koron",
@@ -405,7 +424,8 @@
     "scale": [
       {
         "note": "D4",
-        "frequency": 293.33
+        "frequency": 293.33,
+        "jins": "Bayati"
       },
       {
         "note": "E4-Koron",
@@ -417,7 +437,8 @@
       },
       {
         "note": "G4",
-        "frequency": 391.11
+        "frequency": 391.11,
+        "jins": "Hijaz on G"
       },
       {
         "note": "A4\u266d",
@@ -452,7 +473,8 @@
       },
       {
         "note": "D4",
-        "frequency": 293.33
+        "frequency": 293.33,
+        "jins": "Saba"
       },
       {
         "note": "E4-Koron",
@@ -464,7 +486,8 @@
       },
       {
         "note": "G4\u266d",
-        "frequency": 368
+        "frequency": 368,
+        "jins": "Hijaz on G"
       },
       {
         "note": "A4\u266e",
@@ -507,7 +530,8 @@
       },
       {
         "note": "D4",
-        "frequency": 293.33
+        "frequency": 293.33,
+        "jins": "Saba"
       },
       {
         "note": "E4\u266d",
@@ -519,7 +543,8 @@
       },
       {
         "note": "G4\u266d",
-        "frequency": 368
+        "frequency": 368,
+        "jins": "Bayati on G"
       },
       {
         "note": "A4\u266e",
@@ -570,7 +595,8 @@
       },
       {
         "note": "E4-Koron",
-        "frequency": 320
+        "frequency": 320,
+        "jins": "Sikah"
       },
       {
         "note": "E4-Koron",
@@ -586,7 +612,8 @@
       },
       {
         "note": "A4\u266d",
-        "frequency": 422
+        "frequency": 422,
+        "jins": "Rast / Hijaz on A\u266d"
       },
       {
         "note": "A4\u266e",
@@ -617,7 +644,8 @@
     "scale": [
       {
         "note": "E4-Koron",
-        "frequency": 322
+        "frequency": 322,
+        "jins": "Sikah"
       },
       {
         "note": "F4",
@@ -629,7 +657,8 @@
       },
       {
         "note": "A4\u266d",
-        "frequency": 423
+        "frequency": 423,
+        "jins": "Hijaz on A\u266d"
       },
       {
         "note": "B4\u266e",
@@ -668,7 +697,8 @@
       },
       {
         "note": "E4-Koron",
-        "frequency": 320
+        "frequency": 320,
+        "jins": "Sikah"
       },
       {
         "note": "F4",
@@ -699,7 +729,8 @@
       },
       {
         "note": "E4-Koron",
-        "frequency": 320
+        "frequency": 320,
+        "jins": "Sikah"
       },
       {
         "note": "F4\u266f",
@@ -711,7 +742,8 @@
       },
       {
         "note": "A4\u266e",
-        "frequency": 440
+        "frequency": 440,
+        "jins": "Hijaz on A\u266d"
       },
       {
         "note": "B4\u266d",
@@ -746,7 +778,8 @@
       },
       {
         "note": "D4",
-        "frequency": 293.33
+        "frequency": 293.33,
+        "jins": "Hijaz"
       },
       {
         "note": "E4\u266d",
@@ -762,7 +795,8 @@
       },
       {
         "note": "A4",
-        "frequency": 440
+        "frequency": 440,
+        "jins": "Nahawand on A"
       },
       {
         "note": "B4\u266d",
@@ -805,7 +839,8 @@
       },
       {
         "note": "D4\u266d",
-        "frequency": 277
+        "frequency": 277,
+        "jins": "Hijaz"
       },
       {
         "note": "E4\u266e",
@@ -821,7 +856,8 @@
       },
       {
         "note": "A4\u266e",
-        "frequency": 440
+        "frequency": 440,
+        "jins": "Ajam on A"
       },
       {
         "note": "B4\u266d",
@@ -844,7 +880,8 @@
       },
       {
         "note": "D4\u266d",
-        "frequency": 277
+        "frequency": 277,
+        "jins": "Hijaz"
       },
       {
         "note": "E4\u266e",
@@ -860,7 +897,8 @@
       },
       {
         "note": "A4\u266d",
-        "frequency": 420
+        "frequency": 420,
+        "jins": "Hijaz Kar on A"
       },
       {
         "note": "B4\u266e",
@@ -895,7 +933,8 @@
       },
       {
         "note": "D4\u266d",
-        "frequency": 274
+        "frequency": 274,
+        "jins": "Hijazkar"
       },
       {
         "note": "E4\u266d",
@@ -911,7 +950,8 @@
       },
       {
         "note": "A4\u266d",
-        "frequency": 420
+        "frequency": 420,
+        "jins": "Kurd on A"
       },
       {
         "note": "B4\u266d",
@@ -954,7 +994,8 @@
       },
       {
         "note": "C4",
-        "frequency": 260.74
+        "frequency": 260.74,
+        "jins": "Nahawand"
       },
       {
         "note": "D4",
@@ -970,7 +1011,8 @@
       },
       {
         "note": "G4",
-        "frequency": 391.11
+        "frequency": 391.11,
+        "jins": "Kurd on G"
       },
       {
         "note": "A4\u266d",
@@ -1005,26 +1047,28 @@
     "scale": [
       {
         "note": "G3",
-        "frequency": 196.0
+        "frequency": 196.0,
+        "jins": "Nahawand"
       },
       {
         "note": "A3",
         "frequency": 220.0
       },
       {
-        "note": "B3♭",
+        "note": "B3\u266d",
         "frequency": 233.08
       },
       {
         "note": "C4",
-        "frequency": 261.63
+        "frequency": 261.63,
+        "jins": "Nahawand on C"
       },
       {
         "note": "D4",
         "frequency": 293.66
       },
       {
-        "note": "E4♭",
+        "note": "E4\u266d",
         "frequency": 311.13
       },
       {
@@ -1044,7 +1088,8 @@
     "scale": [
       {
         "note": "C4",
-        "frequency": 260.74
+        "frequency": 260.74,
+        "jins": "Nahawand"
       },
       {
         "note": "D4",
@@ -1060,7 +1105,8 @@
       },
       {
         "note": "G4",
-        "frequency": 391.11
+        "frequency": 391.11,
+        "jins": "Hijaz on G"
       },
       {
         "note": "A4\u266d",
@@ -1093,7 +1139,8 @@
       },
       {
         "note": "D4",
-        "frequency": 293.33
+        "frequency": 293.33,
+        "jins": "Kurd"
       },
       {
         "note": "E4\u266d",
@@ -1113,7 +1160,8 @@
       },
       {
         "note": "A4",
-        "frequency": 440
+        "frequency": 440,
+        "jins": "Nahawand on A"
       },
       {
         "note": "B4\u266d",
@@ -1136,7 +1184,8 @@
     "scale": [
       {
         "note": "D4",
-        "frequency": 293.33
+        "frequency": 293.33,
+        "jins": "Kurd"
       },
       {
         "note": "E4\u266d",
@@ -1148,7 +1197,8 @@
       },
       {
         "note": "G4",
-        "frequency": 391.11
+        "frequency": 391.11,
+        "jins": "Hijaz on G"
       },
       {
         "note": "A4\u266d",
@@ -1191,7 +1241,8 @@
       },
       {
         "note": "D4\u266d",
-        "frequency": 274
+        "frequency": 274,
+        "jins": "Athar Kurd"
       },
       {
         "note": "E4\u266d",
@@ -1211,7 +1262,8 @@
       },
       {
         "note": "A4\u266d",
-        "frequency": 423
+        "frequency": 423,
+        "jins": "Hijazkar on A"
       },
       {
         "note": "B4\u266e",
@@ -1238,7 +1290,8 @@
       },
       {
         "note": "C4",
-        "frequency": 260.74
+        "frequency": 260.74,
+        "jins": "Ajam"
       },
       {
         "note": "D4",
@@ -1254,7 +1307,8 @@
       },
       {
         "note": "G4",
-        "frequency": 391.11
+        "frequency": 391.11,
+        "jins": "Ajam / Nahawand on G"
       },
       {
         "note": "A4",
@@ -1297,7 +1351,8 @@
       },
       {
         "note": "C4",
-        "frequency": 260.74
+        "frequency": 260.74,
+        "jins": "Ajam"
       },
       {
         "note": "D4",
@@ -1332,7 +1387,8 @@
     "scale": [
       {
         "note": "C4",
-        "frequency": 260.74
+        "frequency": 260.74,
+        "jins": "Ajam"
       },
       {
         "note": "D4",
@@ -1348,7 +1404,8 @@
       },
       {
         "note": "G4",
-        "frequency": 391.11
+        "frequency": 391.11,
+        "jins": "Hijaz on G"
       },
       {
         "note": "A4\u266d",
@@ -1379,7 +1436,8 @@
       },
       {
         "note": "C4",
-        "frequency": 260.74
+        "frequency": 260.74,
+        "jins": "Nikriz"
       },
       {
         "note": "D4",
@@ -1395,7 +1453,8 @@
       },
       {
         "note": "G4",
-        "frequency": 391.11
+        "frequency": 391.11,
+        "jins": "Rast / Nahawand on G"
       },
       {
         "note": "A4\u266d",
@@ -1438,7 +1497,8 @@
       },
       {
         "note": "E4-Koron",
-        "frequency": 320
+        "frequency": 320,
+        "jins": "Sikah"
       },
       {
         "note": "F4",
@@ -1481,7 +1541,8 @@
     "scale": [
       {
         "note": "C4",
-        "frequency": 260.74
+        "frequency": 260.74,
+        "jins": "Saba Dalanshin"
       },
       {
         "note": "D4\u266e",
@@ -1497,7 +1558,8 @@
       },
       {
         "note": "G4",
-        "frequency": 391.11
+        "frequency": 391.11,
+        "jins": "Rast on G"
       },
       {
         "note": "A4",
@@ -1528,7 +1590,8 @@
     "scale": [
       {
         "note": "C4",
-        "frequency": 260.74
+        "frequency": 260.74,
+        "jins": "Rast"
       },
       {
         "note": "D4",
@@ -1540,7 +1603,8 @@
       },
       {
         "note": "F4",
-        "frequency": 347.65
+        "frequency": 347.65,
+        "jins": "Hijaz on F"
       },
       {
         "note": "G4",
