@@ -629,6 +629,10 @@ function renderMaqamPage(maqamKeyRaw) {
   const noteRows = data
     .map((n, idx) => {
       const note = n?.note ?? "";
+      const noteStr = String(note);
+      const noteParts = noteStr.split("-");
+      const noteBase = noteParts[0] || "";
+      const noteSuffix = noteParts.length > 1 ? `-${noteParts.slice(1).join("-")}` : "";
       const jins = n?.jins ?? "";
       const jinsDisplay = jins ? getJinsDisplayName(jins) : "";
       const freq = Number(n?.frequency);
@@ -638,7 +642,7 @@ function renderMaqamPage(maqamKeyRaw) {
           <button class="notePad selected" data-idx="${idx}" aria-pressed="true">
             <div class="noteTitle">
               <span class="noteIndex">[${idx}]</span>
-              <span class="noteName">${escapeHtml(note)}</span>
+              <span class="noteName">${escapeHtml(noteBase)}${noteSuffix ? `<span class="noteSuffix">${escapeHtml(noteSuffix)}</span>` : ""}</span>
             </div>
             <div class="noteMeta"><span class="pill">${escapeHtml(freqText)}</span></div>
             ${jinsDisplay ? `<div class="noteJins">${escapeHtml(jinsDisplay)}</div>` : ""}

@@ -230,6 +230,7 @@
     .notePad .noteTitle { font-size: 1rem; }
     .notePad .noteIndex { font-size: 0.7em; color: var(--muted); display: block; }
     .notePad .noteName { display: block; }
+    .notePad .noteSuffix { font-size: 0.75em; }
     .notePad .noteMeta { font-size: 0.9rem; color: var(--muted); }
     .notePad .noteJins { font-size: 0.85rem; color: var(--muted); }
     .notePad.selected {
@@ -292,6 +293,8 @@
         font-size: calc(2.1rem * var(--noteScale));
       }
       .notePad .noteIndex { font-size: 0.55em; }
+      .notePad .noteName { white-space: nowrap; }
+      .notePad .noteSuffix { font-size: 0.6em; }
       .notePad .noteMeta {
         display: flex;
         justify-content: center;
