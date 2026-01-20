@@ -26,6 +26,44 @@ const USE_SOUNDFONT = true;
 const SOUNDFONT_NAME = "MusyngKite";
 const SOUNDFONT_INSTRUMENT = "acoustic_guitar_nylon";
 const SOUNDFONT_BASE_URL = "https://gleitz.github.io/midi-js-soundfonts/";
+const EXERCISES = [
+  { id: "five_note", name: "Five Note Scale", pattern: [1, 2, 3, 2, 1] },
+  {
+    id: "full_scale",
+    name: "Full Scale Up and Down",
+    pattern: [1, 2, 3, 4, 5, 6, 7, 8, 7, 6, 5, 4, 3, 2, 1]
+  },
+  {
+    id: "broken_thirds",
+    name: "Broken Thirds",
+    pattern: [1, 3, 2, 4, 3, 5, 4, 6, 5, 7, 6, 8, 7, 8, 6, 7, 5, 6, 4, 5, 3, 4, 2, 3, 1]
+  },
+  { id: "arpeggio_octave", name: "Arpeggio with Octave", pattern: [1, 3, 5, 8, 5, 3, 1] },
+  { id: "octave_leaps", name: "Octave Leap Descent", pattern: [1, 8, 7, 6, 5, 4, 3, 2, 1] },
+  {
+    id: "fourths",
+    name: "Scale in Fourths",
+    pattern: [1, 4, 2, 5, 3, 6, 4, 7, 5, 8, 6, 7, 5, 6, 4, 5, 3, 4, 2, 3, 1]
+  },
+  {
+    id: "neighbor_tones",
+    name: "Neighbor Tone Motion",
+    pattern: [
+      1, 2, 1, 2, 3, 2, 3, 4, 3, 4, 5, 4, 5, 6, 5, 6, 7, 6, 7, 8, 7, 8, 7, 6, 7, 5, 6, 4, 5,
+      3, 4, 2, 3, 1
+    ]
+  },
+  {
+    id: "sequential_triads",
+    name: "Sequential Triads",
+    pattern: [1, 3, 5, 2, 4, 6, 3, 5, 7, 4, 6, 8, 5, 7, 8, 6, 8, 7, 5, 7, 4, 6, 3, 5, 2, 4, 1]
+  },
+  {
+    id: "interval_slides",
+    name: "Portamento Intervals",
+    pattern: [1, 3, 2, 4, 3, 5, 4, 6, 5, 7, 6, 8, 8, 6, 7, 5, 6, 4, 5, 3, 4, 2, 3, 1]
+  }
+];
 
 let maqamsData = null;
 let translations = null;
@@ -70,6 +108,7 @@ const siteHeaderEl = document.getElementById("siteHeader");
 const headerTitleEl = document.getElementById("headerTitle");
 const headerTaglineEl = document.getElementById("headerTagline");
 const langSwitchEl = document.getElementById("langSwitch");
+const navExercisesEl = document.getElementById("navExercises");
 
 function t(key, vars = null) {
   const dict = (translations && translations[currentLang]) || (translations && translations.en) || {};
@@ -128,6 +167,8 @@ function applyLang() {
   if (headerTitleEl) headerTitleEl.textContent = t("app.title");
   if (headerTitleEl) headerTitleEl.setAttribute("href", buildHash());
   if (headerTaglineEl) headerTaglineEl.textContent = t("header.tagline");
+  if (navExercisesEl) navExercisesEl.setAttribute("href", buildHash("/exercises"));
+  if (navExercisesEl) navExercisesEl.textContent = t("nav.exercises");
   document.title = t("app.title");
   setHeaderMaqam(currentMaqamKey);
   setAudioStatusByKey(audioStatusKey);
@@ -177,7 +218,11 @@ function updateHeaderCompact() {
 }
 
 function updateNotesScale() {
-  if (!document.body.classList.contains("pageMaqam")) return;
+  if (
+    !document.body.classList.contains("pageMaqam") &&
+    !document.body.classList.contains("pageExercises")
+  )
+    return;
   if (window.innerWidth > 720) {
     const notesEl = appEl && appEl.querySelector(".notes");
     if (notesEl) notesEl.style.setProperty("--noteScale", "1");
@@ -430,6 +475,7 @@ function parseRoute() {
     lang = parts.shift();
   }
   if (parts.length === 0) return { page: "list", lang };
+  if (parts[0] === "exercises") return { page: "exercises", lang };
   if (parts[0] === "maqam" && parts[1]) return { page: "maqam", maqam: parts[1], lang };
   return { page: "list", lang };
 }
@@ -480,6 +526,160 @@ function intervalLabelFromFrequencies(currentHz, nextHz, isRtl) {
   }
   const arrow = isRtl ? "←" : "→";
   return `${arrow} ${t(best.key)}`;
+}
+
+function getTonicIndexFromScale(data, tonic) {
+  const tonicStr = tonic ? String(tonic).trim() : "";
+  if (!tonicStr) return -1;
+  const target = tonicStr.toLowerCase();
+  const directIndex = data.findIndex((n) => {
+    const note = String(n?.note || "").toLowerCase();
+    return note.startsWith(target);
+  });
+  if (directIndex >= 0) return directIndex;
+  const match = tonicStr.match(/[A-G]/i);
+  if (!match) return -1;
+  const letter = match[0].toLowerCase();
+  return data.findIndex((n) => {
+    const note = String(n?.note || "").toLowerCase();
+    return note.startsWith(letter);
+  });
+}
+
+function findNoteIndexInScale(data, entry) {
+  if (!entry) return -1;
+  const idx = Number(entry.index);
+  if (Number.isFinite(idx)) return idx;
+  const note = entry.note ?? "";
+  const freq = Number(entry.frequency);
+  return data.findIndex((n) => {
+    if (!n) return false;
+    if (n.note !== note) return false;
+    if (!Number.isFinite(freq)) return true;
+    const f = Number(n.frequency);
+    return Number.isFinite(f) && Math.abs(f - freq) < 0.01;
+  });
+}
+
+function getUpperGroupData(data, upperJins) {
+  const groups = Array.isArray(upperJins)
+    ? upperJins.map((entry) => ({
+        name: entry?.name || entry?.jins || "",
+        scale: Array.isArray(entry?.scale) ? entry.scale : [],
+        indices: []
+      }))
+    : [];
+  const used = new Set();
+  groups.forEach((group) => {
+    group.indices = group.scale
+      .map((entry) => findNoteIndexInScale(data, entry))
+      .filter((idx) => Number.isFinite(idx) && idx >= 0);
+    group.indices.forEach((idx) => used.add(idx));
+  });
+  const all = data.map((_, i) => i);
+  const lowerIndices = all.filter((idx) => !used.has(idx));
+  return { groups, lowerIndices };
+}
+
+function buildScaleList(scale, tonicIndex, allowedSet) {
+  if (!Number.isFinite(tonicIndex) || tonicIndex < 0) return [];
+  const indices = [...allowedSet]
+    .filter((idx) => idx >= tonicIndex)
+    .sort((a, b) => a - b);
+  return indices
+    .map((idx) => {
+      const entry = scale[idx];
+      if (!entry) return null;
+      return {
+        note: entry.note,
+        frequency: entry.frequency,
+        index: idx
+      };
+    })
+    .filter(Boolean);
+}
+
+function buildNoteRows(data, tonicIndex, upperJins, lowerJinsDisplay) {
+  function renderNoteItem(n, idx, jinsOverride = "", upperGroupId = "") {
+    const note = n?.note ?? "";
+    const noteStr = String(note);
+    const noteParts = noteStr.split("-");
+    const noteBase = noteParts[0] || "";
+    const noteSuffix = noteParts.length > 1 ? `-${noteParts.slice(1).join("-")}` : "";
+    const jins = jinsOverride || n?.jins || "";
+    const jinsDisplay = jins ? getJinsDisplayName(jins) : "";
+    const freq = Number(n?.frequency);
+    const next = data[idx + 1];
+    const intervalText = intervalLabelFromFrequencies(freq, Number(next?.frequency), isRtlLang(currentLang));
+    const displayIndex = Number.isFinite(tonicIndex) && tonicIndex >= 0 ? idx - tonicIndex : idx;
+    const isTonic = displayIndex === 0;
+    const isSelected = displayIndex >= 0;
+    const upperAttr = upperGroupId ? ` data-upper="${upperGroupId}"` : "";
+    return `
+      <div class="noteItem">
+        <button class="notePad${isSelected ? " selected" : ""}" data-idx="${idx}" aria-pressed="${
+      isSelected ? "true" : "false"
+    }"${upperAttr}>
+          <div class="noteTitle">
+            <span class="noteIndex">[${displayIndex}]</span>
+            <span class="noteName">${escapeHtml(noteBase)}${
+      noteSuffix ? `<span class="noteSuffix">${escapeHtml(noteSuffix)}</span>` : ""
+    }${isTonic ? `<span class="noteKey" aria-hidden="true"> 🔑</span>` : ""}</span>
+          </div>
+          <div class="noteMeta"><span class="noteInterval">${escapeHtml(intervalText)}</span></div>
+          ${jinsDisplay ? `<div class="noteJins">${escapeHtml(jinsDisplay)}</div>` : ""}
+        </button>
+      </div>
+    `;
+  }
+
+  let noteRows = "";
+  const upperGroupData = getUpperGroupData(data, upperJins);
+  const upperGroups = upperGroupData.groups;
+
+  if (upperGroups.length > 1) {
+    const groupBlocks = [];
+
+    for (const group of upperGroups) {
+      const groupId = group === upperGroups[0] ? "a" : group === upperGroups[1] ? "b" : "";
+      const label = group.name ? `${t("maqam.upperJinsLabel")} ${getJinsDisplayName(group.name)}` : "";
+      if (label) {
+        groupBlocks.push(`<div class="notesGroupTitle">${escapeHtml(label)}</div>`);
+      }
+      groupBlocks.push(
+        group.indices
+          .map((idx, i) => renderNoteItem(data[idx], idx, i === 0 ? group.name : "", groupId))
+          .join("")
+      );
+    }
+
+    if (upperGroupData.lowerIndices.length > 0) {
+      const label = lowerJinsDisplay
+        ? `${t("maqam.lowerJinsLabel")} ${lowerJinsDisplay}`
+        : t("maqam.lowerJinsLabel");
+      groupBlocks.unshift(`<div class="notesGroupTitle">${escapeHtml(label)}</div>`);
+      groupBlocks.splice(
+        1,
+        0,
+        upperGroupData.lowerIndices.map((idx) => renderNoteItem(data[idx], idx)).join("")
+      );
+    }
+
+    noteRows = groupBlocks.join("");
+  } else {
+    noteRows = data.map((n, idx) => renderNoteItem(n, idx)).join("");
+  }
+
+  return noteRows;
+}
+
+function getUpperGroupForIndex(idx, upperASet, upperBSet, preferGroup = null) {
+  const inA = upperASet.has(idx);
+  const inB = upperBSet.has(idx);
+  if (inA && inB) return preferGroup;
+  if (inA) return "a";
+  if (inB) return "b";
+  return null;
 }
 
 // --------------------
@@ -562,6 +762,7 @@ function renderListPage(keepSearchFocus = false) {
   stopMic();
   setHeaderMaqam("");
   document.body.classList.remove("pageMaqam");
+  document.body.classList.remove("pageExercises");
 
   const keys = Object.keys(maqamsData);
 
@@ -702,6 +903,7 @@ function renderListPage(keepSearchFocus = false) {
 function renderMaqamPage(maqamKeyRaw) {
   stopLoop();
   stopMic();
+  document.body.classList.remove("pageExercises");
   document.body.classList.add("pageMaqam");
 
   const key = decodeURIComponent(maqamKeyRaw);
@@ -725,103 +927,9 @@ function renderMaqamPage(maqamKeyRaw) {
   const upperNames = getUpperJinsNames(upperJins);
   const upperJinsDisplay = upperNames.map(getJinsDisplayName).join(" / ");
   const data = Array.isArray(maqamObj.scale) ? maqamObj.scale : [];
-
-  const tonicIndex = (() => {
-    const tonic = maqamObj.tonic ? String(maqamObj.tonic) : "";
-    const match = tonic.match(/[A-G]/i);
-    if (!match) return -1;
-    const tonicLetter = match[0].toUpperCase();
-    return data.findIndex((n) => {
-      const note = n?.note ?? "";
-      return typeof note === "string" && note[0].toUpperCase() === tonicLetter;
-    });
-  })();
-
-  function renderNoteItem(n, idx, jinsOverride = "") {
-      const note = n?.note ?? "";
-      const noteStr = String(note);
-      const noteParts = noteStr.split("-");
-      const noteBase = noteParts[0] || "";
-      const noteSuffix = noteParts.length > 1 ? `-${noteParts.slice(1).join("-")}` : "";
-      const jins = jinsOverride || n?.jins || "";
-      const jinsDisplay = jins ? getJinsDisplayName(jins) : "";
-      const freq = Number(n?.frequency);
-      const next = data[idx + 1];
-      const intervalText = intervalLabelFromFrequencies(freq, Number(next?.frequency), isRtlLang(currentLang));
-      const displayIndex = Number.isFinite(tonicIndex) && tonicIndex >= 0 ? idx - tonicIndex : idx;
-      const isTonic = displayIndex === 0;
-      return `
-        <div class="noteItem">
-          <button class="notePad selected" data-idx="${idx}" aria-pressed="true">
-            <div class="noteTitle">
-              <span class="noteIndex">[${displayIndex}]</span>
-              <span class="noteName">${escapeHtml(noteBase)}${noteSuffix ? `<span class="noteSuffix">${escapeHtml(noteSuffix)}</span>` : ""}${isTonic ? `<span class="noteKey" aria-hidden="true"> 🔑</span>` : ""}</span>
-            </div>
-            <div class="noteMeta"><span class="noteInterval">${escapeHtml(intervalText)}</span></div>
-            ${jinsDisplay ? `<div class="noteJins">${escapeHtml(jinsDisplay)}</div>` : ""}
-          </button>
-        </div>
-      `;
-  }
-
-  function findNoteIndex(entry) {
-    if (!entry) return -1;
-    const idx = Number(entry.index);
-    if (Number.isFinite(idx)) return idx;
-    const note = entry.note ?? "";
-    const freq = Number(entry.frequency);
-    return data.findIndex((n) => {
-      if (!n) return false;
-      if (n.note !== note) return false;
-      if (!Number.isFinite(freq)) return true;
-      const f = Number(n.frequency);
-      return Number.isFinite(f) && Math.abs(f - freq) < 0.01;
-    });
-  }
-
-  let noteRows = "";
-  const upperGroups = Array.isArray(upperJins)
-    ? upperJins.map((entry) => ({
-        name: entry?.name || entry?.jins || "",
-        scale: Array.isArray(entry?.scale) ? entry.scale : []
-      }))
-    : [];
-
-  if (upperGroups.length > 1) {
-    const used = new Set();
-    const groupBlocks = [];
-
-    const allIndices = data.map((_, i) => i);
-
-    for (const group of upperGroups) {
-      const indices = group.scale
-        .map(findNoteIndex)
-        .filter((idx) => Number.isFinite(idx) && idx >= 0);
-      indices.forEach((idx) => used.add(idx));
-      const label = group.name ? `${t("maqam.upperJinsLabel")} ${getJinsDisplayName(group.name)}` : "";
-      if (label) {
-        groupBlocks.push(`<div class="notesGroupTitle">${escapeHtml(label)}</div>`);
-      }
-      groupBlocks.push(
-        indices
-          .map((idx, i) => renderNoteItem(data[idx], idx, i === 0 ? group.name : ""))
-          .join("")
-      );
-    }
-
-    const remaining = allIndices.filter((idx) => !used.has(idx));
-    if (remaining.length > 0) {
-      const label = lowerJinsDisplay
-        ? `${t("maqam.lowerJinsLabel")} ${lowerJinsDisplay}`
-        : t("maqam.lowerJinsLabel");
-      groupBlocks.unshift(`<div class="notesGroupTitle">${escapeHtml(label)}</div>`);
-      groupBlocks.splice(1, 0, remaining.map((idx) => renderNoteItem(data[idx], idx)).join(""));
-    }
-
-    noteRows = groupBlocks.join("");
-  } else {
-    noteRows = data.map((n, idx) => renderNoteItem(n, idx)).join("");
-  }
+  const tonicIndex = getTonicIndexFromScale(data, maqamObj.tonic);
+  const noteRows = buildNoteRows(data, tonicIndex, upperJins, lowerJinsDisplay);
+  const upperGroupData = getUpperGroupData(data, upperJins);
 
   const displayName = getMaqamDisplayName(key);
   appEl.innerHTML = `
@@ -850,14 +958,14 @@ function renderMaqamPage(maqamKeyRaw) {
         <label class="row miniGroup" style="gap:6px;">
           <span class="pill">${escapeHtml(t("controls.tempo"))}</span>
           <button id="tempoDown" class="miniBtn" aria-label="${escapeHtml(t("aria.decreaseTempo"))}">-</button>
-          <span id="tempoMiniValue"><strong>120</strong> BPM</span>
+          <span id="tempoMiniValue"><strong>60</strong> BPM</span>
           <button id="tempoUp" class="miniBtn" aria-label="${escapeHtml(t("aria.increaseTempo"))}">+</button>
         </label>
 
         <label class="row miniGroup" style="gap:6px;">
           <span class="pill">${escapeHtml(t("controls.length"))}</span>
           <button id="noteLenDown" class="miniBtn" aria-label="${escapeHtml(t("aria.decreaseLength"))}">-</button>
-          <span id="noteLenMiniValue"><strong>500</strong> ms</span>
+          <span id="noteLenMiniValue"><strong>800</strong> ms</span>
           <button id="noteLenUp" class="miniBtn" aria-label="${escapeHtml(t("aria.increaseLength"))}">+</button>
         </label>
       </div>
@@ -880,14 +988,14 @@ function renderMaqamPage(maqamKeyRaw) {
         <div class="row" style="margin-top:8px;">
           <label class="row" style="gap:8px;">
             <span class="pill">${escapeHtml(t("controls.tempo"))}</span>
-            <input id="tempo" type="range" min="30" max="240" value="120" />
-            <span id="tempoLabel"><strong>120</strong> BPM</span>
+            <input id="tempo" type="range" min="30" max="240" value="60" />
+            <span id="tempoLabel"><strong>60</strong> BPM</span>
           </label>
 
           <label class="row" style="gap:8px;">
             <span class="pill">${escapeHtml(t("controls.noteLength"))}</span>
-            <input id="noteLen" type="range" min="80" max="1200" value="500" />
-            <span id="noteLenLabel"><strong>500</strong> ms</span>
+            <input id="noteLen" type="range" min="80" max="1200" value="800" />
+            <span id="noteLenLabel"><strong>800</strong> ms</span>
           </label>
 
           <label class="row" style="gap:8px;">
@@ -903,6 +1011,29 @@ function renderMaqamPage(maqamKeyRaw) {
               <option value="down">${escapeHtml(t("controls.loopDown"))}</option>
             </select>
           </label>
+
+          ${
+            upperGroupData.groups.length > 1
+              ? `
+          <label class="row" style="gap:8px;">
+            <span class="pill">${escapeHtml(t("upperJins.modeLabel"))}</span>
+            <select id="upperJinsMode">
+              <option value="a">${escapeHtml(
+                t("upperJins.aOnly", {
+                  name: getJinsDisplayName(upperGroupData.groups[0]?.name) || t("upperJins.groupA")
+                })
+              )}</option>
+              <option value="b">${escapeHtml(
+                t("upperJins.bOnly", {
+                  name: getJinsDisplayName(upperGroupData.groups[1]?.name) || t("upperJins.groupB")
+                })
+              )}</option>
+              <option value="mixed">${escapeHtml(t("upperJins.mixed"))}</option>
+            </select>
+          </label>
+          `
+              : ""
+          }
 
           <label class="row" style="gap:8px;">
             <span class="pill">${escapeHtml(t("controls.pitchOffset"))}</span>
@@ -991,6 +1122,7 @@ function renderMaqamPage(maqamKeyRaw) {
   const noteLen = document.getElementById("noteLen");
   const noteLenLabel = document.getElementById("noteLenLabel");
   const loopOrder = document.getElementById("loopOrder");
+  const upperJinsMode = document.getElementById("upperJinsMode");
   const pitchOffset = document.getElementById("pitchOffset");
   const pitchOffsetLabel = document.getElementById("pitchOffsetLabel");
   const selectedCount = document.getElementById("selectedCount");
@@ -1015,24 +1147,52 @@ function renderMaqamPage(maqamKeyRaw) {
   });
 
   let activeLoopBtn = null;
-  function setActiveLoopIndex(idx) {
+  function setActiveLoopIndex(entry) {
     if (activeLoopBtn) activeLoopBtn.classList.remove("active");
     activeLoopBtn = null;
 
+    if (entry === null || entry === undefined) return;
+    const idx = typeof entry === "object" ? Number(entry.idx) : Number(entry);
+    const group = typeof entry === "object" ? entry.group : null;
     if (!Number.isFinite(idx)) return;
     const buttons = playButtonsByIdx.get(idx);
     if (!buttons || buttons.length === 0) return;
-    const preferred = buttons.find((btn) => btn.classList.contains("selected")) || buttons[0];
+    const preferred =
+      (group ? buttons.find((btn) => btn.getAttribute("data-upper") === group) : null) ||
+      buttons.find((btn) => btn.classList.contains("selected")) ||
+      buttons[0];
     preferred.classList.add("active");
     activeLoopBtn = preferred;
   }
 
   function getSelectedIndexes() {
     const pads = [...appEl.querySelectorAll(".notePad.selected")];
-    return pads
-      .map((c) => Number(c.getAttribute("data-idx")))
-      .filter((n) => Number.isFinite(n))
-      .sort((a, b) => a - b);
+    const uniq = new Set(
+      pads.map((c) => Number(c.getAttribute("data-idx"))).filter((n) => Number.isFinite(n))
+    );
+    return [...uniq].sort((a, b) => a - b);
+  }
+
+  const upperGroupA = upperGroupData.groups[0] || { indices: [] };
+  const upperGroupB = upperGroupData.groups[1] || { indices: [] };
+  const upperASet = new Set(upperGroupA.indices);
+  const upperBSet = new Set(upperGroupB.indices);
+  const lowerSet = new Set(upperGroupData.lowerIndices);
+
+  function applyUpperMode(mode) {
+    if (!upperJinsMode) return;
+    const blockedUpper = mode === "a" ? "b" : mode === "b" ? "a" : null;
+
+    appEl.querySelectorAll(".notePad").forEach((btn) => {
+      const upper = btn.getAttribute("data-upper");
+      const isBlocked = blockedUpper && upper === blockedUpper;
+      btn.classList.toggle("blocked", isBlocked);
+      if (isBlocked) {
+        btn.classList.remove("selected");
+        btn.setAttribute("aria-pressed", "false");
+      }
+    });
+    updateSelectedCount();
   }
 
   function getLoopSequence() {
@@ -1040,9 +1200,42 @@ function renderMaqamPage(maqamKeyRaw) {
     if (idxs.length === 0) return [];
     const mode = loopOrder?.value || "upDown";
 
-    if (mode === "down") return [...idxs].reverse();
-    if (mode === "up") return idxs;
-    return idxs.concat([...idxs].reverse());
+    if (!upperJinsMode) {
+      if (mode === "down") return [...idxs].reverse().map((idx) => ({ idx, group: null }));
+      if (mode === "up") return idxs.map((idx) => ({ idx, group: null }));
+      return idxs
+        .map((idx) => ({ idx, group: null }))
+        .concat([...idxs].reverse().map((idx) => ({ idx, group: null })));
+    }
+
+    const upperMode = upperJinsMode.value;
+    const lower = idxs.filter((idx) => lowerSet.has(idx));
+    const upperA = idxs.filter((idx) => upperASet.has(idx));
+    const upperB = idxs.filter((idx) => upperBSet.has(idx));
+
+    const upSeq = [...lower, ...upperA].sort((a, b) => a - b);
+    const downSeq = [...lower, ...upperB].sort((a, b) => a - b);
+    const upEntries = upSeq.map((idx) => ({
+      idx,
+      group: getUpperGroupForIndex(idx, upperASet, upperBSet, "a")
+    }));
+    const downEntries = downSeq.map((idx) => ({
+      idx,
+      group: getUpperGroupForIndex(idx, upperASet, upperBSet, "b")
+    }));
+
+    if (upperMode === "mixed") {
+      const up = upEntries.length > 0 ? upEntries : downEntries;
+      const down = downEntries.length > 0 ? downEntries : upEntries;
+      if (mode === "up") return up;
+      if (mode === "down") return [...down].reverse();
+      return up.concat([...down].reverse());
+    }
+
+    const single = upperMode === "b" ? downEntries : upEntries;
+    if (mode === "down") return [...single].reverse();
+    if (mode === "up") return single;
+    return single.concat([...single].reverse());
   }
 
   function updateSelectedCount() {
@@ -1145,6 +1338,18 @@ function renderMaqamPage(maqamKeyRaw) {
     };
   }
 
+  if (upperJinsMode) {
+    upperJinsMode.onchange = () => {
+      applyUpperMode(upperJinsMode.value);
+      if (isLooping) {
+        currentLoopStep = 0;
+        loopTick();
+        restartLoopTimer();
+      }
+    };
+    applyUpperMode(upperJinsMode.value);
+  }
+
   selectAll.onclick = () => {
     [...appEl.querySelectorAll(".notePad")].forEach((btn) => {
       btn.classList.add("selected");
@@ -1166,6 +1371,10 @@ function renderMaqamPage(maqamKeyRaw) {
       const idx = Number(btn.getAttribute("data-idx"));
       const note = data[idx];
       if (!note || !Number.isFinite(Number(note.frequency))) return;
+      if (btn.classList.contains("blocked")) {
+        playTone(Number(note.frequency), getNoteDurationMs());
+        return;
+      }
       const isSelected = btn.classList.toggle("selected");
       btn.setAttribute("aria-pressed", isSelected ? "true" : "false");
       updateSelectedCount();
@@ -1208,9 +1417,10 @@ function renderMaqamPage(maqamKeyRaw) {
         await sleep(80);
       }
       if (playSequenceToken !== token) break;
-      const noteIdx = seq[i];
+      const entry = seq[i];
+      const noteIdx = typeof entry === "object" ? entry.idx : entry;
       const n = data[noteIdx];
-      setActiveLoopIndex(noteIdx);
+      setActiveLoopIndex(entry);
       if (n && Number.isFinite(Number(n.frequency))) playTone(Number(n.frequency), dur);
       await sleep(intervalMs);
     }
@@ -1248,10 +1458,11 @@ function renderMaqamPage(maqamKeyRaw) {
 
     const dur = getNoteDurationMs();
     const i = currentLoopStep % seq.length;
-    const noteIdx = seq[i];
+    const entry = seq[i];
+    const noteIdx = typeof entry === "object" ? entry.idx : entry;
     const note = data[noteIdx];
 
-    setActiveLoopIndex(noteIdx);
+    setActiveLoopIndex(entry);
 
     if (note && Number.isFinite(Number(note.frequency))) {
       playTone(Number(note.frequency), dur);
@@ -1451,6 +1662,410 @@ function renderMaqamPage(maqamKeyRaw) {
   }
 }
 
+function getMaqamKeyFromInput(value) {
+  const raw = String(value || "").trim();
+  if (!raw) return "";
+  const normalized = normalizeKey(raw);
+  if (maqamsData && maqamsData[normalized]) return normalized;
+
+  const match = raw.match(/\(([^)]+)\)\s*$/);
+  if (match) {
+    const maybeKey = normalizeKey(match[1]);
+    if (maqamsData && maqamsData[maybeKey]) return maybeKey;
+  }
+
+  const keys = Object.keys(maqamsData || {});
+  for (const key of keys) {
+    const display = getMaqamDisplayName(key);
+    if (normalizeKey(display) === normalized) return key;
+  }
+  return "";
+}
+
+function renderExercisesPage() {
+  stopLoop();
+  stopMic();
+  stopAllPlayback();
+  setHeaderMaqam("");
+  document.body.classList.remove("pageMaqam");
+  document.body.classList.add("pageExercises");
+
+  const maqamKeys = Object.keys(maqamsData || {});
+  const maqamOptions = maqamKeys
+    .map((k) => {
+      const display = getMaqamDisplayName(k) || k;
+      return `<option value="${escapeHtml(display)} (${escapeHtml(k)})"></option>`;
+    })
+    .join("");
+
+  const exerciseOptions = EXERCISES.map(
+    (ex) => `<option value="${escapeHtml(ex.id)}">${escapeHtml(ex.name)}</option>`
+  ).join("");
+
+  appEl.innerHTML = `
+    <div class="card">
+      <div class="row" style="margin-bottom:8px;">
+        <label class="row" style="gap:8px;">
+          <span class="pill">${escapeHtml(t("exercises.maqam"))}</span>
+          <input id="exerciseMaqamInput" type="text" list="maqamList" placeholder="${escapeHtml(
+            t("exercises.maqamPlaceholder")
+          )}" />
+          <datalist id="maqamList">${maqamOptions}</datalist>
+        </label>
+        <label class="row" style="gap:8px;">
+          <span class="pill">${escapeHtml(t("exercises.pickExercise"))}</span>
+          <select id="exerciseSelect">
+            <option value="">${escapeHtml(t("exercises.selectExercise"))}</option>
+            ${exerciseOptions}
+          </select>
+        </label>
+      </div>
+      <div class="row" style="margin-top:8px;">
+        <label class="row" style="gap:8px;">
+          <span class="pill">${escapeHtml(t("controls.tempo"))}</span>
+          <input id="exerciseTempo" type="range" min="30" max="240" value="60" />
+          <span id="exerciseTempoLabel"><strong>60</strong> BPM</span>
+        </label>
+        <label class="row" style="gap:8px;">
+          <span class="pill">${escapeHtml(t("controls.noteLength"))}</span>
+          <input id="exerciseNoteLen" type="range" min="80" max="1200" value="800" />
+          <span id="exerciseNoteLenLabel"><strong>800</strong> ms</span>
+        </label>
+        <span id="exerciseUpperJinsWrap"></span>
+        <button id="exerciseStart">${escapeHtml(t("exercises.start"))}</button>
+        <button id="exerciseStop" disabled>${escapeHtml(t("exercises.stop"))}</button>
+      </div>
+      <div class="muted small" id="exerciseStatus" style="margin-top:8px;">${escapeHtml(
+        t("exercises.status.ready")
+      )}</div>
+    </div>
+
+    <div class="card" style="margin-top:12px;">
+      <div class="row" style="align-items:flex-start;">
+        <div>
+          <div class="muted small">${escapeHtml(t("exercises.nowPlaying"))}</div>
+          <div id="exerciseNow" style="font-size:1.2rem; font-weight:700;">-</div>
+        </div>
+      </div>
+      <div id="exerciseSteps" class="exerciseSteps"></div>
+    </div>
+
+    <div class="card" style="margin-top:12px;">
+      <div class="row" style="align-items:center; justify-content:space-between;">
+        <strong>${escapeHtml(t("exercises.notesTitle"))}</strong>
+      </div>
+      <div id="exerciseNotes" class="notes" style="margin-top:8px;"></div>
+    </div>
+  `;
+
+  const maqamInput = document.getElementById("exerciseMaqamInput");
+  const exerciseSelect = document.getElementById("exerciseSelect");
+  const tempo = document.getElementById("exerciseTempo");
+  const tempoLabel = document.getElementById("exerciseTempoLabel");
+  const noteLen = document.getElementById("exerciseNoteLen");
+  const noteLenLabel = document.getElementById("exerciseNoteLenLabel");
+  const btnStart = document.getElementById("exerciseStart");
+  const btnStop = document.getElementById("exerciseStop");
+  const statusEl = document.getElementById("exerciseStatus");
+  const nowEl = document.getElementById("exerciseNow");
+  const stepsEl = document.getElementById("exerciseSteps");
+  const notesEl = document.getElementById("exerciseNotes");
+  const upperJinsWrap = document.getElementById("exerciseUpperJinsWrap");
+
+  let exerciseTimer = null;
+  let exerciseSequence = [];
+  let activeStepEl = null;
+  let exerciseData = [];
+  let exerciseUpperData = { groups: [], lowerIndices: [] };
+  let exerciseUpperMode = "a";
+  let noteButtonsByIdx = new Map();
+  let activeNoteBtn = null;
+
+  function setStatus(key, vars = null) {
+    statusEl.textContent = t(key, vars);
+  }
+
+  function setActiveStep(idx) {
+    if (activeStepEl) activeStepEl.classList.remove("active");
+    activeStepEl = null;
+    if (!stepsEl || idx === null) return;
+    const next = stepsEl.querySelector(`.exerciseStep[data-step="${idx}"]`);
+    if (next) {
+      next.classList.add("active");
+      activeStepEl = next;
+    }
+  }
+
+  function setActiveNoteIndex(idx) {
+    if (activeNoteBtn) activeNoteBtn.classList.remove("active");
+    activeNoteBtn = null;
+    if (idx === null || idx === undefined) return;
+    const noteIdx = typeof idx === "object" ? Number(idx.idx) : Number(idx);
+    const group = typeof idx === "object" ? idx.group : null;
+    if (!Number.isFinite(noteIdx)) return;
+    const buttons = noteButtonsByIdx.get(noteIdx);
+    if (!buttons || buttons.length === 0) return;
+    const preferred =
+      (group ? buttons.find((btn) => btn.getAttribute("data-upper") === group) : null) ||
+      buttons.find((btn) => btn.classList.contains("selected")) ||
+      buttons[0];
+    preferred.classList.add("active");
+    activeNoteBtn = preferred;
+  }
+
+  function mapNoteButtons() {
+    noteButtonsByIdx = new Map();
+    activeNoteBtn = null;
+    if (!notesEl) return;
+    notesEl.querySelectorAll(".notePad").forEach((btn) => {
+      const idx = Number(btn.getAttribute("data-idx"));
+      if (!Number.isFinite(idx)) return;
+      if (!noteButtonsByIdx.has(idx)) noteButtonsByIdx.set(idx, []);
+      noteButtonsByIdx.get(idx).push(btn);
+      btn.addEventListener("click", () => {
+        const note = exerciseData[idx];
+        if (!note || !Number.isFinite(Number(note.frequency))) return;
+        if (!btn.classList.contains("blocked")) {
+          const isSelected = btn.classList.toggle("selected");
+          btn.setAttribute("aria-pressed", isSelected ? "true" : "false");
+        }
+        playTone(Number(note.frequency), Number(noteLen.value) || 800);
+      });
+    });
+  }
+
+  function applyUpperModeToNotes() {
+    if (!notesEl) return;
+    if (exerciseUpperData.groups.length < 2) {
+      notesEl.querySelectorAll(".notePad").forEach((btn) => btn.classList.remove("blocked"));
+      return;
+    }
+    const blockedUpper = exerciseUpperMode === "a" ? "b" : exerciseUpperMode === "b" ? "a" : null;
+    notesEl.querySelectorAll(".notePad").forEach((btn) => {
+      const upper = btn.getAttribute("data-upper");
+      const isBlocked = blockedUpper && upper === blockedUpper;
+      btn.classList.toggle("blocked", isBlocked);
+      if (isBlocked) {
+        btn.classList.remove("selected");
+        btn.setAttribute("aria-pressed", "false");
+      }
+    });
+  }
+
+  function refreshNotesPanel() {
+    const maqamKey = getMaqamKeyFromInput(maqamInput.value);
+    if (!maqamKey) {
+      if (notesEl) {
+        notesEl.innerHTML = `<div class="muted small" style="grid-column:1/-1;">${escapeHtml(
+          t("exercises.status.noMaqam")
+        )}</div>`;
+      }
+      exerciseData = [];
+      noteButtonsByIdx = new Map();
+      activeNoteBtn = null;
+      updateNotesScale();
+      return;
+    }
+
+    const obj = maqamsData[maqamKey] || {};
+    exerciseData = Array.isArray(obj.scale) ? obj.scale : [];
+    const tonicIndex = getTonicIndexFromScale(exerciseData, obj.tonic);
+    const lowerDisplay = getJinsDisplayName(obj.lower_jins || "");
+    exerciseUpperData = getUpperGroupData(exerciseData, obj.upper_jins);
+    const noteRows = buildNoteRows(exerciseData, tonicIndex, obj.upper_jins, lowerDisplay);
+    if (notesEl) {
+      notesEl.innerHTML = noteRows;
+    }
+    mapNoteButtons();
+    if (upperJinsWrap) {
+      if (exerciseUpperData.groups.length > 1) {
+        const upperAName =
+          getJinsDisplayName(exerciseUpperData.groups[0]?.name) || t("upperJins.groupA");
+        const upperBName =
+          getJinsDisplayName(exerciseUpperData.groups[1]?.name) || t("upperJins.groupB");
+        upperJinsWrap.innerHTML = `
+          <label class="row" style="gap:8px;">
+            <span class="pill">${escapeHtml(t("upperJins.modeLabel"))}</span>
+            <select id="exerciseUpperJinsMode">
+              <option value="a">${escapeHtml(t("upperJins.aOnly", { name: upperAName }))}</option>
+              <option value="b">${escapeHtml(t("upperJins.bOnly", { name: upperBName }))}</option>
+              <option value="mixed">${escapeHtml(t("upperJins.mixed"))}</option>
+            </select>
+          </label>
+        `;
+        const upperSelect = document.getElementById("exerciseUpperJinsMode");
+        upperSelect.value = exerciseUpperMode;
+        upperSelect.onchange = () => {
+          exerciseUpperMode = upperSelect.value;
+          stopExercise();
+          refreshNotesPanel();
+        };
+      } else {
+        upperJinsWrap.innerHTML = "";
+        exerciseUpperMode = "a";
+      }
+    }
+    applyUpperModeToNotes();
+    updateNotesScale();
+  }
+
+  function stopExercise() {
+    if (exerciseTimer) {
+      clearInterval(exerciseTimer);
+      exerciseTimer = null;
+    }
+    exerciseSequence = [];
+    setActiveStep(null);
+    setActiveNoteIndex(null);
+    btnStart.disabled = false;
+    btnStop.disabled = true;
+    nowEl.textContent = "-";
+    setStatus("exercises.status.stopped");
+    stopAllPlayback();
+  }
+
+  function buildSequence() {
+    const maqamKey = getMaqamKeyFromInput(maqamInput.value);
+    if (!maqamKey) return { error: "exercises.status.noMaqam" };
+
+    const exercise = EXERCISES.find((ex) => ex.id === exerciseSelect.value);
+    if (!exercise) return { error: "exercises.status.noExercise" };
+
+    const obj = maqamsData[maqamKey] || {};
+    const scale = Array.isArray(obj.scale) ? obj.scale : [];
+    const tonicIndex = getTonicIndexFromScale(scale, obj.tonic);
+    if (tonicIndex < 0) {
+      return { error: "exercises.status.noTonic", vars: { tonic: obj.tonic || "" } };
+    }
+
+    const upperData = exerciseUpperData || getUpperGroupData(scale, obj.upper_jins);
+    const lowerSet = new Set(upperData.lowerIndices);
+    const upperASet = new Set(upperData.groups[0]?.indices || []);
+    const upperBSet = new Set(upperData.groups[1]?.indices || []);
+    const allowedA = new Set([...lowerSet, ...upperASet]);
+    const allowedB = new Set([...lowerSet, ...upperBSet]);
+    const scaleUp = buildScaleList(scale, tonicIndex, allowedA);
+    const scaleDown = buildScaleList(scale, tonicIndex, allowedB);
+
+    const needed = Math.max(...exercise.pattern);
+    if (exerciseUpperMode === "mixed") {
+      const minCount = Math.min(scaleUp.length, scaleDown.length);
+      if (minCount < needed) {
+        return { error: "exercises.status.notEnoughNotes", vars: { count: minCount, needed } };
+      }
+    } else {
+      const scaleMain = exerciseUpperMode === "b" ? scaleDown : scaleUp;
+      if (scaleMain.length < needed) {
+        return { error: "exercises.status.notEnoughNotes", vars: { count: scaleMain.length, needed } };
+      }
+    }
+
+    let prevDegree = null;
+    const seq = exercise.pattern
+      .map((degree) => {
+        let useScale = exerciseUpperMode === "b" ? scaleDown : scaleUp;
+        let preferGroup = exerciseUpperMode === "b" ? "b" : "a";
+        if (exerciseUpperMode === "mixed") {
+          if (prevDegree !== null && degree < prevDegree) {
+            useScale = scaleDown;
+            preferGroup = "b";
+          } else {
+            useScale = scaleUp;
+            preferGroup = "a";
+          }
+        }
+        prevDegree = degree;
+        const n = useScale[degree - 1];
+        if (!n || !Number.isFinite(Number(n.frequency))) return null;
+        const group = getUpperGroupForIndex(n.index, upperASet, upperBSet, preferGroup);
+        return { degree, note: n.note, frequency: Number(n.frequency), index: n.index, group };
+      })
+      .filter(Boolean);
+
+    if (seq.length === 0) return { error: "exercises.status.noNotes" };
+    return { seq, exercise };
+  }
+
+  function renderSteps(seq) {
+    if (!stepsEl) return;
+    stepsEl.innerHTML = seq
+      .map(
+        (step, i) =>
+          `<span class="exerciseStep" data-step="${i}" title="${escapeHtml(
+            t("exercises.stepTitle", { degree: step.degree })
+          )}">${escapeHtml(step.note)}</span>`
+      )
+      .join("");
+  }
+
+  function playStep(idx) {
+    const step = exerciseSequence[idx];
+    if (!step) return;
+    setActiveStep(idx);
+    setActiveNoteIndex({ idx: step.index, group: step.group });
+    nowEl.innerHTML = `<strong>${escapeHtml(step.note)}</strong> <span class="pill">${step.frequency.toFixed(
+      2
+    )} Hz</span>`;
+    playTone(step.frequency, Number(noteLen.value) || 800);
+  }
+
+  function startExercise() {
+    refreshNotesPanel();
+    const built = buildSequence();
+    if (built.error) {
+      setStatus(built.error, built.vars);
+      return;
+    }
+    const { seq, exercise } = built;
+    exerciseSequence = seq;
+    renderSteps(seq);
+    ensureAudio();
+    stopLoop();
+    stopAllPlayback();
+
+    const intervalMs = getBpmIntervalMs(tempo.value);
+    let stepIndex = 0;
+
+    setStatus("exercises.status.playing", { name: exercise.name });
+    btnStart.disabled = true;
+    btnStop.disabled = false;
+
+    playStep(stepIndex);
+    exerciseTimer = setInterval(() => {
+      stepIndex = (stepIndex + 1) % exerciseSequence.length;
+      playStep(stepIndex);
+    }, intervalMs);
+  }
+
+  tempo.oninput = () => {
+    tempoLabel.innerHTML = `<strong>${tempo.value}</strong> BPM`;
+    if (exerciseTimer) {
+      clearInterval(exerciseTimer);
+      exerciseTimer = null;
+      startExercise();
+    }
+  };
+
+  noteLen.oninput = () => {
+    noteLenLabel.innerHTML = `<strong>${noteLen.value}</strong> ms`;
+  };
+
+  btnStart.onclick = () => startExercise();
+  btnStop.onclick = () => stopExercise();
+
+  maqamInput.oninput = () => {
+    stopExercise();
+    refreshNotesPanel();
+  };
+  maqamInput.onchange = () => {
+    stopExercise();
+    refreshNotesPanel();
+  };
+
+  setStatus("exercises.status.ready");
+  refreshNotesPanel();
+}
+
 function render() {
   const route = parseRoute();
   const nextLang = route.lang || "en";
@@ -1460,6 +2075,7 @@ function render() {
     applyLang();
   }
   if (route.page === "list") return renderListPage();
+  if (route.page === "exercises") return renderExercisesPage();
   if (route.page === "maqam") return renderMaqamPage(normalizeKey(route.maqam));
   renderListPage();
 }

@@ -69,6 +69,7 @@
       text-decoration: none;
     }
     .langSwitch a.active { color: var(--ink); border-color: var(--gold); background: var(--accent-soft); }
+    .navLink { text-decoration: none; }
     .siteFooter {
       position: sticky;
       bottom: 0;
@@ -260,6 +261,10 @@
       outline: 6px solid var(--accent);
       outline-offset: -6px;
     }
+    .notePad.blocked {
+      opacity: 0.55;
+      filter: grayscale(0.2);
+    }
     .pill {
       font-size: 0.85rem;
       padding: 2px 8px;
@@ -267,6 +272,26 @@
       background: var(--accent-soft);
       border: 1px solid var(--gold);
       color: var(--wood-dark);
+    }
+    .exerciseSteps {
+      margin-top: 12px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    .exerciseStep {
+      padding: 4px 8px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      background: #fff4e3;
+      font-size: 0.85rem;
+      color: var(--muted);
+    }
+    .exerciseStep.active {
+      border-color: var(--accent);
+      color: var(--ink);
+      background: var(--accent-soft);
+      box-shadow: 0 0 0 3px rgba(179, 88, 42, 0.18);
     }
     .danger { border-color:#f2c2c2; background:#fff6f6; }
     .small { font-size: 0.9rem; }
@@ -357,6 +382,7 @@
       <a href="#/he" data-lang="he">HE</a>
       <a href="#/ar" data-lang="ar">AR</a>
     </div>
+    <a class="pill navLink" id="navExercises" href="#/exercises">Exercises</a>
     <span class="spacer"></span>
     <span class="muted small" id="audioStatus"></span>
   </header>
