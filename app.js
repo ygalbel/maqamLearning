@@ -177,11 +177,12 @@ function applyLang() {
 
 function updateLangSwitch() {
   if (!langSwitchEl) return;
+  const currentPath = getCurrentPathFromHash();
   const links = [...langSwitchEl.querySelectorAll("a[data-lang]")];
   links.forEach((a) => {
     const lang = a.getAttribute("data-lang");
     a.classList.toggle("active", lang === currentLang);
-    a.setAttribute("href", buildLangHash(lang));
+    a.setAttribute("href", buildLangHash(lang, currentPath));
   });
 }
 
@@ -301,6 +302,15 @@ function buildLangHash(lang, path = "") {
 
 function buildHash(path = "") {
   return buildLangHash(currentLang, path);
+}
+
+function getCurrentPathFromHash() {
+  const hash = location.hash || "#/";
+  const parts = hash.replace(/^#\/?/, "").split("/").filter(Boolean);
+  if (parts.length > 0 && SUPPORTED_LANGS.includes(parts[0])) {
+    parts.shift();
+  }
+  return parts.length === 0 ? "/" : `/${parts.join("/")}`;
 }
 
 function ensureAudio() {
@@ -1699,7 +1709,7 @@ function renderExercisesPage() {
     .join("");
 
   const exerciseOptions = EXERCISES.map(
-    (ex) => `<option value="${escapeHtml(ex.id)}">${escapeHtml(ex.name)}</option>`
+    (ex) => `<option value="${escapeHtml(ex.name)} (${escapeHtml(ex.id)})"></option>`
   ).join("");
 
   appEl.innerHTML = `
@@ -1714,10 +1724,10 @@ function renderExercisesPage() {
         </label>
         <label class="row" style="gap:8px;">
           <span class="pill">${escapeHtml(t("exercises.pickExercise"))}</span>
-          <select id="exerciseSelect">
-            <option value="">${escapeHtml(t("exercises.selectExercise"))}</option>
-            ${exerciseOptions}
-          </select>
+          <input id="exerciseSelect" type="text" list="exerciseList" placeholder="${escapeHtml(
+            t("exercises.selectExercise")
+          )}" />
+          <datalist id="exerciseList">${exerciseOptions}</datalist>
         </label>
       </div>
       <div class="row" style="margin-top:8px;">
@@ -1928,7 +1938,15 @@ function renderExercisesPage() {
     const maqamKey = getMaqamKeyFromInput(maqamInput.value);
     if (!maqamKey) return { error: "exercises.status.noMaqam" };
 
-    const exercise = EXERCISES.find((ex) => ex.id === exerciseSelect.value);
+    const exerciseRaw = String(exerciseSelect.value || "").trim();
+    const exerciseId = (() => {
+      if (!exerciseRaw) return "";
+      const match = exerciseRaw.match(/\(([^)]+)\)\s*$/);
+      if (match) return match[1];
+      const byName = EXERCISES.find((ex) => ex.name.toLowerCase() === exerciseRaw.toLowerCase());
+      return byName ? byName.id : exerciseRaw;
+    })();
+    const exercise = EXERCISES.find((ex) => ex.id === exerciseId);
     if (!exercise) return { error: "exercises.status.noExercise" };
 
     const obj = maqamsData[maqamKey] || {};
@@ -2091,34 +2109,24 @@ async function boot() {
     window.addEventListener("resize", updateNotesScale, { passive: true });
     window.addEventListener("resize", updateHeaderOffset, { passive: true });
 
-/**
- * IOS & MOBILE AUDIO UNLOCK
- * Mobile browsers suspend audio contexts until a user interaction occurs.
- * This snippet listens for the first touch/click and resumes the context.
- */
-
-function unlockAudioContext() {
-    // 1. Identify your AudioContext
-    // Check if 'audioCtx' exists (from your existing code), or find the global one
-    const context = window.audioCtx || window.AudioContext || window.webkitAudioContext;
-    
-    // If we found a context and it's suspended, try to resume it
-    if (context && context.state === 'suspended') {
-        context.resume().then(() => {
-            console.log('AudioContext resumed successfully by user interaction.');
-            
-            // Clean up: remove the event listeners so this only runs once
-            ['touchstart', 'touchend', 'click', 'keydown'].forEach(event => {
-                document.body.removeEventListener(event, unlockAudioContext);
-            });
-        });
+  // IOS & MOBILE AUDIO UNLOCK
+  // Mobile browsers suspend audio contexts until a user interaction occurs.
+  function unlockAudioContext() {
+    try {
+      ensureAudio();
+      if (audioCtx && audioCtx.state === "suspended") {
+        audioCtx.resume();
+      }
+    } finally {
+      ["touchstart", "touchend", "click", "keydown"].forEach((event) => {
+        document.body.removeEventListener(event, unlockAudioContext);
+      });
     }
-}
+  }
 
-// 2. Attach the unlock function to all major interaction events
-['touchstart', 'touchend', 'click', 'keydown'].forEach(event => {
-    document.body.addEventListener(event, unlockAudioContext);
-});
+  ["touchstart", "touchend", "click", "keydown"].forEach((event) => {
+    document.body.addEventListener(event, unlockAudioContext, { once: true });
+  });
     
     if (window.visualViewport) {
       window.visualViewport.addEventListener("resize", updateHeaderOffset, { passive: true });

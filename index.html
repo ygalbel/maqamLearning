@@ -96,15 +96,20 @@
     html[dir="rtl"] .notePad { text-align: right; }
     .pageMaqam .card,
     .pageMaqam .controls,
-    .pageMaqam .notePad {
+    .pageMaqam .notePad,
+    .pageExercises .card,
+    .pageExercises .controls,
+    .pageExercises .notePad {
       background: rgba(255, 248, 238, 0.7);
       box-shadow: none;
     }
-    .pageMaqam .notePad.selected {
+    .pageMaqam .notePad.selected,
+    .pageExercises .notePad.selected {
       background: var(--accent-soft);
       box-shadow: 0 0 0 4px rgba(211, 165, 91, 0.35);
     }
-    .pageMaqam .notePad .pill {
+    .pageMaqam .notePad .pill,
+    .pageExercises .notePad .pill {
       background: transparent;
       border-color: var(--line);
       color: var(--muted);
