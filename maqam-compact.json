@@ -7,16 +7,45 @@
         "name": "Rast",
         "scale": [
           {
-            "note": "C4",
-            "frequency": 260.74,
-            "index": 2,
-            "jins": "Rast"
-          }
+        "note": "G4",
+        "frequency": 391.11,
+        "jins": "Rast"
+      },
+      {
+        "note": "A4",
+        "frequency": 440
+      },
+      {
+        "note": "B4-Koron",
+        "frequency": 482
+      },
+      {
+        "note": "C5",
+        "frequency": 521.48
+      }
         ]
       },
       {
         "name": "Nahawand on G",
-        "scale": []
+        "scale": [
+          {
+        "note": "G4",
+        "frequency": 391.11,
+        "jins": "Rast / Nahawand on G"
+      },
+      {
+        "note": "A4",
+        "frequency": 440
+      },
+      {
+        "note": "B4\u266d",
+        "frequency": 463.54
+      },
+      {
+        "note": "C5",
+        "frequency": 521.48
+      }
+        ]
       }
     ],
     "scale": [
@@ -50,10 +79,6 @@
         "note": "G4",
         "frequency": 391.11,
         "jins": "Rast / Nahawand on G"
-      },
-      {
-        "note": "A4\u266d",
-        "frequency": 422
       },
       {
         "note": "A4",

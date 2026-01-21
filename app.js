@@ -1701,33 +1701,20 @@ function renderExercisesPage() {
   document.body.classList.add("pageExercises");
 
   const maqamKeys = Object.keys(maqamsData || {});
-  const maqamOptions = maqamKeys
-    .map((k) => {
-      const display = getMaqamDisplayName(k) || k;
-      return `<option value="${escapeHtml(display)} (${escapeHtml(k)})"></option>`;
-    })
-    .join("");
-
-  const exerciseOptions = EXERCISES.map(
-    (ex) => `<option value="${escapeHtml(ex.name)} (${escapeHtml(ex.id)})"></option>`
-  ).join("");
-
   appEl.innerHTML = `
     <div class="card">
       <div class="row" style="margin-bottom:8px;">
         <label class="row" style="gap:8px;">
           <span class="pill">${escapeHtml(t("exercises.maqam"))}</span>
-          <input id="exerciseMaqamInput" type="text" list="maqamList" placeholder="${escapeHtml(
+          <input id="exerciseMaqamInput" type="text" placeholder="${escapeHtml(
             t("exercises.maqamPlaceholder")
           )}" />
-          <datalist id="maqamList">${maqamOptions}</datalist>
         </label>
         <label class="row" style="gap:8px;">
           <span class="pill">${escapeHtml(t("exercises.pickExercise"))}</span>
-          <input id="exerciseSelect" type="text" list="exerciseList" placeholder="${escapeHtml(
+          <input id="exerciseSelect" type="text" placeholder="${escapeHtml(
             t("exercises.selectExercise")
           )}" />
-          <datalist id="exerciseList">${exerciseOptions}</datalist>
         </label>
       </div>
       <div class="row" style="margin-top:8px;">
