@@ -246,21 +246,15 @@ function updateNotesScale() {
     const gap = parseFloat(styles.rowGap || styles.gap || "0");
     const count = notesEl.querySelectorAll(".notePad").length;
 
-    const minCol = 150;
-    const cols1 = Math.max(1, Math.floor(notesRect.width / minCol));
-    const rows1 = Math.ceil(count / cols1);
+    const cols = 4;
+    const rows1 = Math.ceil(count / cols);
     const total1 = rows1 * padRect.height + Math.max(0, rows1 - 1) * gap;
 
     const available = window.innerHeight - notesRect.top - 16;
     if (available <= 0 || total1 <= 0) return;
 
-    const scale1 = Math.max(0.55, Math.min(1, available / total1));
-    const cols2 = Math.max(1, Math.floor(notesRect.width / (minCol * scale1)));
-    const rows2 = Math.ceil(count / cols2);
-    const total2 = rows2 * padRect.height * scale1 + Math.max(0, rows2 - 1) * gap * scale1;
-    const scale2 = Math.max(0.55, Math.min(1, available / total2));
-
-    notesEl.style.setProperty("--noteScale", scale2.toFixed(3));
+    const scale = Math.max(0.55, Math.min(1, available / total1));
+    notesEl.style.setProperty("--noteScale", scale.toFixed(3));
   });
 }
 
@@ -535,8 +529,7 @@ function intervalLabelFromFrequencies(currentHz, nextHz, isRtl) {
       bestDiff = diff;
     }
   }
-  const arrow = isRtl ? "←" : "→";
-  return `${arrow} ${t(best.key)}`;
+  return t(best.key);
 }
 
 function getTonicIndexFromScale(data, tonic) {
