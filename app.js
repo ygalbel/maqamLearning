@@ -89,6 +89,7 @@ let micSource = null;
 let analyser = null;
 let micData = null;
 let pitchRaf = null;
+let stopExercisesPlayback = null;
 
 let listSort = "alpha";
 let listSortDir = "asc";
@@ -770,6 +771,7 @@ function autoCorrelate(buffer, sampleRate) {
 function renderListPage(keepSearchFocus = false) {
   stopLoop();
   stopMic();
+  if (stopExercisesPlayback) stopExercisesPlayback();
   setHeaderMaqam("");
   document.body.classList.remove("pageMaqam");
   document.body.classList.remove("pageExercises");
@@ -913,6 +915,7 @@ function renderListPage(keepSearchFocus = false) {
 function renderMaqamPage(maqamKeyRaw) {
   stopLoop();
   stopMic();
+  if (stopExercisesPlayback) stopExercisesPlayback();
   document.body.classList.remove("pageExercises");
   document.body.classList.add("pageMaqam");
 
@@ -1701,20 +1704,31 @@ function renderExercisesPage() {
   document.body.classList.add("pageExercises");
 
   const maqamKeys = Object.keys(maqamsData || {});
+  const maqamOptions = maqamKeys
+    .map((k) => {
+      const display = getMaqamDisplayName(k) || k;
+      return `<option value="${escapeHtml(k)}">${escapeHtml(display)}</option>`;
+    })
+    .join("");
+  const exerciseOptions = EXERCISES.map(
+    (ex) => `<option value="${escapeHtml(ex.id)}">${escapeHtml(ex.name)}</option>`
+  ).join("");
   appEl.innerHTML = `
     <div class="card">
       <div class="row" style="margin-bottom:8px;">
         <label class="row" style="gap:8px;">
           <span class="pill">${escapeHtml(t("exercises.maqam"))}</span>
-          <input id="exerciseMaqamInput" type="text" placeholder="${escapeHtml(
-            t("exercises.maqamPlaceholder")
-          )}" />
+          <select id="exerciseMaqamInput">
+            <option value="">${escapeHtml(t("exercises.maqamPlaceholder"))}</option>
+            ${maqamOptions}
+          </select>
         </label>
         <label class="row" style="gap:8px;">
           <span class="pill">${escapeHtml(t("exercises.pickExercise"))}</span>
-          <input id="exerciseSelect" type="text" placeholder="${escapeHtml(
-            t("exercises.selectExercise")
-          )}" />
+          <select id="exerciseSelect">
+            <option value="">${escapeHtml(t("exercises.selectExercise"))}</option>
+            ${exerciseOptions}
+          </select>
         </label>
       </div>
       <div class="row" style="margin-top:8px;">
@@ -1850,7 +1864,7 @@ function renderExercisesPage() {
   }
 
   function refreshNotesPanel() {
-    const maqamKey = getMaqamKeyFromInput(maqamInput.value);
+    const maqamKey = String(maqamInput.value || "");
     if (!maqamKey) {
       if (notesEl) {
         notesEl.innerHTML = `<div class="muted small" style="grid-column:1/-1;">${escapeHtml(
@@ -1921,18 +1935,13 @@ function renderExercisesPage() {
     stopAllPlayback();
   }
 
+  stopExercisesPlayback = stopExercise;
+
   function buildSequence() {
-    const maqamKey = getMaqamKeyFromInput(maqamInput.value);
+    const maqamKey = String(maqamInput.value || "");
     if (!maqamKey) return { error: "exercises.status.noMaqam" };
 
-    const exerciseRaw = String(exerciseSelect.value || "").trim();
-    const exerciseId = (() => {
-      if (!exerciseRaw) return "";
-      const match = exerciseRaw.match(/\(([^)]+)\)\s*$/);
-      if (match) return match[1];
-      const byName = EXERCISES.find((ex) => ex.name.toLowerCase() === exerciseRaw.toLowerCase());
-      return byName ? byName.id : exerciseRaw;
-    })();
+    const exerciseId = String(exerciseSelect.value || "");
     const exercise = EXERCISES.find((ex) => ex.id === exerciseId);
     if (!exercise) return { error: "exercises.status.noExercise" };
 
@@ -2058,10 +2067,6 @@ function renderExercisesPage() {
   btnStart.onclick = () => startExercise();
   btnStop.onclick = () => stopExercise();
 
-  maqamInput.oninput = () => {
-    stopExercise();
-    refreshNotesPanel();
-  };
   maqamInput.onchange = () => {
     stopExercise();
     refreshNotesPanel();
@@ -2074,10 +2079,14 @@ function renderExercisesPage() {
 function render() {
   const route = parseRoute();
   const nextLang = route.lang || "en";
+  const prevLang = currentLang;
   if (nextLang !== currentLang) {
     currentLang = nextLang;
     localStorage.setItem("lang", currentLang);
     applyLang();
+  }
+  if (route.page === "exercises" && prevLang !== nextLang && stopExercisesPlayback) {
+    stopExercisesPlayback();
   }
   if (route.page === "list") return renderListPage();
   if (route.page === "exercises") return renderExercisesPage();
