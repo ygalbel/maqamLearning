@@ -317,7 +317,7 @@ function ensureAudio() {
   if (!audioCtx) {
     audioCtx = new (window.AudioContext || window.webkitAudioContext)();
     masterGain = audioCtx.createGain();
-    masterGain.gain.value = 0.2;
+    masterGain.gain.value = 0.6;
     masterGain.connect(audioCtx.destination);
     setAudioStatusByKey("audio.ready");
   }
@@ -2125,6 +2125,9 @@ function renderLooperPage() {
       <div class="muted small" id="looperStatus" style="margin-top:8px;">${escapeHtml(
         t("looper.status.ready")
       )}</div>
+      <div id="looperTimeline" class="looperTimeline" style="margin-top:10px;">
+        <div class="looperPlayhead" id="looperPlayhead" style="display:none;"></div>
+      </div>
     </div>
 
     <div class="card" style="margin-top:12px;">
@@ -2145,6 +2148,8 @@ function renderLooperPage() {
   const tempo = document.getElementById("looperTempo");
   const tempoLabel = document.getElementById("looperTempoLabel");
   const statusEl = document.getElementById("looperStatus");
+  const timelineEl = document.getElementById("looperTimeline");
+  const playheadEl = document.getElementById("looperPlayhead");
   const notesEl = document.getElementById("looperNotes");
   const countEl = document.getElementById("looperCount");
 
@@ -2158,6 +2163,9 @@ function renderLooperPage() {
   let loopTimeout = null;
   let loopTimers = [];
   let metronomeTimer = null;
+  let loopDuration = 0;
+  let playheadRaf = null;
+  let loopStart = 0;
 
   function setStatus(key, vars = null) {
     statusEl.textContent = t(key, vars);
@@ -2165,6 +2173,62 @@ function renderLooperPage() {
 
   function updateCount() {
     countEl.textContent = String(recordedEvents.length);
+  }
+
+  function renderTimeline() {
+    if (!timelineEl) return;
+    timelineEl.innerHTML =
+      '<div class="looperPlayhead" id="looperPlayhead" style="display:none;"></div>';
+    const localPlayhead = document.getElementById("looperPlayhead");
+    if (recordedEvents.length === 0) {
+      if (localPlayhead) localPlayhead.style.display = "none";
+      return;
+    }
+    const duration = Math.max(400, loopDuration || recordedEvents[recordedEvents.length - 1].t || 0);
+    recordedEvents.forEach((ev, i) => {
+      const left = Math.max(0, Math.min(100, (ev.t / duration) * 100));
+      const el = document.createElement("div");
+      el.className = "looperEvent";
+      el.style.left = `${left}%`;
+      el.textContent = ev.note;
+      el.setAttribute("data-event-idx", String(i));
+      timelineEl.appendChild(el);
+    });
+  }
+
+  function setActiveTimelineEvent(idx) {
+    if (!timelineEl) return;
+    timelineEl.querySelectorAll(".looperEvent.active").forEach((el) => el.classList.remove("active"));
+    if (idx === null || idx === undefined) return;
+    const el = timelineEl.querySelector(`.looperEvent[data-event-idx="${idx}"]`);
+    if (el) el.classList.add("active");
+  }
+
+  function updatePlayhead() {
+    const localPlayhead = document.getElementById("looperPlayhead");
+    if (!isLooping || !localPlayhead) return;
+    const duration = Math.max(400, loopDuration || recordedEvents[recordedEvents.length - 1].t || 0);
+    const elapsed = Math.max(0, performance.now() - loopStart);
+    const pct = ((elapsed % duration) / duration) * 100;
+    localPlayhead.style.left = `${pct}%`;
+    playheadRaf = requestAnimationFrame(updatePlayhead);
+  }
+
+  function startPlayhead() {
+    const localPlayhead = document.getElementById("looperPlayhead");
+    if (!localPlayhead) return;
+    localPlayhead.style.display = "block";
+    loopStart = performance.now();
+    if (playheadRaf) cancelAnimationFrame(playheadRaf);
+    playheadRaf = requestAnimationFrame(updatePlayhead);
+  }
+
+  function stopPlayhead() {
+    if (playheadRaf) cancelAnimationFrame(playheadRaf);
+    playheadRaf = null;
+    const localPlayhead = document.getElementById("looperPlayhead");
+    if (localPlayhead) localPlayhead.style.display = "none";
+    setActiveTimelineEvent(null);
   }
 
   function setActiveNoteIndex(entry) {
@@ -2208,6 +2272,7 @@ function renderLooperPage() {
             group
           });
           updateCount();
+          renderTimeline();
         }
       });
     });
@@ -2280,6 +2345,7 @@ function renderLooperPage() {
     clearLoopTimers();
     isLooping = false;
     stopMetronome();
+    stopPlayhead();
     btnPlay.disabled = recordedEvents.length === 0;
     btnStop.disabled = true;
     setActiveNoteIndex(null);
@@ -2287,11 +2353,12 @@ function renderLooperPage() {
 
   function playLoopOnce() {
     if (recordedEvents.length === 0) return 0;
-    const duration = Math.max(400, recordedEvents[recordedEvents.length - 1].t || 0);
-    recordedEvents.forEach((ev) => {
+    const duration = Math.max(400, loopDuration || recordedEvents[recordedEvents.length - 1].t || 0);
+    recordedEvents.forEach((ev, i) => {
       const timer = setTimeout(() => {
         playTone(ev.frequency, 320);
         setActiveNoteIndex(ev);
+        setActiveTimelineEvent(i);
       }, ev.t);
       loopTimers.push(timer);
     });
@@ -2303,12 +2370,14 @@ function renderLooperPage() {
       setStatus("looper.status.empty");
       return;
     }
+    loopDuration = Math.max(400, recordedEvents[recordedEvents.length - 1].t || 0);
     stopAllPlayback();
     clearLoopTimers();
     isLooping = true;
     btnPlay.disabled = true;
     btnStop.disabled = false;
     setStatus("looper.status.playing");
+    startPlayhead();
     const duration = playLoopOnce();
     loopTimeout = setTimeout(() => {
       if (isLooping) startLoopPlayback();
@@ -2318,6 +2387,8 @@ function renderLooperPage() {
   function startRecording() {
     recordedEvents = [];
     updateCount();
+    loopDuration = 0;
+    renderTimeline();
     isRecording = true;
     recordStart = performance.now();
     startMetronome();
@@ -2333,12 +2404,16 @@ function renderLooperPage() {
     btnRecord.disabled = false;
     btnStopRecord.disabled = true;
     btnPlay.disabled = recordedEvents.length === 0;
+    loopDuration = Math.max(400, recordedEvents[recordedEvents.length - 1]?.t || 0);
+    renderTimeline();
     setStatus("looper.status.recorded", { count: recordedEvents.length });
   }
 
   function clearRecording() {
     recordedEvents = [];
     updateCount();
+    loopDuration = 0;
+    renderTimeline();
     stopLoopPlayback();
     btnPlay.disabled = true;
     setStatus("looper.status.cleared");
@@ -2368,6 +2443,7 @@ function renderLooperPage() {
 
   setStatus("looper.status.ready");
   refreshNotesPanel();
+  renderTimeline();
 }
 
 function render() {
