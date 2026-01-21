@@ -90,6 +90,7 @@ let analyser = null;
 let micData = null;
 let pitchRaf = null;
 let stopExercisesPlayback = null;
+let stopLooperPlayback = null;
 
 let listSort = "alpha";
 let listSortDir = "asc";
@@ -110,6 +111,7 @@ const headerTitleEl = document.getElementById("headerTitle");
 const headerTaglineEl = document.getElementById("headerTagline");
 const langSwitchEl = document.getElementById("langSwitch");
 const navExercisesEl = document.getElementById("navExercises");
+const navLooperEl = document.getElementById("navLooper");
 
 function t(key, vars = null) {
   const dict = (translations && translations[currentLang]) || (translations && translations.en) || {};
@@ -170,6 +172,8 @@ function applyLang() {
   if (headerTaglineEl) headerTaglineEl.textContent = t("header.tagline");
   if (navExercisesEl) navExercisesEl.setAttribute("href", buildHash("/exercises"));
   if (navExercisesEl) navExercisesEl.textContent = t("nav.exercises");
+  if (navLooperEl) navLooperEl.setAttribute("href", buildHash("/looper"));
+  if (navLooperEl) navLooperEl.textContent = t("nav.looper");
   document.title = t("app.title");
   setHeaderMaqam(currentMaqamKey);
   setAudioStatusByKey(audioStatusKey);
@@ -222,7 +226,8 @@ function updateHeaderCompact() {
 function updateNotesScale() {
   if (
     !document.body.classList.contains("pageMaqam") &&
-    !document.body.classList.contains("pageExercises")
+    !document.body.classList.contains("pageExercises") &&
+    !document.body.classList.contains("pageLooper")
   )
     return;
   if (window.innerWidth > 720) {
@@ -481,6 +486,7 @@ function parseRoute() {
   }
   if (parts.length === 0) return { page: "list", lang };
   if (parts[0] === "exercises") return { page: "exercises", lang };
+  if (parts[0] === "looper") return { page: "looper", lang };
   if (parts[0] === "maqam" && parts[1]) return { page: "maqam", maqam: parts[1], lang };
   return { page: "list", lang };
 }
@@ -765,9 +771,11 @@ function renderListPage(keepSearchFocus = false) {
   stopLoop();
   stopMic();
   if (stopExercisesPlayback) stopExercisesPlayback();
+  if (stopLooperPlayback) stopLooperPlayback();
   setHeaderMaqam("");
   document.body.classList.remove("pageMaqam");
   document.body.classList.remove("pageExercises");
+  document.body.classList.remove("pageLooper");
 
   const keys = Object.keys(maqamsData);
 
@@ -909,7 +917,9 @@ function renderMaqamPage(maqamKeyRaw) {
   stopLoop();
   stopMic();
   if (stopExercisesPlayback) stopExercisesPlayback();
+  if (stopLooperPlayback) stopLooperPlayback();
   document.body.classList.remove("pageExercises");
+  document.body.classList.remove("pageLooper");
   document.body.classList.add("pageMaqam");
 
   const key = decodeURIComponent(maqamKeyRaw);
@@ -1692,9 +1702,11 @@ function renderExercisesPage() {
   stopLoop();
   stopMic();
   stopAllPlayback();
+  if (stopLooperPlayback) stopLooperPlayback();
   setHeaderMaqam("");
   document.body.classList.remove("pageMaqam");
   document.body.classList.add("pageExercises");
+  document.body.classList.remove("pageLooper");
 
   const maqamKeys = Object.keys(maqamsData || {});
   const maqamOptions = maqamKeys
@@ -2069,6 +2081,295 @@ function renderExercisesPage() {
   refreshNotesPanel();
 }
 
+function renderLooperPage() {
+  stopLoop();
+  stopMic();
+  stopAllPlayback();
+  if (stopExercisesPlayback) stopExercisesPlayback();
+  setHeaderMaqam("");
+  document.body.classList.remove("pageMaqam");
+  document.body.classList.remove("pageExercises");
+  document.body.classList.add("pageLooper");
+
+  const maqamKeys = Object.keys(maqamsData || {});
+  const maqamOptions = maqamKeys
+    .map((k) => {
+      const display = getMaqamDisplayName(k) || k;
+      return `<option value="${escapeHtml(k)}">${escapeHtml(display)}</option>`;
+    })
+    .join("");
+
+  appEl.innerHTML = `
+    <div class="card">
+      <div class="row" style="margin-bottom:8px;">
+        <label class="row" style="gap:8px;">
+          <span class="pill">${escapeHtml(t("looper.maqam"))}</span>
+          <select id="looperMaqam">
+            <option value="">${escapeHtml(t("looper.selectMaqam"))}</option>
+            ${maqamOptions}
+          </select>
+        </label>
+      </div>
+      <div class="row" style="margin-top:8px;">
+        <label class="row" style="gap:8px;">
+          <span class="pill">${escapeHtml(t("looper.metronome"))}</span>
+          <input id="looperTempo" type="range" min="30" max="240" value="60" />
+          <span id="looperTempoLabel"><strong>60</strong> BPM</span>
+        </label>
+        <button id="looperRecord">${escapeHtml(t("looper.startRecording"))}</button>
+        <button id="looperStopRecord" disabled>${escapeHtml(t("looper.stopRecording"))}</button>
+        <button id="looperPlay" disabled>${escapeHtml(t("looper.playLoop"))}</button>
+        <button id="looperStop" disabled>${escapeHtml(t("looper.stopLoop"))}</button>
+        <button id="looperClear">${escapeHtml(t("looper.clear"))}</button>
+      </div>
+      <div class="muted small" id="looperStatus" style="margin-top:8px;">${escapeHtml(
+        t("looper.status.ready")
+      )}</div>
+    </div>
+
+    <div class="card" style="margin-top:12px;">
+      <div class="row" style="align-items:center; justify-content:space-between;">
+        <strong>${escapeHtml(t("looper.notesTitle"))}</strong>
+        <span class="muted small" id="looperCount">0</span>
+      </div>
+      <div id="looperNotes" class="notes" style="margin-top:8px;"></div>
+    </div>
+  `;
+
+  const maqamSelect = document.getElementById("looperMaqam");
+  const btnRecord = document.getElementById("looperRecord");
+  const btnStopRecord = document.getElementById("looperStopRecord");
+  const btnPlay = document.getElementById("looperPlay");
+  const btnStop = document.getElementById("looperStop");
+  const btnClear = document.getElementById("looperClear");
+  const tempo = document.getElementById("looperTempo");
+  const tempoLabel = document.getElementById("looperTempoLabel");
+  const statusEl = document.getElementById("looperStatus");
+  const notesEl = document.getElementById("looperNotes");
+  const countEl = document.getElementById("looperCount");
+
+  let looperData = [];
+  let noteButtonsByIdx = new Map();
+  let activeNoteBtn = null;
+  let isRecording = false;
+  let isLooping = false;
+  let recordStart = 0;
+  let recordedEvents = [];
+  let loopTimeout = null;
+  let loopTimers = [];
+  let metronomeTimer = null;
+
+  function setStatus(key, vars = null) {
+    statusEl.textContent = t(key, vars);
+  }
+
+  function updateCount() {
+    countEl.textContent = String(recordedEvents.length);
+  }
+
+  function setActiveNoteIndex(entry) {
+    if (activeNoteBtn) activeNoteBtn.classList.remove("active");
+    activeNoteBtn = null;
+    if (!entry) return;
+    const idx = Number(entry.idx);
+    const group = entry.group || null;
+    if (!Number.isFinite(idx)) return;
+    const buttons = noteButtonsByIdx.get(idx);
+    if (!buttons || buttons.length === 0) return;
+    const preferred = group
+      ? buttons.find((btn) => btn.getAttribute("data-upper") === group)
+      : buttons[0];
+    if (preferred) {
+      preferred.classList.add("active");
+      activeNoteBtn = preferred;
+    }
+  }
+
+  function mapNoteButtons() {
+    noteButtonsByIdx = new Map();
+    activeNoteBtn = null;
+    notesEl.querySelectorAll(".notePad").forEach((btn) => {
+      const idx = Number(btn.getAttribute("data-idx"));
+      if (!Number.isFinite(idx)) return;
+      if (!noteButtonsByIdx.has(idx)) noteButtonsByIdx.set(idx, []);
+      noteButtonsByIdx.get(idx).push(btn);
+      btn.addEventListener("click", () => {
+        const note = looperData[idx];
+        if (!note || !Number.isFinite(Number(note.frequency))) return;
+        const group = btn.getAttribute("data-upper") || null;
+        playTone(Number(note.frequency), 320);
+        if (isRecording) {
+          const tms = Math.max(0, performance.now() - recordStart);
+          recordedEvents.push({
+            t: tms,
+            note: note.note,
+            frequency: Number(note.frequency),
+            idx,
+            group
+          });
+          updateCount();
+        }
+      });
+    });
+  }
+
+  function playClick() {
+    ensureAudio();
+    if (!audioCtx || !masterGain) return;
+    const now = audioCtx.currentTime;
+    const osc = audioCtx.createOscillator();
+    const gain = audioCtx.createGain();
+    osc.type = "square";
+    osc.frequency.value = 1200;
+    gain.gain.setValueAtTime(0.001, now);
+    gain.gain.exponentialRampToValueAtTime(0.12, now + 0.01);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
+    osc.connect(gain);
+    gain.connect(masterGain);
+    osc.start(now);
+    osc.stop(now + 0.08);
+  }
+
+  function stopMetronome() {
+    if (metronomeTimer) {
+      clearInterval(metronomeTimer);
+      metronomeTimer = null;
+    }
+  }
+
+  function startMetronome() {
+    stopMetronome();
+    const intervalMs = getBpmIntervalMs(tempo.value);
+    playClick();
+    metronomeTimer = setInterval(playClick, intervalMs);
+  }
+
+  function refreshNotesPanel() {
+    const maqamKey = String(maqamSelect.value || "");
+    if (!maqamKey) {
+      notesEl.innerHTML = `<div class="muted small" style="grid-column:1/-1;">${escapeHtml(
+        t("looper.status.noMaqam")
+      )}</div>`;
+      looperData = [];
+      noteButtonsByIdx = new Map();
+      activeNoteBtn = null;
+      updateNotesScale();
+      return;
+    }
+
+    const obj = maqamsData[maqamKey] || {};
+    looperData = Array.isArray(obj.scale) ? obj.scale : [];
+    const tonicIndex = getTonicIndexFromScale(looperData, obj.tonic);
+    const lowerDisplay = getJinsDisplayName(obj.lower_jins || "");
+    const noteRows = buildNoteRows(looperData, tonicIndex, obj.upper_jins, lowerDisplay);
+    notesEl.innerHTML = noteRows;
+    mapNoteButtons();
+    updateNotesScale();
+  }
+
+  function clearLoopTimers() {
+    loopTimers.forEach((t) => clearTimeout(t));
+    loopTimers = [];
+    if (loopTimeout) {
+      clearTimeout(loopTimeout);
+      loopTimeout = null;
+    }
+  }
+
+  function stopLoopPlayback() {
+    clearLoopTimers();
+    isLooping = false;
+    stopMetronome();
+    btnPlay.disabled = recordedEvents.length === 0;
+    btnStop.disabled = true;
+    setActiveNoteIndex(null);
+  }
+
+  function playLoopOnce() {
+    if (recordedEvents.length === 0) return 0;
+    const duration = Math.max(400, recordedEvents[recordedEvents.length - 1].t || 0);
+    recordedEvents.forEach((ev) => {
+      const timer = setTimeout(() => {
+        playTone(ev.frequency, 320);
+        setActiveNoteIndex(ev);
+      }, ev.t);
+      loopTimers.push(timer);
+    });
+    return duration;
+  }
+
+  function startLoopPlayback() {
+    if (recordedEvents.length === 0) {
+      setStatus("looper.status.empty");
+      return;
+    }
+    stopAllPlayback();
+    clearLoopTimers();
+    isLooping = true;
+    btnPlay.disabled = true;
+    btnStop.disabled = false;
+    setStatus("looper.status.playing");
+    const duration = playLoopOnce();
+    loopTimeout = setTimeout(() => {
+      if (isLooping) startLoopPlayback();
+    }, duration + 60);
+  }
+
+  function startRecording() {
+    recordedEvents = [];
+    updateCount();
+    isRecording = true;
+    recordStart = performance.now();
+    startMetronome();
+    btnRecord.disabled = true;
+    btnStopRecord.disabled = false;
+    btnPlay.disabled = true;
+    setStatus("looper.status.recording");
+  }
+
+  function stopRecording() {
+    isRecording = false;
+    stopMetronome();
+    btnRecord.disabled = false;
+    btnStopRecord.disabled = true;
+    btnPlay.disabled = recordedEvents.length === 0;
+    setStatus("looper.status.recorded", { count: recordedEvents.length });
+  }
+
+  function clearRecording() {
+    recordedEvents = [];
+    updateCount();
+    stopLoopPlayback();
+    btnPlay.disabled = true;
+    setStatus("looper.status.cleared");
+  }
+
+  maqamSelect.onchange = () => {
+    stopLoopPlayback();
+    clearRecording();
+    refreshNotesPanel();
+  };
+
+  btnRecord.onclick = () => startRecording();
+  btnStopRecord.onclick = () => stopRecording();
+  btnPlay.onclick = () => startLoopPlayback();
+  btnStop.onclick = () => stopLoopPlayback();
+  btnClear.onclick = () => clearRecording();
+
+  tempo.oninput = () => {
+    tempoLabel.innerHTML = `<strong>${tempo.value}</strong> BPM`;
+    if (isRecording) startMetronome();
+  };
+
+  stopLooperPlayback = () => {
+    stopLoopPlayback();
+    if (isRecording) stopRecording();
+  };
+
+  setStatus("looper.status.ready");
+  refreshNotesPanel();
+}
+
 function render() {
   const route = parseRoute();
   const nextLang = route.lang || "en";
@@ -2081,8 +2382,12 @@ function render() {
   if (route.page === "exercises" && prevLang !== nextLang && stopExercisesPlayback) {
     stopExercisesPlayback();
   }
+  if (route.page === "looper" && prevLang !== nextLang && stopLooperPlayback) {
+    stopLooperPlayback();
+  }
   if (route.page === "list") return renderListPage();
   if (route.page === "exercises") return renderExercisesPage();
+  if (route.page === "looper") return renderLooperPage();
   if (route.page === "maqam") return renderMaqamPage(normalizeKey(route.maqam));
   renderListPage();
 }

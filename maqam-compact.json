@@ -7,44 +7,44 @@
         "name": "Rast",
         "scale": [
           {
-        "note": "G4",
-        "frequency": 391.11,
-        "jins": "Rast"
-      },
-      {
-        "note": "A4",
-        "frequency": 440
-      },
-      {
-        "note": "B4-Koron",
-        "frequency": 482
-      },
-      {
-        "note": "C5",
-        "frequency": 521.48
-      }
+            "note": "G4",
+            "frequency": 391.11,
+            "jins": "Rast"
+          },
+          {
+            "note": "A4",
+            "frequency": 440
+          },
+          {
+            "note": "B4-Koron",
+            "frequency": 482
+          },
+          {
+            "note": "C5",
+            "frequency": 521.48
+          }
         ]
       },
       {
         "name": "Nahawand on G",
         "scale": [
           {
-        "note": "G4",
-        "frequency": 391.11,
-        "jins": "Rast / Nahawand on G"
-      },
-      {
-        "note": "A4",
-        "frequency": 440
-      },
-      {
-        "note": "B4\u266d",
-        "frequency": 463.54
-      },
-      {
-        "note": "C5",
-        "frequency": 521.48
-      }
+            "note": "G4",
+            "frequency": 391.11,
+            "jins": "Rast / Nahawand on G"
+          },
+          {
+            "note": "A4",
+            "frequency": 440
+          },
+          {
+            "note": "B4\u266d",
+            "frequency": 463.54
+          },
+          {
+            "note": "C5",
+            "frequency": 521.48
+          }
         ]
       }
     ],
@@ -323,52 +323,52 @@
         "name": "Nahawand on G",
         "scale": [
           {
-        "note": "G4",
-        "frequency": 391.11,
-        "jins": "Nahawand on G"
-      },
-      {
-        "note": "A4",
-        "frequency": 440
-      },
-      {
-        "note": "B4\u266d",
-        "frequency": 463.54
-      },
-      {
-        "note": "C5",
-        "frequency": 521.48
-      },
-      {
-        "note": "D5",
-        "frequency": 586.66
-      }
+            "note": "G4",
+            "frequency": 391.11,
+            "jins": "Nahawand on G"
+          },
+          {
+            "note": "A4",
+            "frequency": 440
+          },
+          {
+            "note": "B4\u266d",
+            "frequency": 463.54
+          },
+          {
+            "note": "C5",
+            "frequency": 521.48
+          },
+          {
+            "note": "D5",
+            "frequency": 586.66
+          }
         ]
       },
       {
         "name": "Rast on G",
         "scale": [
           {
-        "note": "G4",
-        "frequency": 391.11,
-        "jins": "Rast on G"
-      },
-      {
-        "note": "A4",
-        "frequency": 440
-      },
-      {
-        "note": "B4-Koron",
-        "frequency": 482
-      },
-      {
-        "note": "C5",
-        "frequency": 521.48
-      },
-      {
-        "note": "D5",
-        "frequency": 586.66
-      }
+            "note": "G4",
+            "frequency": 391.11,
+            "jins": "Rast on G"
+          },
+          {
+            "note": "A4",
+            "frequency": 440
+          },
+          {
+            "note": "B4-Koron",
+            "frequency": 482
+          },
+          {
+            "note": "C5",
+            "frequency": 521.48
+          },
+          {
+            "note": "D5",
+            "frequency": 586.66
+          }
         ]
       }
     ],
@@ -1382,16 +1382,69 @@
         "name": "Ajam",
         "scale": [
           {
-            "note": "C4",
-            "frequency": 260.74,
-            "index": 2,
-            "jins": "Ajam"
+            "note": "G4",
+            "frequency": 391.11,
+            "jins": "Ajam / Nahawand on G"
+          },
+          {
+            "note": "A4",
+            "frequency": 440
+          },
+          {
+            "note": "B4",
+            "frequency": 495
+          },
+          {
+            "note": "C5",
+            "frequency": 521.48
+          },
+          {
+            "note": "D5",
+            "frequency": 586.66
+          },
+          {
+            "note": "E5\u266d",
+            "frequency": 616.5
+          },
+          {
+            "note": "F5",
+            "frequency": 695.31
           }
         ]
       },
       {
         "name": "Nahawand on G",
-        "scale": []
+        "scale": [
+          {
+            "note": "G4",
+            "frequency": 391.11,
+            "jins": "Ajam / Nahawand on G"
+          },
+          {
+            "note": "A4",
+            "frequency": 440
+          },
+          {
+            "note": "B4\u266d",
+            "frequency": 463.54
+          },
+          {
+            "note": "C5",
+            "frequency": 521.48
+          },
+          {
+            "note": "D5",
+            "frequency": 586.66
+          },
+          {
+            "note": "E5\u266d",
+            "frequency": 616.5
+          },
+          {
+            "note": "F5",
+            "frequency": 695.31
+          }
+        ]
       }
     ],
     "scale": [

@@ -99,17 +99,22 @@
     .pageMaqam .notePad,
     .pageExercises .card,
     .pageExercises .controls,
-    .pageExercises .notePad {
+    .pageExercises .notePad,
+    .pageLooper .card,
+    .pageLooper .controls,
+    .pageLooper .notePad {
       background: rgba(255, 248, 238, 0.7);
       box-shadow: none;
     }
     .pageMaqam .notePad.selected,
-    .pageExercises .notePad.selected {
+    .pageExercises .notePad.selected,
+    .pageLooper .notePad.selected {
       background: var(--accent-soft);
       box-shadow: 0 0 0 4px rgba(211, 165, 91, 0.35);
     }
     .pageMaqam .notePad .pill,
-    .pageExercises .notePad .pill {
+    .pageExercises .notePad .pill,
+    .pageLooper .notePad .pill {
       background: transparent;
       border-color: var(--line);
       color: var(--muted);
@@ -398,6 +403,7 @@
       <a href="#/ar" data-lang="ar">AR</a>
     </div>
     <a class="pill navLink" id="navExercises" href="#/exercises">Exercises</a>
+    <a class="pill navLink" id="navLooper" href="#/looper">Looper</a>
     <span class="spacer"></span>
     <span class="muted small" id="audioStatus"></span>
   </header>
