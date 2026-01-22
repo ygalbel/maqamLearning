@@ -18,61 +18,18 @@
 //   ...
 // }
 
-const DATA_URL = "./maqam-compact.json";
-const I18N_URL = "./i18n.json";
-const SUPPORTED_LANGS = ["en", "he", "ar"];
-const MIC_ENABLED = false;
-const USE_SOUNDFONT = true;
-const SOUNDFONT_NAME = "MusyngKite";
-const SOUNDFONT_INSTRUMENT = "acoustic_guitar_nylon";
-const SOUNDFONT_BASE_URL = "https://gleitz.github.io/midi-js-soundfonts/";
-const EXERCISES = [
-  { id: "five_note", name: "Five Note Scale", pattern: [1, 2, 3, 2, 1] },
-  {
-    id: "full_scale",
-    name: "Full Scale Up and Down",
-    pattern: [1, 2, 3, 4, 5, 6, 7, 8, 7, 6, 5, 4, 3, 2, 1]
-  },
-  {
-    id: "broken_thirds",
-    name: "Broken Thirds",
-    pattern: [1, 3, 2, 4, 3, 5, 4, 6, 5, 7, 6, 8, 7, 8, 6, 7, 5, 6, 4, 5, 3, 4, 2, 3, 1]
-  },
-  { id: "arpeggio_octave", name: "Arpeggio with Octave", pattern: [1, 3, 5, 8, 5, 3, 1] },
-  { id: "octave_leaps", name: "Octave Leap Descent", pattern: [1, 8, 7, 6, 5, 4, 3, 2, 1] },
-  {
-    id: "fourths",
-    name: "Scale in Fourths",
-    pattern: [1, 4, 2, 5, 3, 6, 4, 7, 5, 8, 6, 7, 5, 6, 4, 5, 3, 4, 2, 3, 1]
-  },
-  {
-    id: "neighbor_tones",
-    name: "Neighbor Tone Motion",
-    pattern: [
-      1, 2, 1, 2, 3, 2, 3, 4, 3, 4, 5, 4, 5, 6, 5, 6, 7, 6, 7, 8, 7, 8, 7, 6, 7, 5, 6, 4, 5,
-      3, 4, 2, 3, 1
-    ]
-  },
-  {
-    id: "sequential_triads",
-    name: "Sequential Triads",
-    pattern: [1, 3, 5, 2, 4, 6, 3, 5, 7, 4, 6, 8, 5, 7, 8, 6, 8, 7, 5, 7, 4, 6, 3, 5, 2, 4, 1]
-  },
-  {
-    id: "interval_slides",
-    name: "Portamento Intervals",
-    pattern: [1, 3, 2, 4, 3, 5, 4, 6, 5, 7, 6, 8, 8, 6, 7, 5, 6, 4, 5, 3, 4, 2, 3, 1]
-  }
-];
+import { SUPPORTED_LANGS, MIC_ENABLED, EXERCISES } from "./config.js";
+import { loadData, loadTranslations } from "./data.js";
+import {
+  ensureAudio as ensureAudioCore,
+  getAudioContext,
+  playTone,
+  playClick,
+  stopActiveOscillators
+} from "./audio.js";
 
 let maqamsData = null;
 let translations = null;
-
-// Audio playback
-let audioCtx = null;
-let masterGain = null;
-let sampleInstrument = null;
-let sampleInstrumentPromise = null;
 
 // Loop playback
 let isLooping = false;
@@ -81,7 +38,6 @@ let currentLoopStep = 0;
 let isPlayingSequence = false;
 let isPaused = false;
 let playSequenceToken = 0;
-const activeOscillators = new Set();
 
 // Mic / pitch detection
 let micStream = null;
@@ -274,22 +230,6 @@ function updateHeaderOffset() {
   document.documentElement.style.setProperty("--header-offset", `${height}px`);
 }
 
-async function loadData() {
-  const res = await fetch(DATA_URL, { cache: "no-store" });
-  if (!res.ok) throw new Error(`Failed to load ${DATA_URL}: ${res.status}`);
-  const json = await res.json();
-  if (!json || typeof json !== "object") throw new Error("JSON is not an object");
-  return json;
-}
-
-async function loadTranslations() {
-  const res = await fetch(I18N_URL, { cache: "no-store" });
-  if (!res.ok) throw new Error(`Failed to load ${I18N_URL}: ${res.status}`);
-  const json = await res.json();
-  if (!json || typeof json !== "object") throw new Error("i18n JSON is not an object");
-  return json;
-}
-
 function getStoredLang() {
   const stored = localStorage.getItem("lang");
   return SUPPORTED_LANGS.includes(stored) ? stored : null;
@@ -316,15 +256,9 @@ function getCurrentPathFromHash() {
 }
 
 function ensureAudio() {
-  if (!audioCtx) {
-    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
-    masterGain = audioCtx.createGain();
-    masterGain.gain.value = 0.6;
-    masterGain.connect(audioCtx.destination);
-    setAudioStatusByKey("audio.ready");
-  }
-  if (USE_SOUNDFONT) loadSampleInstrument();
-  if (audioCtx.state === "suspended") audioCtx.resume();
+  const created = ensureAudioCore();
+  if (created) setAudioStatusByKey("audio.ready");
+  return created;
 }
 
 function stopLoop() {
@@ -340,15 +274,6 @@ function stopAllPlayback() {
   playSequenceToken += 1;
   isPlayingSequence = false;
   stopActiveOscillators();
-}
-
-function stopActiveOscillators() {
-  for (const osc of activeOscillators) {
-    try {
-      osc.stop();
-    } catch {}
-  }
-  activeOscillators.clear();
 }
 
 function stopMic() {
@@ -371,111 +296,6 @@ function stopMic() {
     micStream.getTracks().forEach((t) => t.stop());
     micStream = null;
   }
-}
-
-function frequencyToMidiAndDetune(frequency) {
-  if (!Number.isFinite(frequency) || frequency <= 0) return null;
-  const midiFloat = 69 + 12 * Math.log2(frequency / 440);
-  const midi = Math.round(midiFloat);
-  const detune = (midiFloat - midi) * 100;
-  return { midi, detune };
-}
-
-function loadSampleInstrument() {
-  if (!window.Soundfont || !audioCtx || !masterGain) return null;
-  if (sampleInstrument) return Promise.resolve(sampleInstrument);
-  if (!sampleInstrumentPromise) {
-    sampleInstrumentPromise = window.Soundfont.instrument(audioCtx, SOUNDFONT_INSTRUMENT, {
-      soundfont: SOUNDFONT_NAME,
-      format: "mp3",
-      baseUrl: SOUNDFONT_BASE_URL,
-      destination: masterGain
-    })
-      .then((inst) => {
-        sampleInstrument = inst;
-        return inst;
-      })
-      .catch((err) => {
-        console.warn("Soundfont load failed, falling back to synth.", err);
-        sampleInstrumentPromise = null;
-        return null;
-      });
-  }
-  return sampleInstrumentPromise;
-}
-
-function playTone(frequency, durationMs) {
-  ensureAudio();
-
-  const now = audioCtx.currentTime;
-  const offsetFactor = Math.pow(2, pitchOffsetSemitones / 12);
-  const adjustedFrequency = frequency * offsetFactor;
-  const durSec = Math.max(0.06, durationMs / 1000);
-
-  if (USE_SOUNDFONT && sampleInstrument) {
-    const midiData = frequencyToMidiAndDetune(adjustedFrequency);
-    if (midiData) {
-      sampleInstrument.play(midiData.midi, now, {
-        gain: 0.7,
-        duration: durSec,
-        detune: midiData.detune
-      });
-      return;
-    }
-  } else if (USE_SOUNDFONT) {
-    loadSampleInstrument();
-  }
-
-  const osc = audioCtx.createOscillator();
-  const osc2 = audioCtx.createOscillator();
-  const gain1 = audioCtx.createGain();
-  const gain2 = audioCtx.createGain();
-  const amp = audioCtx.createGain();
-  const filter = audioCtx.createBiquadFilter();
-
-  osc.type = "triangle";
-  osc.frequency.value = adjustedFrequency;
-
-  osc2.type = "sine";
-  osc2.frequency.value = adjustedFrequency * 2;
-  osc2.detune.value = 6;
-
-  gain1.gain.value = 0.9;
-  gain2.gain.value = 0.25;
-
-  // Plucked envelope + gentle low-pass for an oud-like timbre
-  const attack = 0.005;
-  const decay = Math.min(0.2, Math.max(0.06, durSec * 0.6));
-  const endTime = now + durSec;
-
-  amp.gain.setValueAtTime(0.0001, now);
-  amp.gain.exponentialRampToValueAtTime(0.35, now + attack);
-  amp.gain.exponentialRampToValueAtTime(0.0001, endTime);
-
-  filter.type = "lowpass";
-  filter.Q.value = 0.6;
-  filter.frequency.setValueAtTime(1600, now);
-  filter.frequency.exponentialRampToValueAtTime(900, now + decay);
-
-  osc.connect(gain1);
-  osc2.connect(gain2);
-  gain1.connect(amp);
-  gain2.connect(amp);
-  amp.connect(filter);
-  filter.connect(masterGain);
-
-  function registerOscillator(node) {
-    activeOscillators.add(node);
-    node.onended = () => activeOscillators.delete(node);
-  }
-
-  registerOscillator(osc);
-  registerOscillator(osc2);
-
-  osc.start(now);
-  osc2.start(now);
-  osc.stop(endTime + 0.02);
-  osc2.stop(endTime + 0.02);
 }
 
 function parseRoute() {
@@ -1402,14 +1222,14 @@ function renderMaqamPage(maqamKeyRaw) {
 
   if (upperJinsMode) {
     upperJinsMode.onchange = () => {
-      applyUpperMode(upperJinsMode.value);
+      applyUpperMode();
       if (isLooping) {
         currentLoopStep = 0;
         loopTick();
         restartLoopTimer();
       }
     };
-    applyUpperMode(upperJinsMode.value);
+    applyUpperMode();
   }
 
   selectAll.onclick = () => {
@@ -1434,13 +1254,13 @@ function renderMaqamPage(maqamKeyRaw) {
       const note = data[idx];
       if (!note || !Number.isFinite(Number(note.frequency))) return;
       if (btn.classList.contains("blocked")) {
-        playTone(Number(note.frequency), getNoteDurationMs());
+        playTone(Number(note.frequency), getNoteDurationMs(), pitchOffsetSemitones);
         return;
       }
       const isSelected = btn.classList.toggle("selected");
       btn.setAttribute("aria-pressed", isSelected ? "true" : "false");
       updateSelectedCount();
-      playTone(Number(note.frequency), getNoteDurationMs());
+      playTone(Number(note.frequency), getNoteDurationMs(), pitchOffsetSemitones);
     });
   });
 
@@ -1483,7 +1303,7 @@ function renderMaqamPage(maqamKeyRaw) {
       const noteIdx = typeof entry === "object" ? entry.idx : entry;
       const n = data[noteIdx];
       setActiveLoopIndex(entry);
-      if (n && Number.isFinite(Number(n.frequency))) playTone(Number(n.frequency), dur);
+      if (n && Number.isFinite(Number(n.frequency))) playTone(Number(n.frequency), dur, pitchOffsetSemitones);
       await sleep(intervalMs);
     }
     setActiveLoopIndex(null);
@@ -1527,7 +1347,7 @@ function renderMaqamPage(maqamKeyRaw) {
     setActiveLoopIndex(entry);
 
     if (note && Number.isFinite(Number(note.frequency))) {
-      playTone(Number(note.frequency), dur);
+      playTone(Number(note.frequency), dur, pitchOffsetSemitones);
     }
 
     currentLoopStep += 1;
@@ -1631,8 +1451,10 @@ function renderMaqamPage(maqamKeyRaw) {
       }
     });
 
-    micSource = audioCtx.createMediaStreamSource(micStream);
-    analyser = audioCtx.createAnalyser();
+    const ctx = getAudioContext();
+    if (!ctx) return;
+    micSource = ctx.createMediaStreamSource(micStream);
+    analyser = ctx.createAnalyser();
     analyser.fftSize = 2048;
 
     micData = new Float32Array(analyser.fftSize);
@@ -1646,7 +1468,7 @@ function renderMaqamPage(maqamKeyRaw) {
       if (!analyser) return;
 
       analyser.getFloatTimeDomainData(micData);
-      const hz = autoCorrelate(micData, audioCtx.sampleRate);
+      const hz = autoCorrelate(micData, ctx.sampleRate);
       const now = performance.now();
 
       if (!hz) {
@@ -1891,7 +1713,7 @@ function renderExercisesPage() {
           const isSelected = btn.classList.toggle("selected");
           btn.setAttribute("aria-pressed", isSelected ? "true" : "false");
         }
-        playTone(Number(note.frequency), Number(noteLen.value) || 800);
+        playTone(Number(note.frequency), Number(noteLen.value) || 800, 0);
       });
     });
   }
@@ -2061,7 +1883,7 @@ function renderExercisesPage() {
     nowEl.innerHTML = `<strong>${escapeHtml(step.note)}</strong> <span class="pill">${step.frequency.toFixed(
       2
     )} Hz</span>`;
-    playTone(step.frequency, Number(noteLen.value) || 800);
+    playTone(step.frequency, Number(noteLen.value) || 800, 0);
   }
 
   function startExercise() {
@@ -2304,7 +2126,7 @@ function renderLooperPage() {
         const note = looperData[idx];
         if (!note || !Number.isFinite(Number(note.frequency))) return;
         const group = btn.getAttribute("data-upper") || null;
-        playTone(Number(note.frequency), Number(noteLen.value) || 800);
+        playTone(Number(note.frequency), Number(noteLen.value) || 800, 0);
         if (isRecording) {
           const tms = Math.max(0, performance.now() - recordStart);
           recordedEvents.push({
@@ -2319,23 +2141,6 @@ function renderLooperPage() {
         }
       });
     });
-  }
-
-  function playClick() {
-    ensureAudio();
-    if (!audioCtx || !masterGain) return;
-    const now = audioCtx.currentTime;
-    const osc = audioCtx.createOscillator();
-    const gain = audioCtx.createGain();
-    osc.type = "square";
-    osc.frequency.value = 1200;
-    gain.gain.setValueAtTime(0.001, now);
-    gain.gain.exponentialRampToValueAtTime(0.12, now + 0.01);
-    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.06);
-    osc.connect(gain);
-    gain.connect(masterGain);
-    osc.start(now);
-    osc.stop(now + 0.08);
   }
 
   function stopMetronome() {
@@ -2399,7 +2204,7 @@ function renderLooperPage() {
     const duration = Math.max(400, loopDuration || recordedEvents[recordedEvents.length - 1].t || 0);
     recordedEvents.forEach((ev, i) => {
       const timer = setTimeout(() => {
-        playTone(ev.frequency, Number(noteLen.value) || 800);
+        playTone(ev.frequency, Number(noteLen.value) || 800, 0);
         setActiveNoteIndex(ev);
         setActiveTimelineEvent(i);
       }, ev.t);
@@ -2530,8 +2335,9 @@ async function boot() {
   function unlockAudioContext() {
     try {
       ensureAudio();
-      if (audioCtx && audioCtx.state === "suspended") {
-        audioCtx.resume();
+      const ctx = getAudioContext();
+      if (ctx && ctx.state === "suspended") {
+        ctx.resume();
       }
     } finally {
       ["touchstart", "touchend", "click", "keydown"].forEach((event) => {
