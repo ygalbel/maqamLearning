@@ -245,7 +245,6 @@ function updateNotesScale() {
     const notePad = notesEl.querySelector(".notePad");
     if (!notePad) return;
 
-    const notesRect = notesEl.getBoundingClientRect();
     const padRect = notePad.getBoundingClientRect();
     const styles = getComputedStyle(notesEl);
     const gap = parseFloat(styles.rowGap || styles.gap || "0");
@@ -255,7 +254,10 @@ function updateNotesScale() {
     const rows1 = Math.ceil(count / cols);
     const total1 = rows1 * padRect.height + Math.max(0, rows1 - 1) * gap;
 
-    const available = window.innerHeight - notesRect.top - 16;
+    const rootStyles = getComputedStyle(document.documentElement);
+    const headerOffset = parseFloat(rootStyles.getPropertyValue("--header-offset") || "0");
+    const safeTop = parseFloat(rootStyles.getPropertyValue("--safe-top") || "0");
+    const available = window.innerHeight - (headerOffset + safeTop + 16);
     if (available <= 0 || total1 <= 0) return;
 
     const scale = Math.max(0.55, Math.min(1, available / total1));
