@@ -941,12 +941,12 @@
       },
       {
         "note": "G4",
-        "frequency": 391.11
+        "frequency": 391.11,  
+        "jins": "Nahawand on A"
       },
       {
         "note": "A4",
-        "frequency": 440,
-        "jins": "Nahawand on A"
+        "frequency": 440
       },
       {
         "note": "B4♭",

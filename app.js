@@ -649,11 +649,11 @@ function formatNoteSuffix(suffix) {
 function noteLabelFontSize(label) {
   if (window.innerWidth > 720) return "";
   const len = String(label || "").length;
-  if (len <= 4) return "1.98rem";
-  if (len <= 6) return "1.8rem";
-  if (len <= 8) return "1.62rem";
-  if (len <= 10) return "1.44rem";
-  return "1.305rem";
+  if (len <= 4) return "1.85rem";
+  if (len <= 6) return "1.65rem";
+  if (len <= 8) return "1.5rem";
+  if (len <= 10) return "1.35rem";
+  return "1.2rem";
 }
 
 function buildNoteRows(data, tonicIndex, upperJins, lowerJinsDisplay, selectedSet = null) {
@@ -688,8 +688,8 @@ function buildNoteRows(data, tonicIndex, upperJins, lowerJinsDisplay, selectedSe
     }</span>
           </div>
           <div class="noteMeta"><span class="noteInterval">${escapeHtml(intervalText)}</span></div>
-          ${jinsDisplay ? `<div class="noteJins">${escapeHtml(jinsDisplay)}</div>` : ""}
         </button>
+        ${jinsDisplay ? `<div class="noteJinsOutside">${escapeHtml(jinsDisplay)}</div>` : ""}
       </div>
     `;
   }
@@ -1096,7 +1096,7 @@ function renderMaqamPage(maqamKeyRaw) {
                   name: getJinsDisplayName(upperGroupData.groups[1]?.name) || t("upperJins.groupB")
                 })
               )}</option>
-              <option value="mixed">${escapeHtml(t("upperJins.mixed"))}</option>
+              <option value="mixed" selected>${escapeHtml(t("upperJins.mixed"))}</option>
             </select>
           </label>
           `
@@ -1247,18 +1247,10 @@ function renderMaqamPage(maqamKeyRaw) {
   const upperBSet = new Set(upperGroupB.indices);
   const lowerSet = new Set(upperGroupData.lowerIndices);
 
-  function applyUpperMode(mode) {
+  function applyUpperMode() {
     if (!upperJinsMode) return;
-    const blockedUpper = mode === "a" ? "b" : mode === "b" ? "a" : null;
-
     appEl.querySelectorAll(".notePad").forEach((btn) => {
-      const upper = btn.getAttribute("data-upper");
-      const isBlocked = blockedUpper && upper === blockedUpper;
-      btn.classList.toggle("blocked", isBlocked);
-      if (isBlocked) {
-        btn.classList.remove("selected");
-        btn.setAttribute("aria-pressed", "false");
-      }
+      btn.classList.remove("blocked");
     });
     updateSelectedCount();
   }
@@ -1904,19 +1896,8 @@ function renderExercisesPage() {
 
   function applyUpperModeToNotes() {
     if (!notesEl) return;
-    if (exerciseUpperData.groups.length < 2) {
-      notesEl.querySelectorAll(".notePad").forEach((btn) => btn.classList.remove("blocked"));
-      return;
-    }
-    const blockedUpper = exerciseUpperMode === "a" ? "b" : exerciseUpperMode === "b" ? "a" : null;
     notesEl.querySelectorAll(".notePad").forEach((btn) => {
-      const upper = btn.getAttribute("data-upper");
-      const isBlocked = blockedUpper && upper === blockedUpper;
-      btn.classList.toggle("blocked", isBlocked);
-      if (isBlocked) {
-        btn.classList.remove("selected");
-        btn.setAttribute("aria-pressed", "false");
-      }
+      btn.classList.remove("blocked");
     });
   }
 
@@ -1958,7 +1939,7 @@ function renderExercisesPage() {
             <select id="exerciseUpperJinsMode">
               <option value="a">${escapeHtml(t("upperJins.aOnly", { name: upperAName }))}</option>
               <option value="b">${escapeHtml(t("upperJins.bOnly", { name: upperBName }))}</option>
-              <option value="mixed">${escapeHtml(t("upperJins.mixed"))}</option>
+              <option value="mixed" selected>${escapeHtml(t("upperJins.mixed"))}</option>
             </select>
           </label>
         `;
@@ -2169,6 +2150,11 @@ function renderLooperPage() {
           <input id="looperTempo" type="range" min="30" max="240" value="60" />
           <span id="looperTempoLabel"><strong>60</strong> BPM</span>
         </label>
+        <label class="row" style="gap:8px;">
+          <span class="pill">${escapeHtml(t("controls.noteLength"))}</span>
+          <input id="looperNoteLen" type="range" min="80" max="1200" value="800" />
+          <span id="looperNoteLenLabel"><strong>800</strong> ms</span>
+        </label>
         <button id="looperRecord">${escapeHtml(t("looper.startRecording"))}</button>
         <button id="looperStopRecord" disabled>${escapeHtml(t("looper.stopRecording"))}</button>
         <button id="looperPlay" disabled>${escapeHtml(t("looper.playLoop"))}</button>
@@ -2200,6 +2186,8 @@ function renderLooperPage() {
   const btnClear = document.getElementById("looperClear");
   const tempo = document.getElementById("looperTempo");
   const tempoLabel = document.getElementById("looperTempoLabel");
+  const noteLen = document.getElementById("looperNoteLen");
+  const noteLenLabel = document.getElementById("looperNoteLenLabel");
   const statusEl = document.getElementById("looperStatus");
   const timelineEl = document.getElementById("looperTimeline");
   const playheadEl = document.getElementById("looperPlayhead");
@@ -2314,7 +2302,7 @@ function renderLooperPage() {
         const note = looperData[idx];
         if (!note || !Number.isFinite(Number(note.frequency))) return;
         const group = btn.getAttribute("data-upper") || null;
-        playTone(Number(note.frequency), 320);
+        playTone(Number(note.frequency), Number(noteLen.value) || 800);
         if (isRecording) {
           const tms = Math.max(0, performance.now() - recordStart);
           recordedEvents.push({
@@ -2409,7 +2397,7 @@ function renderLooperPage() {
     const duration = Math.max(400, loopDuration || recordedEvents[recordedEvents.length - 1].t || 0);
     recordedEvents.forEach((ev, i) => {
       const timer = setTimeout(() => {
-        playTone(ev.frequency, 320);
+        playTone(ev.frequency, Number(noteLen.value) || 800);
         setActiveNoteIndex(ev);
         setActiveTimelineEvent(i);
       }, ev.t);
@@ -2487,6 +2475,9 @@ function renderLooperPage() {
   tempo.oninput = () => {
     tempoLabel.innerHTML = `<strong>${tempo.value}</strong> BPM`;
     if (isRecording) startMetronome();
+  };
+  noteLen.oninput = () => {
+    noteLenLabel.innerHTML = `<strong>${noteLen.value}</strong> ms`;
   };
 
   stopLooperPlayback = () => {
