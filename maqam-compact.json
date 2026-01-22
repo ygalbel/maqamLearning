@@ -1868,28 +1868,25 @@
   "nahawand kbir": {
     "tonic": "C",
     "lower_jins": "Nahawand",
-    "upper_jins": {
-      "name": "Hijaz on G",
-      "scale": [
-        {
-          "note": "G4",
-          "frequency": 391.11,
-          "jins": "Hijaz on G"
-        },
-        {
-          "note": "A4♭",
-          "frequency": 411
-        },
-        {
-          "note": "B4♮",
-          "frequency": 492
-        },
-        {
-          "note": "C5",
-          "frequency": 521.48
-        }
-      ]
-    },
+    "upper_jins": [
+      {
+        "note": "G4",
+        "frequency": 391.11,
+        "jins": "Hijaz on G"
+      },
+      {
+        "note": "A4♭",
+        "frequency": 411
+      },
+      {
+        "note": "B4♮",
+        "frequency": 492
+      },
+      {
+        "note": "C5",
+        "frequency": 521.48
+      }
+    ],
     "scale": [
       {
         "note": "A3♭",
@@ -1923,7 +1920,7 @@
       {
         "note": "G4",
         "frequency": 391.11,
-        "jins": "Kurd on G"
+        "jins": "Hijaz on G"
       },
       {
         "note": "A4♭",

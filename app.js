@@ -609,13 +609,64 @@ function buildScaleList(scale, tonicIndex, allowedSet) {
     .filter(Boolean);
 }
 
-function buildNoteRows(data, tonicIndex, upperJins, lowerJinsDisplay) {
+function noteBaseKey(note) {
+  const s = String(note || "");
+  const match = s.match(/([A-Ga-g])(\d+)/);
+  if (!match) return "";
+  return `${match[1].toUpperCase()}${match[2]}`;
+}
+
+function buildDefaultSelectionSet(data, tonicIndex, upperJins = null) {
+  const upperData = getUpperGroupData(data, upperJins);
+  if (upperData.groups.length > 1) {
+    const selected = new Set();
+    for (let i = 0; i < data.length; i++) {
+      if (!Number.isFinite(tonicIndex) || tonicIndex < 0 || i - tonicIndex < 0) continue;
+      selected.add(i);
+    }
+    return selected;
+  }
+  const selected = new Set();
+  const seen = new Set();
+  for (let i = 0; i < data.length; i++) {
+    if (!Number.isFinite(tonicIndex) || tonicIndex < 0 || i - tonicIndex < 0) continue;
+    const key = noteBaseKey(data[i]?.note);
+    if (!key || seen.has(key)) continue;
+    seen.add(key);
+    selected.add(i);
+  }
+  return selected;
+}
+
+function formatNoteSuffix(suffix) {
+  if (!suffix) return "";
+  if (window.innerWidth <= 720) {
+    return suffix.replace(/Koron/gi, "Ko");
+  }
+  return suffix;
+}
+
+function noteLabelFontSize(label) {
+  if (window.innerWidth > 720) return "";
+  const len = String(label || "").length;
+  if (len <= 4) return "1.98rem";
+  if (len <= 6) return "1.8rem";
+  if (len <= 8) return "1.62rem";
+  if (len <= 10) return "1.44rem";
+  return "1.305rem";
+}
+
+function buildNoteRows(data, tonicIndex, upperJins, lowerJinsDisplay, selectedSet = null) {
   function renderNoteItem(n, idx, jinsOverride = "", upperGroupId = "") {
     const note = n?.note ?? "";
     const noteStr = String(note);
     const noteParts = noteStr.split("-");
     const noteBase = noteParts[0] || "";
-    const noteSuffix = noteParts.length > 1 ? `-${noteParts.slice(1).join("-")}` : "";
+    const noteSuffixRaw = noteParts.length > 1 ? noteParts.slice(1).join("-") : "";
+    const noteSuffix = noteSuffixRaw ? `-${noteSuffixRaw}` : "";
+    const noteSuffixDisplay = formatNoteSuffix(noteSuffix);
+    const noteLabel = `${noteBase}${noteSuffixDisplay}`;
+    const noteFont = noteLabelFontSize(noteLabel);
     const jins = jinsOverride || n?.jins || "";
     const jinsDisplay = jins ? getJinsDisplayName(jins) : "";
     const freq = Number(n?.frequency);
@@ -623,7 +674,7 @@ function buildNoteRows(data, tonicIndex, upperJins, lowerJinsDisplay) {
     const intervalText = intervalLabelFromFrequencies(freq, Number(next?.frequency), isRtlLang(currentLang));
     const displayIndex = Number.isFinite(tonicIndex) && tonicIndex >= 0 ? idx - tonicIndex : idx;
     const isTonic = displayIndex === 0;
-    const isSelected = displayIndex >= 0;
+    const isSelected = displayIndex >= 0 && (!selectedSet || selectedSet.has(idx));
     const upperAttr = upperGroupId ? ` data-upper="${upperGroupId}"` : "";
     return `
       <div class="noteItem">
@@ -631,10 +682,10 @@ function buildNoteRows(data, tonicIndex, upperJins, lowerJinsDisplay) {
       isSelected ? "true" : "false"
     }"${upperAttr}>
           <div class="noteTitle">
-            <span class="noteIndex">[${displayIndex}]</span>
-            <span class="noteName">${escapeHtml(noteBase)}${
-      noteSuffix ? `<span class="noteSuffix">${escapeHtml(noteSuffix)}</span>` : ""
-    }${isTonic ? `<span class="noteKey" aria-hidden="true"> 🔑</span>` : ""}</span>
+            <span class="noteIndex">[${displayIndex}]${isTonic ? ` <span class="noteKey" aria-hidden="true">🔑</span>` : ""}</span>
+            <span class="noteName" style="${noteFont ? `font-size:${noteFont};` : ""}">${escapeHtml(noteBase)}${
+      noteSuffixDisplay ? `<span class="noteSuffix">${escapeHtml(noteSuffixDisplay)}</span>` : ""
+    }</span>
           </div>
           <div class="noteMeta"><span class="noteInterval">${escapeHtml(intervalText)}</span></div>
           ${jinsDisplay ? `<div class="noteJins">${escapeHtml(jinsDisplay)}</div>` : ""}
@@ -944,7 +995,8 @@ function renderMaqamPage(maqamKeyRaw) {
   const upperJinsDisplay = upperNames.map(getJinsDisplayName).join(" / ");
   const data = Array.isArray(maqamObj.scale) ? maqamObj.scale : [];
   const tonicIndex = getTonicIndexFromScale(data, maqamObj.tonic);
-  const noteRows = buildNoteRows(data, tonicIndex, upperJins, lowerJinsDisplay);
+  const defaultSelected = buildDefaultSelectionSet(data, tonicIndex, upperJins);
+  const noteRows = buildNoteRows(data, tonicIndex, upperJins, lowerJinsDisplay, defaultSelected);
   const upperGroupData = getUpperGroupData(data, upperJins);
 
   const displayName = getMaqamDisplayName(key);
@@ -1888,7 +1940,8 @@ function renderExercisesPage() {
     const tonicIndex = getTonicIndexFromScale(exerciseData, obj.tonic);
     const lowerDisplay = getJinsDisplayName(obj.lower_jins || "");
     exerciseUpperData = getUpperGroupData(exerciseData, obj.upper_jins);
-    const noteRows = buildNoteRows(exerciseData, tonicIndex, obj.upper_jins, lowerDisplay);
+    const defaultSelected = buildDefaultSelectionSet(exerciseData, tonicIndex, obj.upper_jins);
+    const noteRows = buildNoteRows(exerciseData, tonicIndex, obj.upper_jins, lowerDisplay, defaultSelected);
     if (notesEl) {
       notesEl.innerHTML = noteRows;
     }

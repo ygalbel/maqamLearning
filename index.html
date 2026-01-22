@@ -387,9 +387,19 @@
         text-align: center;
         width: 100%;
         font-size: calc(2.1rem * var(--noteScale));
+        line-height: 1.05;
       }
-      .notePad .noteIndex { font-size: 0.55em; }
-      .notePad .noteName { white-space: nowrap; }
+      .notePad .noteIndex { font-size: 0.42em; }
+      .notePad .noteName { white-space: nowrap; line-height: 1.05; margin-top: 6px; }
+      .notePad .noteTitle,
+      .notePad .noteName,
+      .notePad .noteMeta,
+      .notePad .noteInterval,
+      .notePad .noteJins {
+        max-width: 100%;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
       .notePad .noteSuffix { font-size: 0.6em; }
       .notePad .noteMeta {
         display: flex;
