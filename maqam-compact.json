@@ -1272,6 +1272,184 @@
       }
     ]
   },
+  "nawah": {
+    "tonic": "G",
+    "lower_jins": "Bayati / Ajam / Rash / Hijaz / Kurd",
+    "lower_jins_groups": [
+      {
+        "name": "Ajam",
+        "scale": [
+          {
+            "note": "C4",
+            "frequency": 260.74,
+            "jins": "Ajam"
+          },
+          {
+            "note": "D4",
+            "frequency": 293.33
+          },
+          {
+            "note": "E4",
+            "frequency": 328
+          },
+          {
+            "note": "F4",
+            "frequency": 347.65
+          },
+          {
+            "note": "G4",
+            "frequency": 391.11
+          }
+        ]
+      },
+      {
+        "name": "Bayati",
+        "scale": [
+          {
+            "note": "D4",
+            "frequency": 293.33,
+            "jins": "Bayati"
+          },
+          {
+            "note": "E4-Koron",
+            "frequency": 320
+          },
+          {
+            "note": "F4",
+            "frequency": 345
+          },
+          {
+            "note": "G4",
+            "frequency": 391.11
+          }
+        ]
+      },
+      {
+        "name": "Hijaz",
+        "scale": [
+          {
+            "note": "D4",
+            "frequency": 293.33,
+            "jins": "Hijaz"
+          },
+          {
+            "note": "E4♭",
+            "frequency": 315
+          },
+          {
+            "note": "F4♯",
+            "frequency": 375
+          },
+          {
+            "note": "G4",
+            "frequency": 391.11
+          }
+        ]
+      },
+      {
+        "name": "Kurd",
+        "scale": [
+          {
+            "note": "D4",
+            "frequency": 293.33,
+            "jins": "Kurd"
+          },
+          {
+            "note": "E4♭",
+            "frequency": 308.25
+          },
+          {
+            "note": "F4",
+            "frequency": 347.65
+          },
+          {
+            "note": "G4",
+            "frequency": 391.11
+          }
+        ]
+      }
+    ],
+    "upper_jins": [
+      {
+        "name": "Nahawand on G",
+        "scale": [
+          {
+            "note": "G4",
+            "frequency": 391.11,
+            "jins": "Nahawand on G"
+          },
+          {
+            "note": "A4",
+            "frequency": 440
+          },
+          {
+            "note": "B4♭",
+            "frequency": 463.54
+          },
+          {
+            "note": "C5",
+            "frequency": 521.48
+          }
+        ]
+      }
+    ],
+    "scale": [
+      {
+        "note": "C4",
+        "frequency": 260.74,
+        "jins": "Ajam"
+      },
+      {
+        "note": "D4",
+        "frequency": 293.33
+      },
+      {
+        "note": "E4♭",
+        "frequency": 308.25
+      },
+      {
+        "note": "E4♭",
+        "frequency": 315
+      },
+      {
+        "note": "E4-Koron",
+        "frequency": 320
+      },
+      {
+        "note": "E4",
+        "frequency": 328
+      },
+      {
+        "note": "F4",
+        "frequency": 345
+      },
+      {
+        "note": "F4",
+        "frequency": 347.65
+      },
+      {
+        "note": "F4♯",
+        "frequency": 375
+      },
+      {
+        "note": "G4",
+        "frequency": 391.11,
+        "jins": "Nahawand on G"
+      },
+      {
+        "note": "A4",
+        "frequency": 440
+      },
+      {
+        "note": "B4♭",
+        "frequency": 463.54
+      },
+      {
+        "note": "C5",
+        "frequency": 521.48
+      }
+    ]
+  },
   "nahawand murassa": {
     "tonic": "C",
     "lower_jins": "Nahawand",

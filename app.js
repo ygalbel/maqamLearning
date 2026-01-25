@@ -1634,6 +1634,7 @@ function renderExercisesPage() {
   document.body.classList.remove("pageLooper");
 
   const maqamKeys = sortMaqamKeysByDisplay(Object.keys(maqamsData || {}));
+  const maqamKeyLookup = new Map(maqamKeys.map((k) => [normalizeKey(k), k]));
   const maqamOptions = maqamKeys
     .map((k) => {
       const display = getMaqamDisplayName(k) || k;
@@ -1775,6 +1776,15 @@ function renderExercisesPage() {
     });
   }
 
+  function getSelectedIndexes() {
+    if (!notesEl) return [];
+    const pads = [...notesEl.querySelectorAll(".notePad.selected")];
+    const uniq = new Set(
+      pads.map((c) => Number(c.getAttribute("data-idx"))).filter((n) => Number.isFinite(n))
+    );
+    return [...uniq].sort((a, b) => a - b);
+  }
+
   function applyUpperModeToNotes() {
     if (!notesEl) return;
     notesEl.querySelectorAll(".notePad").forEach((btn) => {
@@ -1876,10 +1886,17 @@ function renderExercisesPage() {
     const lowerSet = new Set(upperData.lowerIndices);
     const upperASet = new Set(upperData.groups[0]?.indices || []);
     const upperBSet = new Set(upperData.groups[1]?.indices || []);
+    const selected = getSelectedIndexes();
+    const selectedSet = new Set(selected);
+    if (selectedSet.size === 0) {
+      return { error: "exercises.status.noNotes" };
+    }
     const allowedA = new Set([...lowerSet, ...upperASet]);
     const allowedB = new Set([...lowerSet, ...upperBSet]);
-    let scaleUp = buildScaleList(scale, tonicIndex, allowedA);
-    let scaleDown = buildScaleList(scale, tonicIndex, allowedB);
+    const filteredA = new Set([...allowedA].filter((idx) => selectedSet.has(idx)));
+    const filteredB = new Set([...allowedB].filter((idx) => selectedSet.has(idx)));
+    let scaleUp = buildScaleList(scale, tonicIndex, filteredA);
+    let scaleDown = buildScaleList(scale, tonicIndex, filteredB);
     let pattern = exercise.pattern;
 
     if (exercise.id === "full_scale" && normalizeKey(maqamKey) === "nawah") {
@@ -2224,7 +2241,8 @@ function renderLooperPage() {
   }
 
   function refreshNotesPanel() {
-    const maqamKey = String(maqamSelect.value || "");
+    const rawKey = String(maqamSelect.value || "");
+    const maqamKey = maqamKeyLookup.get(normalizeKey(rawKey)) || rawKey;
     if (!maqamKey) {
       notesEl.innerHTML = `<div class="muted small" style="grid-column:1/-1;">${escapeHtml(
         t("looper.status.noMaqam")
@@ -2236,6 +2254,7 @@ function renderLooperPage() {
       return;
     }
 
+    if (rawKey !== maqamKey) maqamSelect.value = maqamKey;
     const obj = maqamsData[maqamKey] || {};
     looperData = Array.isArray(obj.scale) ? obj.scale : [];
     const tonicIndex = getTonicIndexFromScale(looperData, obj.tonic);
