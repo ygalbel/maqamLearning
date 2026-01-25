@@ -577,6 +577,13 @@ function buildNoteRows(
     }
 
     if (upperGroups.length > 0) {
+      if (!hasLowerGroups && upperGroupData.lowerIndices.length > 0) {
+        const label = lowerJinsDisplay
+          ? `${t("maqam.lowerJinsLabel")} ${lowerJinsDisplay}`
+          : t("maqam.lowerJinsLabel");
+        groupBlocks.push(`<div class="notesGroupTitle">${escapeHtml(label)}</div>`);
+        groupBlocks.push(upperGroupData.lowerIndices.map((idx) => renderNoteItem(data[idx], idx)).join(""));
+      }
       for (const group of upperGroups) {
         const groupId = group === upperGroups[0] ? "a" : group === upperGroups[1] ? "b" : "";
         const label = group.name ? `${t("maqam.upperJinsLabel")} ${getJinsDisplayName(group.name)}` : "";
@@ -1811,9 +1818,17 @@ function renderExercisesPage() {
     exerciseData = Array.isArray(obj.scale) ? obj.scale : [];
     const tonicIndex = getTonicIndexFromScale(exerciseData, obj.tonic);
     const lowerDisplay = getJinsDisplayName(obj.lower_jins || "");
+    const lowerGroups = obj.lower_jins_groups || null;
     exerciseUpperData = getUpperGroupData(exerciseData, obj.upper_jins);
     const defaultSelected = buildDefaultSelectionSet(exerciseData, tonicIndex, obj.upper_jins);
-    const noteRows = buildNoteRows(exerciseData, tonicIndex, obj.upper_jins, lowerDisplay, defaultSelected);
+    const noteRows = buildNoteRows(
+      exerciseData,
+      tonicIndex,
+      obj.upper_jins,
+      lowerDisplay,
+      defaultSelected,
+      lowerGroups
+    );
     if (notesEl) {
       notesEl.innerHTML = noteRows;
     }
