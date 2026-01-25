@@ -91,6 +91,17 @@ function getMaqamDisplayName(key) {
   return translated || key;
 }
 
+function sortMaqamKeysByDisplay(keys) {
+  const locale = currentLang || undefined;
+  return [...keys].sort((a, b) => {
+    const aName = getMaqamDisplayName(a) || a;
+    const bName = getMaqamDisplayName(b) || b;
+    const primary = aName.localeCompare(bName, locale, { sensitivity: "base" });
+    if (primary !== 0) return primary;
+    return String(a).localeCompare(String(b), locale, { sensitivity: "base" });
+  });
+}
+
 function getJinsDisplayName(name) {
   if (!name) return "";
   const dict = translations && translations[currentLang];
@@ -101,6 +112,7 @@ function getJinsDisplayName(name) {
     "";
   return translated || name;
 }
+
 
 function getUpperJinsNames(upperJins) {
   if (!upperJins) return [];
@@ -393,24 +405,35 @@ function findNoteIndexInScale(data, entry) {
   });
 }
 
-function getUpperGroupData(data, upperJins) {
-  const groups = Array.isArray(upperJins)
-    ? upperJins.map((entry) => ({
-        name: entry?.name || entry?.jins || "",
-        scale: Array.isArray(entry?.scale) ? entry.scale : [],
-        indices: []
-      }))
-    : [];
+function getGroupData(data, groups) {
+  const normalized = Array.isArray(groups) ? groups : [];
+  const result = normalized.map((entry) => ({
+    name: entry?.name || entry?.jins || "",
+    scale: Array.isArray(entry?.scale) ? entry.scale : [],
+    indices: []
+  }));
   const used = new Set();
-  groups.forEach((group) => {
+  result.forEach((group) => {
     group.indices = group.scale
       .map((entry) => findNoteIndexInScale(data, entry))
       .filter((idx) => Number.isFinite(idx) && idx >= 0);
     group.indices.forEach((idx) => used.add(idx));
   });
+  return { groups: result, used };
+}
+
+function getUpperGroupData(data, upperJins) {
+  const groupData = getGroupData(data, upperJins);
   const all = data.map((_, i) => i);
-  const lowerIndices = all.filter((idx) => !used.has(idx));
-  return { groups, lowerIndices };
+  const lowerIndices = all.filter((idx) => !groupData.used.has(idx));
+  return { groups: groupData.groups, lowerIndices };
+}
+
+function getLowerGroupData(data, lowerGroups) {
+  const groupData = getGroupData(data, lowerGroups);
+  const all = data.map((_, i) => i);
+  const otherIndices = all.filter((idx) => !groupData.used.has(idx));
+  return { groups: groupData.groups, otherIndices, used: groupData.used };
 }
 
 function buildScaleList(scale, tonicIndex, allowedSet) {
@@ -478,7 +501,14 @@ function noteLabelFontSize(label) {
   return "1.2rem";
 }
 
-function buildNoteRows(data, tonicIndex, upperJins, lowerJinsDisplay, selectedSet = null) {
+function buildNoteRows(
+  data,
+  tonicIndex,
+  upperJins,
+  lowerJinsDisplay,
+  selectedSet = null,
+  lowerJinsGroups = null
+) {
   function renderNoteItem(n, idx, jinsOverride = "", upperGroupId = "") {
     const note = n?.note ?? "";
     const noteStr = String(note);
@@ -519,33 +549,52 @@ function buildNoteRows(data, tonicIndex, upperJins, lowerJinsDisplay, selectedSe
   let noteRows = "";
   const upperGroupData = getUpperGroupData(data, upperJins);
   const upperGroups = upperGroupData.groups;
+  const lowerGroupData = getLowerGroupData(data, lowerJinsGroups);
+  const hasLowerGroups = lowerGroupData.groups.length > 0;
 
-  if (upperGroups.length > 1) {
+  if (upperGroups.length > 1 || hasLowerGroups) {
     const groupBlocks = [];
 
-    for (const group of upperGroups) {
-      const groupId = group === upperGroups[0] ? "a" : group === upperGroups[1] ? "b" : "";
-      const label = group.name ? `${t("maqam.upperJinsLabel")} ${getJinsDisplayName(group.name)}` : "";
-      if (label) {
+    if (hasLowerGroups) {
+      for (const group of lowerGroupData.groups) {
+        const label = group.name
+          ? `${t("maqam.lowerJinsLabel")} ${getJinsDisplayName(group.name)}`
+          : t("maqam.lowerJinsLabel");
         groupBlocks.push(`<div class="notesGroupTitle">${escapeHtml(label)}</div>`);
+        groupBlocks.push(
+          group.indices.map((idx, i) => renderNoteItem(data[idx], idx, i === 0 ? group.name : "")).join("")
+        );
       }
-      groupBlocks.push(
-        group.indices
-          .map((idx, i) => renderNoteItem(data[idx], idx, i === 0 ? group.name : "", groupId))
-          .join("")
-      );
+
+      const extraLowerIndices = upperGroupData.lowerIndices.filter((idx) => !lowerGroupData.used.has(idx));
+      if (extraLowerIndices.length > 0) {
+        const label = lowerJinsDisplay
+          ? `${t("maqam.lowerJinsLabel")} ${lowerJinsDisplay}`
+          : t("maqam.lowerJinsLabel");
+        groupBlocks.push(`<div class="notesGroupTitle">${escapeHtml(label)}</div>`);
+        groupBlocks.push(extraLowerIndices.map((idx) => renderNoteItem(data[idx], idx)).join(""));
+      }
     }
 
-    if (upperGroupData.lowerIndices.length > 0) {
+    if (upperGroups.length > 0) {
+      for (const group of upperGroups) {
+        const groupId = group === upperGroups[0] ? "a" : group === upperGroups[1] ? "b" : "";
+        const label = group.name ? `${t("maqam.upperJinsLabel")} ${getJinsDisplayName(group.name)}` : "";
+        if (label) {
+          groupBlocks.push(`<div class="notesGroupTitle">${escapeHtml(label)}</div>`);
+        }
+        groupBlocks.push(
+          group.indices
+            .map((idx, i) => renderNoteItem(data[idx], idx, i === 0 ? group.name : "", groupId))
+            .join("")
+        );
+      }
+    } else if (!hasLowerGroups && upperGroupData.lowerIndices.length > 0) {
       const label = lowerJinsDisplay
         ? `${t("maqam.lowerJinsLabel")} ${lowerJinsDisplay}`
         : t("maqam.lowerJinsLabel");
-      groupBlocks.unshift(`<div class="notesGroupTitle">${escapeHtml(label)}</div>`);
-      groupBlocks.splice(
-        1,
-        0,
-        upperGroupData.lowerIndices.map((idx) => renderNoteItem(data[idx], idx)).join("")
-      );
+      groupBlocks.push(`<div class="notesGroupTitle">${escapeHtml(label)}</div>`);
+      groupBlocks.push(upperGroupData.lowerIndices.map((idx) => renderNoteItem(data[idx], idx)).join(""));
     }
 
     noteRows = groupBlocks.join("");
@@ -696,7 +745,7 @@ function renderListPage(keepSearchFocus = false) {
       const obj = maqamsData[k] || {};
       const displayName = getMaqamDisplayName(k);
       const scale = Array.isArray(obj.scale) ? obj.scale : [];
-      const tonic = obj.tonic ? String(obj.tonic) : "?";
+    const tonic = obj.tonic ? String(obj.tonic) : "?";
       const lower = obj.lower_jins ? String(obj.lower_jins) : "";
       const upperNames = getUpperJinsNames(obj.upper_jins);
       const upper = upperNames.join(" / ");
@@ -811,6 +860,7 @@ function renderMaqamPage(maqamKeyRaw) {
 
   const tonic = maqamObj.tonic ? String(maqamObj.tonic) : "";
   const lowerJins = maqamObj.lower_jins ? String(maqamObj.lower_jins) : "";
+  const lowerJinsGroups = maqamObj.lower_jins_groups || null;
   const upperJins = maqamObj.upper_jins || "";
   const lowerJinsDisplay = getJinsDisplayName(lowerJins);
   const upperNames = getUpperJinsNames(upperJins);
@@ -818,7 +868,14 @@ function renderMaqamPage(maqamKeyRaw) {
   const data = Array.isArray(maqamObj.scale) ? maqamObj.scale : [];
   const tonicIndex = getTonicIndexFromScale(data, maqamObj.tonic);
   const defaultSelected = buildDefaultSelectionSet(data, tonicIndex, upperJins);
-  const noteRows = buildNoteRows(data, tonicIndex, upperJins, lowerJinsDisplay, defaultSelected);
+  const noteRows = buildNoteRows(
+    data,
+    tonicIndex,
+    upperJins,
+    lowerJinsDisplay,
+    defaultSelected,
+    lowerJinsGroups
+  );
   const upperGroupData = getUpperGroupData(data, upperJins);
 
   const displayName = getMaqamDisplayName(key);
@@ -1576,7 +1633,7 @@ function renderExercisesPage() {
   document.body.classList.add("pageExercises");
   document.body.classList.remove("pageLooper");
 
-  const maqamKeys = Object.keys(maqamsData || {});
+  const maqamKeys = sortMaqamKeysByDisplay(Object.keys(maqamsData || {}));
   const maqamOptions = maqamKeys
     .map((k) => {
       const display = getMaqamDisplayName(k) || k;
@@ -1821,10 +1878,19 @@ function renderExercisesPage() {
     const upperBSet = new Set(upperData.groups[1]?.indices || []);
     const allowedA = new Set([...lowerSet, ...upperASet]);
     const allowedB = new Set([...lowerSet, ...upperBSet]);
-    const scaleUp = buildScaleList(scale, tonicIndex, allowedA);
-    const scaleDown = buildScaleList(scale, tonicIndex, allowedB);
+    let scaleUp = buildScaleList(scale, tonicIndex, allowedA);
+    let scaleDown = buildScaleList(scale, tonicIndex, allowedB);
+    let pattern = exercise.pattern;
 
-    const needed = Math.max(...exercise.pattern);
+    if (exercise.id === "full_scale" && normalizeKey(maqamKey) === "nawah") {
+      const selected = buildDefaultSelectionSet(scale, 0, null);
+      const fullScale = buildScaleList(scale, 0, selected);
+      scaleUp = fullScale;
+      scaleDown = fullScale;
+      pattern = [5, 6, 7, 8, 8, 7, 6, 5, 4, 3, 2, 1, 1, 2, 3, 4, 5];
+    }
+
+    const needed = Math.max(...pattern);
     if (exerciseUpperMode === "mixed") {
       const minCount = Math.min(scaleUp.length, scaleDown.length);
       if (minCount < needed) {
@@ -1838,7 +1904,7 @@ function renderExercisesPage() {
     }
 
     let prevDegree = null;
-    const seq = exercise.pattern
+    const seq = pattern
       .map((degree) => {
         let useScale = exerciseUpperMode === "b" ? scaleDown : scaleUp;
         let preferGroup = exerciseUpperMode === "b" ? "b" : "a";
@@ -1949,7 +2015,7 @@ function renderLooperPage() {
   document.body.classList.remove("pageExercises");
   document.body.classList.add("pageLooper");
 
-  const maqamKeys = Object.keys(maqamsData || {});
+  const maqamKeys = sortMaqamKeysByDisplay(Object.keys(maqamsData || {}));
   const maqamOptions = maqamKeys
     .map((k) => {
       const display = getMaqamDisplayName(k) || k;
