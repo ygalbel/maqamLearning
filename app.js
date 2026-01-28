@@ -1642,6 +1642,7 @@ function renderExercisesPage() {
 
   const maqamKeys = sortMaqamKeysByDisplay(Object.keys(maqamsData || {}));
   const maqamKeyLookup = new Map(maqamKeys.map((k) => [normalizeKey(k), k]));
+  const maqamKeyLookup = new Map(maqamKeys.map((k) => [normalizeKey(k), k]));
   const maqamOptions = maqamKeys
     .map((k) => {
       const display = getMaqamDisplayName(k) || k;
@@ -2274,7 +2275,8 @@ function renderLooperPage() {
     looperData = Array.isArray(obj.scale) ? obj.scale : [];
     const tonicIndex = getTonicIndexFromScale(looperData, obj.tonic);
     const lowerDisplay = getJinsDisplayName(obj.lower_jins || "");
-    const noteRows = buildNoteRows(looperData, tonicIndex, obj.upper_jins, lowerDisplay);
+    const lowerGroups = obj.lower_jins_groups || null;
+    const noteRows = buildNoteRows(looperData, tonicIndex, obj.upper_jins, lowerDisplay, null, lowerGroups);
     notesEl.innerHTML = noteRows;
     mapNoteButtons();
     updateNotesScale();
