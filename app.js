@@ -1642,7 +1642,6 @@ function renderExercisesPage() {
 
   const maqamKeys = sortMaqamKeysByDisplay(Object.keys(maqamsData || {}));
   const maqamKeyLookup = new Map(maqamKeys.map((k) => [normalizeKey(k), k]));
-  const maqamKeyLookup = new Map(maqamKeys.map((k) => [normalizeKey(k), k]));
   const maqamOptions = maqamKeys
     .map((k) => {
       const display = getMaqamDisplayName(k) || k;
