@@ -2421,6 +2421,13 @@ function render() {
   renderListPage();
 }
 
+function registerServiceWorker() {
+  if (!("serviceWorker" in navigator)) return;
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("./service-worker.js").catch(() => {});
+  });
+}
+
 async function boot() {
   try {
     [maqamsData, translations] = await Promise.all([loadData(), loadTranslations()]);
@@ -2456,6 +2463,7 @@ async function boot() {
       window.visualViewport.addEventListener("resize", updateHeaderOffset, { passive: true });
       window.visualViewport.addEventListener("scroll", updateHeaderOffset, { passive: true });
     }
+    registerServiceWorker();
     render();
     updateHeaderCompact();
     updateHeaderOffset();
