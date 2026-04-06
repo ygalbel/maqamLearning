@@ -2062,7 +2062,6 @@ function renderQuizPage() {
 
   const quizTotal = 10;
   const scaleLength = 6;
-  const excerptLength = 4;
   const maqamKeys = Object.keys(maqamsData || {});
   const playableScaleCache = new Map();
   const quizBasicKeys = ["bayat", "rast", "hijaz", "kurd", "ajam", "nahawand"]
@@ -2209,14 +2208,6 @@ function renderQuizPage() {
       await sleep(intervalMs);
     }
 
-    await sleep(Math.round(intervalMs * 0.8));
-
-    for (const note of question.excerptSeq) {
-      if (quizPlayToken !== token) return;
-      playTone(Number(note.frequency), dur, 0);
-      await sleep(intervalMs);
-    }
-
     if (quizPlayToken !== token) return;
     isPlaying = false;
     if (!quizLocked) {
@@ -2238,14 +2229,13 @@ function renderQuizPage() {
     const correctKey = levelKeys[Math.floor(Math.random() * levelKeys.length)];
     const scale = getPlayableScaleCached(correctKey);
     if (!scale) return null;
-    const scaleSeq = scale.slice(0, Math.min(scaleLength, scale.length));
-    const maxStart = Math.max(0, scale.length - excerptLength);
-    const start = Math.floor(Math.random() * (maxStart + 1));
-    const excerptSeq = scale.slice(start, start + excerptLength);
+    const scaleUp = scale.slice(0, Math.min(scaleLength, scale.length));
+    const scaleDown = scaleUp.length > 1 ? scaleUp.slice(0, -1).reverse() : [];
+    const scaleSeq = scaleUp.concat(scaleDown);
     const pool = levelKeys.filter((k) => k !== correctKey);
     const distractors = shuffleArray(pool).slice(0, 3);
     const options = shuffleArray([correctKey, ...distractors]);
-    return { key: correctKey, scaleSeq, excerptSeq, options };
+    return { key: correctKey, scaleSeq, options };
   }
 
   function renderOptions(options) {
