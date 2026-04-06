@@ -1949,10 +1949,14 @@ function renderExercisesPage() {
     let prevDegree = null;
     const seq = pattern
       .map((degree) => {
+        const isRest = degree === "p";
+        if (isRest) return { rest: true };
+        const degreeNumber = Number(degree);
+        if (!Number.isFinite(degreeNumber)) return null;
         let useScale = exerciseUpperMode === "b" ? scaleDown : scaleUp;
         let preferGroup = exerciseUpperMode === "b" ? "b" : "a";
         if (exerciseUpperMode === "mixed") {
-          if (prevDegree !== null && degree < prevDegree) {
+          if (prevDegree !== null && degreeNumber < prevDegree) {
             useScale = scaleDown;
             preferGroup = "b";
           } else {
@@ -1960,11 +1964,11 @@ function renderExercisesPage() {
             preferGroup = "a";
           }
         }
-        prevDegree = degree;
-        const n = useScale[degree - 1];
+        prevDegree = degreeNumber;
+        const n = useScale[degreeNumber - 1];
         if (!n || !Number.isFinite(Number(n.frequency))) return null;
         const group = getUpperGroupForIndex(n.index, upperASet, upperBSet, preferGroup);
-        return { degree, note: n.note, frequency: Number(n.frequency), index: n.index, group };
+        return { degree: degreeNumber, note: n.note, frequency: Number(n.frequency), index: n.index, group };
       })
       .filter(Boolean);
 
@@ -1975,12 +1979,14 @@ function renderExercisesPage() {
   function renderSteps(seq) {
     if (!stepsEl) return;
     stepsEl.innerHTML = seq
-      .map(
-        (step, i) =>
-          `<span class="exerciseStep" data-step="${i}" title="${escapeHtml(
-            t("exercises.stepTitle", { degree: step.degree })
-          )}">${escapeHtml(step.note)}</span>`
-      )
+      .map((step, i) => {
+        if (step.rest) {
+          return `<span class="exerciseStep" data-step="${i}" title="Rest">Rest</span>`;
+        }
+        return `<span class="exerciseStep" data-step="${i}" title="${escapeHtml(
+          t("exercises.stepTitle", { degree: step.degree })
+        )}">${escapeHtml(step.note)}</span>`;
+      })
       .join("");
   }
 
@@ -1988,6 +1994,12 @@ function renderExercisesPage() {
     const step = exerciseSequence[idx];
     if (!step) return;
     setActiveStep(idx);
+    if (step.rest) {
+      setActiveNoteIndex(null);
+      nowEl.textContent = "Rest";
+      stopAllPlayback();
+      return;
+    }
     setActiveNoteIndex({ idx: step.index, group: step.group });
     nowEl.innerHTML = `<strong>${escapeHtml(step.note)}</strong> <span class="pill">${step.frequency.toFixed(
       2
