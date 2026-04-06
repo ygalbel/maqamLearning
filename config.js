@@ -42,5 +42,14 @@ export const EXERCISES = [
     id: "interval_slides",
     name: "Portamento Intervals",
     pattern: [1, 3, 2, 4, 3, 5, 4, 6, 5, 7, 6, 8, 8, 6, 7, 5, 6, 4, 5, 3, 4, 2, 3, 1]
+  },
+  {
+    id: "straight_scale",
+    name: "Straight Scale Up and Down",
+    pattern: [
+      1, 1, 2, 1, 1, 2, 3, 2, 1, 1, 2, 3, 4, 3, 2, 1, 1, 2, 3, 4, 5, 4, 3, 2, 1, 1, 2, 3, 4,
+      5, 6, 5, 4, 3, 2, 1, 1, 2, 3, 4, 5, 6, 7, 6, 5, 4, 3, 2, 1, 1, 2, 3, 4, 5, 6, 7, 8, 7,
+      6, 5, 4, 3, 2, 1
+    ]
   }
 ];
