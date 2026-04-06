@@ -47,6 +47,7 @@ let micData = null;
 let pitchRaf = null;
 let stopExercisesPlayback = null;
 let stopLooperPlayback = null;
+let stopQuizPlayback = null;
 
 let listSort = "alpha";
 let listSortDir = "asc";
@@ -67,6 +68,7 @@ const headerTitleEl = document.getElementById("headerTitle");
 const headerTaglineEl = document.getElementById("headerTagline");
 const langSwitchEl = document.getElementById("langSwitch");
 const navExercisesEl = document.getElementById("navExercises");
+const navQuizEl = document.getElementById("navQuiz");
 const navLooperEl = document.getElementById("navLooper");
 
 function t(key, vars = null) {
@@ -140,6 +142,8 @@ function applyLang() {
   if (headerTaglineEl) headerTaglineEl.textContent = t("header.tagline");
   if (navExercisesEl) navExercisesEl.setAttribute("href", buildHash("/exercises"));
   if (navExercisesEl) navExercisesEl.textContent = t("nav.exercises");
+  if (navQuizEl) navQuizEl.setAttribute("href", buildHash("/quiz"));
+  if (navQuizEl) navQuizEl.textContent = t("nav.quiz");
   if (navLooperEl) navLooperEl.setAttribute("href", buildHash("/looper"));
   if (navLooperEl) navLooperEl.textContent = t("nav.looper");
   document.title = t("app.title");
@@ -320,6 +324,7 @@ function parseRoute() {
   }
   if (parts.length === 0) return { page: "list", lang };
   if (parts[0] === "exercises") return { page: "exercises", lang };
+  if (parts[0] === "quiz") return { page: "quiz", lang };
   if (parts[0] === "looper") return { page: "looper", lang };
   if (parts[0] === "maqam" && parts[1]) return { page: "maqam", maqam: parts[1], lang };
   return { page: "list", lang };
@@ -701,10 +706,12 @@ function renderListPage(keepSearchFocus = false) {
   stopMic();
   if (stopExercisesPlayback) stopExercisesPlayback();
   if (stopLooperPlayback) stopLooperPlayback();
+  if (stopQuizPlayback) stopQuizPlayback();
   setHeaderMaqam("");
   document.body.classList.remove("pageMaqam");
   document.body.classList.remove("pageExercises");
   document.body.classList.remove("pageLooper");
+  document.body.classList.remove("pageQuiz");
 
   const keys = Object.keys(maqamsData);
 
@@ -847,8 +854,10 @@ function renderMaqamPage(maqamKeyRaw) {
   stopMic();
   if (stopExercisesPlayback) stopExercisesPlayback();
   if (stopLooperPlayback) stopLooperPlayback();
+  if (stopQuizPlayback) stopQuizPlayback();
   document.body.classList.remove("pageExercises");
   document.body.classList.remove("pageLooper");
+  document.body.classList.remove("pageQuiz");
   document.body.classList.add("pageMaqam");
 
   const key = decodeURIComponent(maqamKeyRaw);
@@ -1635,10 +1644,12 @@ function renderExercisesPage() {
   stopMic();
   stopAllPlayback();
   if (stopLooperPlayback) stopLooperPlayback();
+  if (stopQuizPlayback) stopQuizPlayback();
   setHeaderMaqam("");
   document.body.classList.remove("pageMaqam");
   document.body.classList.add("pageExercises");
   document.body.classList.remove("pageLooper");
+  document.body.classList.remove("pageQuiz");
 
   const maqamKeys = sortMaqamKeysByDisplay(Object.keys(maqamsData || {}));
   const maqamKeyLookup = new Map(maqamKeys.map((k) => [normalizeKey(k), k]));
@@ -2037,14 +2048,344 @@ function renderExercisesPage() {
   refreshNotesPanel();
 }
 
+function renderQuizPage() {
+  stopLoop();
+  stopMic();
+  stopAllPlayback();
+  if (stopExercisesPlayback) stopExercisesPlayback();
+  if (stopLooperPlayback) stopLooperPlayback();
+  setHeaderMaqam("");
+  document.body.classList.remove("pageMaqam");
+  document.body.classList.remove("pageExercises");
+  document.body.classList.remove("pageLooper");
+  document.body.classList.add("pageQuiz");
+
+  const quizTotal = 10;
+  const scaleLength = 6;
+  const excerptLength = 4;
+  const maqamKeys = Object.keys(maqamsData || {});
+  const playableScaleCache = new Map();
+  const quizBasicKeys = ["bayat", "rast", "hijaz", "kurd", "ajam", "nahawand"]
+    .map((key) => normalizeKey(key))
+    .filter((key) => key);
+  const quizBasicSet = new Set(quizBasicKeys);
+
+  function shuffleArray(arr) {
+    for (let i = arr.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [arr[i], arr[j]] = [arr[j], arr[i]];
+    }
+    return arr;
+  }
+
+  function getPlayableScaleCached(key) {
+    if (playableScaleCache.has(key)) return playableScaleCache.get(key);
+    const obj = maqamsData[key] || {};
+    const scale = Array.isArray(obj.scale) ? obj.scale : [];
+    const tonicIndex = getTonicIndexFromScale(scale, obj.tonic);
+    if (tonicIndex < 0) {
+      playableScaleCache.set(key, null);
+      return null;
+    }
+    const selected = buildDefaultSelectionSet(scale, tonicIndex, obj.upper_jins);
+    const list = buildScaleList(scale, tonicIndex, selected).filter((n) =>
+      n && Number.isFinite(Number(n.frequency))
+    );
+    const playable = list.length >= scaleLength ? list : null;
+    playableScaleCache.set(key, playable);
+    return playable;
+  }
+
+  const playableKeys = maqamKeys.filter((key) => getPlayableScaleCached(key));
+
+  appEl.innerHTML = `
+    <div class="card">
+      <div class="row" style="align-items:center; justify-content:space-between;">
+        <div>
+          <strong>${escapeHtml(t("quiz.title"))}</strong>
+          <div class="muted small">${escapeHtml(t("quiz.subtitle"))}</div>
+        </div>
+        <div class="row quizMeta">
+          <span class="pill" id="quizProgress"></span>
+          <span class="pill" id="quizScore"></span>
+        </div>
+      </div>
+      <div class="row" style="margin-top:8px;">
+        <label class="row" style="gap:8px;">
+          <span class="pill">${escapeHtml(t("quiz.level"))}</span>
+          <select id="quizLevel">
+            <option value="basic">${escapeHtml(t("quiz.level.basic"))}</option>
+            <option value="all">${escapeHtml(t("quiz.level.all"))}</option>
+          </select>
+        </label>
+        <label class="row" style="gap:8px;">
+          <span class="pill">${escapeHtml(t("controls.tempo"))}</span>
+          <input id="quizTempo" type="range" min="30" max="240" value="60" />
+          <span id="quizTempoLabel"><strong>60</strong> BPM</span>
+        </label>
+        <label class="row" style="gap:8px;">
+          <span class="pill">${escapeHtml(t("controls.noteLength"))}</span>
+          <input id="quizNoteLen" type="range" min="80" max="1200" value="800" />
+          <span id="quizNoteLenLabel"><strong>800</strong> ms</span>
+        </label>
+        <button id="quizStart">${escapeHtml(t("quiz.start"))}</button>
+        <button id="quizReplay" disabled>${escapeHtml(t("quiz.replay"))}</button>
+        <button id="quizNext" disabled>${escapeHtml(t("quiz.next"))}</button>
+        <button id="quizReset" disabled>${escapeHtml(t("quiz.reset"))}</button>
+      </div>
+      <div class="muted small" id="quizStatus" style="margin-top:8px;">${escapeHtml(
+        t("quiz.status.ready")
+      )}</div>
+    </div>
+
+    <div class="card" style="margin-top:12px;">
+      <div id="quizOptions" class="quizOptions"></div>
+    </div>
+  `;
+
+  const quizLevel = document.getElementById("quizLevel");
+  const tempo = document.getElementById("quizTempo");
+  const tempoLabel = document.getElementById("quizTempoLabel");
+  const noteLen = document.getElementById("quizNoteLen");
+  const noteLenLabel = document.getElementById("quizNoteLenLabel");
+  const btnStart = document.getElementById("quizStart");
+  const btnReplay = document.getElementById("quizReplay");
+  const btnNext = document.getElementById("quizNext");
+  const btnReset = document.getElementById("quizReset");
+  const statusEl = document.getElementById("quizStatus");
+  const optionsEl = document.getElementById("quizOptions");
+  const progressEl = document.getElementById("quizProgress");
+  const scoreEl = document.getElementById("quizScore");
+
+  let quizActive = false;
+  let quizIndex = 0;
+  let quizScore = 0;
+  let quizLocked = false;
+  let quizCurrent = null;
+  let quizPlayToken = 0;
+  let isPlaying = false;
+  let quizLevelValue = "basic";
+
+  function setStatus(key, vars = null) {
+    statusEl.textContent = t(key, vars);
+  }
+
+  function updateMeta() {
+    const current = quizActive ? quizIndex + 1 : 0;
+    progressEl.textContent = t("quiz.progress", { current, total: quizTotal });
+    scoreEl.textContent = t("quiz.score", { score: quizScore, total: quizTotal });
+  }
+
+  function renderEmptyOptions() {
+    optionsEl.innerHTML = `<div class="muted small" style="grid-column:1/-1;">${escapeHtml(
+      t("quiz.empty")
+    )}</div>`;
+  }
+
+  function cancelPlayback() {
+    quizPlayToken += 1;
+    isPlaying = false;
+    stopAllPlayback();
+  }
+
+  async function playQuestion(question) {
+    if (!question) return;
+    ensureAudio();
+    stopAllPlayback();
+    stopLoop();
+    const intervalMs = getBpmIntervalMs(tempo.value);
+    const dur = Number(noteLen.value) || 800;
+    const token = quizPlayToken + 1;
+    quizPlayToken = token;
+    isPlaying = true;
+    btnReplay.disabled = true;
+    btnStart.disabled = true;
+    btnNext.disabled = true;
+    setStatus("quiz.status.listening");
+
+    for (const note of question.scaleSeq) {
+      if (quizPlayToken !== token) return;
+      playTone(Number(note.frequency), dur, 0);
+      await sleep(intervalMs);
+    }
+
+    await sleep(Math.round(intervalMs * 0.8));
+
+    for (const note of question.excerptSeq) {
+      if (quizPlayToken !== token) return;
+      playTone(Number(note.frequency), dur, 0);
+      await sleep(intervalMs);
+    }
+
+    if (quizPlayToken !== token) return;
+    isPlaying = false;
+    if (!quizLocked) {
+      setStatus("quiz.status.choose");
+    }
+    btnReplay.disabled = false;
+  }
+
+  function getLevelKeys() {
+    if (quizLevelValue === "basic") {
+      return playableKeys.filter((key) => quizBasicSet.has(normalizeKey(key)));
+    }
+    return playableKeys;
+  }
+
+  function buildQuestion() {
+    const levelKeys = getLevelKeys();
+    if (levelKeys.length < 4) return null;
+    const correctKey = levelKeys[Math.floor(Math.random() * levelKeys.length)];
+    const scale = getPlayableScaleCached(correctKey);
+    if (!scale) return null;
+    const scaleSeq = scale.slice(0, Math.min(scaleLength, scale.length));
+    const maxStart = Math.max(0, scale.length - excerptLength);
+    const start = Math.floor(Math.random() * (maxStart + 1));
+    const excerptSeq = scale.slice(start, start + excerptLength);
+    const pool = levelKeys.filter((k) => k !== correctKey);
+    const distractors = shuffleArray(pool).slice(0, 3);
+    const options = shuffleArray([correctKey, ...distractors]);
+    return { key: correctKey, scaleSeq, excerptSeq, options };
+  }
+
+  function renderOptions(options) {
+    optionsEl.innerHTML = options
+      .map((key) => {
+        const label = getMaqamDisplayName(key) || key;
+        return `<button class="quizOption" data-key="${escapeHtml(key)}">${escapeHtml(label)}</button>`;
+      })
+      .join("");
+
+    optionsEl.querySelectorAll(".quizOption").forEach((btn) => {
+      btn.addEventListener("click", () => {
+        if (!quizActive || quizLocked || !quizCurrent) return;
+        const selectedKey = btn.getAttribute("data-key") || "";
+        const isCorrect = selectedKey === quizCurrent.key;
+        quizLocked = true;
+        if (isCorrect) quizScore += 1;
+
+        optionsEl.querySelectorAll(".quizOption").forEach((optionBtn) => {
+          const key = optionBtn.getAttribute("data-key") || "";
+          optionBtn.disabled = true;
+          if (key === quizCurrent.key) optionBtn.classList.add("correct");
+        });
+
+        if (!isCorrect) {
+          btn.classList.add("incorrect");
+        }
+
+        updateMeta();
+        const answerName = getMaqamDisplayName(quizCurrent.key) || quizCurrent.key;
+        setStatus(isCorrect ? "quiz.status.correct" : "quiz.status.wrong", { name: answerName });
+
+        if (quizIndex >= quizTotal - 1) {
+          setStatus("quiz.status.complete", { score: quizScore, total: quizTotal });
+          btnNext.disabled = true;
+          btnReset.disabled = false;
+        } else {
+          btnNext.disabled = false;
+          btnReset.disabled = false;
+        }
+      });
+    });
+  }
+
+  function loadQuestion() {
+    quizLocked = false;
+    btnReplay.disabled = true;
+    btnNext.disabled = true;
+    quizCurrent = buildQuestion();
+
+    if (!quizCurrent) {
+      setStatus("quiz.status.notEnoughMaqams");
+      renderEmptyOptions();
+      return;
+    }
+
+    renderOptions(quizCurrent.options);
+    updateMeta();
+    playQuestion(quizCurrent);
+  }
+
+  function startQuiz() {
+    if (getLevelKeys().length < 4) {
+      setStatus("quiz.status.notEnoughMaqams");
+      renderEmptyOptions();
+      return;
+    }
+    quizActive = true;
+    quizIndex = 0;
+    quizScore = 0;
+    quizLocked = false;
+    btnStart.disabled = true;
+    btnReset.disabled = false;
+    cancelPlayback();
+    loadQuestion();
+  }
+
+  function nextQuestion() {
+    if (!quizActive) return;
+    if (quizIndex >= quizTotal - 1) return;
+    quizIndex += 1;
+    cancelPlayback();
+    loadQuestion();
+  }
+
+  function resetQuiz() {
+    cancelPlayback();
+    quizActive = false;
+    quizIndex = 0;
+    quizScore = 0;
+    quizLocked = false;
+    quizCurrent = null;
+    btnStart.disabled = false;
+    btnReplay.disabled = true;
+    btnNext.disabled = true;
+    btnReset.disabled = true;
+    setStatus("quiz.status.ready");
+    updateMeta();
+    renderEmptyOptions();
+  }
+
+  stopQuizPlayback = () => {
+    cancelPlayback();
+    quizActive = false;
+  };
+
+  quizLevel.oninput = () => {
+    quizLevelValue = quizLevel.value || "basic";
+    resetQuiz();
+  };
+
+  tempo.oninput = () => {
+    tempoLabel.innerHTML = `<strong>${tempo.value}</strong> BPM`;
+  };
+  noteLen.oninput = () => {
+    noteLenLabel.innerHTML = `<strong>${noteLen.value}</strong> ms`;
+  };
+
+  btnStart.onclick = () => startQuiz();
+  btnReplay.onclick = () => {
+    if (!quizActive || !quizCurrent || isPlaying) return;
+    playQuestion(quizCurrent);
+  };
+  btnNext.onclick = () => nextQuestion();
+  btnReset.onclick = () => resetQuiz();
+
+  updateMeta();
+  renderEmptyOptions();
+}
+
 function renderLooperPage() {
   stopLoop();
   stopMic();
   stopAllPlayback();
   if (stopExercisesPlayback) stopExercisesPlayback();
+  if (stopQuizPlayback) stopQuizPlayback();
   setHeaderMaqam("");
   document.body.classList.remove("pageMaqam");
   document.body.classList.remove("pageExercises");
+  document.body.classList.remove("pageQuiz");
   document.body.classList.add("pageLooper");
 
   const maqamKeys = sortMaqamKeysByDisplay(Object.keys(maqamsData || {}));
@@ -2414,8 +2755,12 @@ function render() {
   if (route.page === "looper" && prevLang !== nextLang && stopLooperPlayback) {
     stopLooperPlayback();
   }
+  if (route.page === "quiz" && prevLang !== nextLang && stopQuizPlayback) {
+    stopQuizPlayback();
+  }
   if (route.page === "list") return renderListPage();
   if (route.page === "exercises") return renderExercisesPage();
+  if (route.page === "quiz") return renderQuizPage();
   if (route.page === "looper") return renderLooperPage();
   if (route.page === "maqam") return renderMaqamPage(normalizeKey(route.maqam));
   renderListPage();

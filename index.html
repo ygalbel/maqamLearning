@@ -102,6 +102,9 @@
     .pageExercises .card,
     .pageExercises .controls,
     .pageExercises .notePad,
+    .pageQuiz .card,
+    .pageQuiz .controls,
+    .pageQuiz .notePad,
     .pageLooper .card,
     .pageLooper .controls,
     .pageLooper .notePad {
@@ -368,6 +371,31 @@
       background: var(--accent-soft);
       box-shadow: 0 0 0 3px rgba(179, 88, 42, 0.18);
     }
+    .quizMeta { gap: 8px; }
+    .quizOptions {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 10px;
+    }
+    .quizOption {
+      text-align: start;
+      padding: 12px 14px;
+    }
+    .quizOption.correct {
+      border-color: #3a7f4c;
+      background: linear-gradient(180deg, #dff2e4, #c9e8d2);
+      color: #234f2e;
+    }
+    .quizOption.incorrect {
+      border-color: #b34b4b;
+      background: linear-gradient(180deg, #f6d8d8, #f2c0c0);
+      color: #5b1f1f;
+    }
+    .quizOption:disabled {
+      opacity: 0.75;
+      cursor: not-allowed;
+      box-shadow: none;
+    }
     .danger { border-color:#f2c2c2; background:#fff6f6; }
     .small { font-size: 0.9rem; }
     .spacer { flex: 1; }
@@ -454,6 +482,7 @@
         z-index: 10;
       }
       .mobileBar button { flex: 1; padding: 12px 14px; font-size: 1rem; }
+      .quizOptions { grid-template-columns: 1fr; }
     }
   </style>
 </head>
@@ -470,6 +499,7 @@
       <a href="#/ar" data-lang="ar">AR</a>
     </div>
     <a class="pill navLink" id="navExercises" href="#/exercises">Exercises</a>
+    <a class="pill navLink" id="navQuiz" href="#/quiz">Quiz</a>
     <a class="pill navLink" id="navLooper" href="#/looper">Looper</a>
     <span class="spacer"></span>
     <span class="muted small" id="audioStatus"></span>
