@@ -2,9 +2,11 @@
 
 ## Project Structure & Module Organization
 This is a static, client-only site.
-- `index.html` contains the page shell and inline CSS.
+- `index.html` is the landing page (embeds Remotion-rendered MP4s from `public/videos/`).
+- `app.html` contains the app shell and inline CSS.
 - `app.js` implements routing, audio playback, and pitch detection.
 - `maqam-compact.json` is the data source for maqam metadata and note frequencies.
+- `remotion/` contains the Remotion sources for the landing-page videos.
 
 There is no build system or server code; changes are made directly in these files.
 
@@ -24,7 +26,7 @@ npx serve .
 - Indentation: 2 spaces in HTML/CSS/JS (match existing files).
 - JavaScript: plain ES6; no framework. Prefer `const`/`let`, camelCase for functions/variables.
 - DOM ids/classes are kebab-case or camelCase already in use (follow existing patterns).
-- Keep UI strings short; update `index.html` for layout/styling changes and `app.js` for behavior.
+- Keep UI strings short; update `app.html` for the app's layout/styling and `app.js` for behavior. Edit `index.html` for landing-page content.
 
 ## Testing Guidelines
 No automated tests are set up. Validate changes manually:
