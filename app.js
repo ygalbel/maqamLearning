@@ -2008,7 +2008,6 @@ function renderExercisesPage() {
   }
 
   function startExercise() {
-    refreshNotesPanel();
     const built = buildSequence();
     if (built.error) {
       setStatus(built.error, built.vars);
