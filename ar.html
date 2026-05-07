@@ -1,13 +1,13 @@
 <!doctype html>
-<html lang="en">
+<html lang="ar" dir="rtl">
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <meta name="theme-color" content="#b3582a" />
-  <title>Maqam Notes Player — Learn Maqamat in Your Browser</title>
+  <title>مشغّل المقامات — تعلّم المقامات في متصفّحك</title>
   <meta
     name="description"
-    content="A free, browser-based player for Arabic maqamat. Hear every microtone, practice with guided exercises, and switch instantly between English, Hebrew, and Arabic."
+    content="مشغّل مقامات مجاني عبر المتصفح. اسمع كل نغمة دقيقة، تدرّب بتمارين موجّهة، وانتقل بين العربية والعبرية والإنجليزية فورًا."
   />
   <link rel="icon" href="favicon.svg" type="image/svg+xml" />
   <link rel="manifest" href="manifest.json" />
@@ -16,12 +16,13 @@
   <link rel="alternate" hreflang="ar" href="ar.html" />
   <link rel="preload" as="video" href="public/videos/hero.mp4" type="video/mp4" />
 
-  <meta property="og:title" content="Maqam Notes Player" />
+  <meta property="og:title" content="مشغّل المقامات" />
   <meta
     property="og:description"
-    content="Learn maqamat in the browser — every microtone, guided exercises, EN/HE/AR."
+    content="تعلّم المقامات في المتصفح — كل نغمة دقيقة، تمارين موجّهة، EN/HE/AR."
   />
   <meta property="og:type" content="website" />
+  <meta property="og:locale" content="ar_AR" />
 
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-7823BS2G20"></script>
   <script>
@@ -32,7 +33,7 @@
   </script>
 
   <style>
-    @import url("https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Gloock&family=Tajawal:wght@400;600;700&family=Heebo:wght@400;600;700&display=swap");
+    @import url("https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Gloock&family=Noto+Naskh+Arabic:wght@400;500;600;700&family=Tajawal:wght@400;500;700;800&display=swap");
 
     :root {
       --ink: #2f2013;
@@ -52,11 +53,12 @@
     * { box-sizing: border-box; }
     html, body { margin: 0; padding: 0; }
     body {
-      font-family: "Amiri", "Noto Naskh Arabic", "Georgia", serif;
+      font-family: "Tajawal", "Noto Naskh Arabic", "Amiri", "Arial", sans-serif;
       color: var(--ink);
       background: var(--parchment);
       overflow-x: hidden;
-      line-height: 1.5;
+      line-height: 1.6;
+      direction: rtl;
     }
 
     a { color: var(--accent); }
@@ -71,22 +73,23 @@
       align-items: center;
       padding: 14px 24px;
       padding-top: calc(14px + env(safe-area-inset-top, 0px));
-      background: linear-gradient(90deg, rgba(255,248,238,0.95), rgba(244,227,206,0.9));
+      background: linear-gradient(270deg, rgba(255,248,238,0.95), rgba(244,227,206,0.9));
       border-bottom: 1px solid var(--line);
       backdrop-filter: blur(6px);
     }
     .nav .brand {
-      font-family: "Gloock", "Amiri", serif;
-      letter-spacing: 0.4px;
+      font-family: "Amiri", "Noto Naskh Arabic", serif;
+      font-weight: 700;
+      letter-spacing: 0.2px;
       color: var(--ink);
       text-decoration: none;
-      font-size: 1.15rem;
+      font-size: 1.2rem;
     }
     .nav .spacer { flex: 1; }
     .nav a.link {
       color: var(--muted);
       text-decoration: none;
-      font-family: "Tajawal", "Amiri", sans-serif;
+      font-family: "Tajawal", "Noto Naskh Arabic", sans-serif;
       font-weight: 600;
       font-size: 0.95rem;
     }
@@ -98,14 +101,31 @@
       color: #fff;
       text-decoration: none;
       font-weight: 700;
-      font-family: "Tajawal", "Amiri", sans-serif;
+      font-family: "Tajawal", "Noto Naskh Arabic", sans-serif;
       box-shadow: 0 8px 16px rgba(98,60,18,0.18);
     }
     .nav a.cta:hover { color: #fff; filter: brightness(1.05); }
+    .langChips { display: flex; gap: 6px; }
+    .langChips a {
+      font-size: 0.85rem;
+      padding: 4px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--line);
+      color: var(--muted);
+      text-decoration: none;
+      background: rgba(255,248,238,0.8);
+    }
+    .langChips a.active {
+      color: var(--ink);
+      border-color: var(--gold);
+      background: var(--accent-soft);
+      font-weight: 700;
+    }
+    .langChips a:hover { color: var(--ink); border-color: var(--gold); }
 
     @media (max-width: 720px) {
       .nav { gap: 10px; padding: 12px 16px; }
-      .nav .brand { font-size: 1rem; }
+      .nav .brand { font-size: 1.05rem; }
       .nav a.link { display: none; }
       .nav .langChips a:not(.active) { display: none; }
       .nav a.cta { padding: 7px 14px; font-size: 0.9rem; }
@@ -124,18 +144,19 @@
       .hero { grid-template-columns: 1.05fr 1fr; gap: 60px; padding: 80px 0 56px; }
     }
     .hero h1 {
-      font-family: "Gloock", "Amiri", serif;
+      font-family: "Amiri", "Noto Naskh Arabic", serif;
+      font-weight: 700;
       font-size: clamp(2.4rem, 5vw, 4rem);
-      line-height: 1.05;
+      line-height: 1.2;
       margin: 0 0 18px;
       color: var(--ink);
     }
     .hero h1 .accent { color: var(--accent); }
     .hero p.lead {
-      font-size: clamp(1.05rem, 1.4vw, 1.3rem);
+      font-size: clamp(1.05rem, 1.4vw, 1.25rem);
       color: var(--muted);
       margin: 0 0 28px;
-      max-width: 52ch;
+      max-width: 56ch;
     }
     .hero .ctaRow {
       display: flex;
@@ -149,7 +170,7 @@
       gap: 8px;
       padding: 14px 22px;
       border-radius: 12px;
-      font-family: "Tajawal", "Amiri", sans-serif;
+      font-family: "Tajawal", "Noto Naskh Arabic", sans-serif;
       font-weight: 700;
       font-size: 1rem;
       text-decoration: none;
@@ -168,27 +189,6 @@
       background: linear-gradient(180deg, #fff4e3, #f6e1c6);
       color: var(--ink);
       border-color: var(--wood);
-    }
-    .langChips {
-      display: flex;
-      gap: 6px;
-      margin-left: 4px;
-    }
-    .langChips a {
-      font-size: 0.85rem;
-      padding: 4px 10px;
-      border-radius: 999px;
-      border: 1px solid var(--line);
-      color: var(--muted);
-      text-decoration: none;
-      background: rgba(255,248,238,0.8);
-    }
-    .langChips a:hover { color: var(--ink); border-color: var(--gold); }
-    .langChips a.active {
-      color: var(--ink);
-      border-color: var(--gold);
-      background: var(--accent-soft);
-      font-weight: 700;
     }
 
     .videoFrame {
@@ -209,17 +209,16 @@
     .videoFrame .frameTag {
       position: absolute;
       top: 12px;
-      left: 12px;
+      right: 12px;
       padding: 4px 10px;
       border-radius: 999px;
       background: rgba(255,248,238,0.92);
       border: 1px solid var(--line);
       color: var(--muted);
-      font-family: "Tajawal", "Amiri", sans-serif;
-      font-size: 0.75rem;
-      font-weight: 600;
-      letter-spacing: 0.4px;
-      text-transform: uppercase;
+      font-family: "Tajawal", "Noto Naskh Arabic", sans-serif;
+      font-size: 0.8rem;
+      font-weight: 700;
+      letter-spacing: 0.2px;
     }
 
     .features {
@@ -242,18 +241,19 @@
       .feature.reverse .copy { order: 2; }
     }
     .feature .copy h2 {
-      font-family: "Gloock", "Amiri", serif;
-      font-size: clamp(1.6rem, 3vw, 2.4rem);
+      font-family: "Amiri", "Noto Naskh Arabic", serif;
+      font-weight: 700;
+      font-size: clamp(1.7rem, 3vw, 2.4rem);
       margin: 0 0 12px;
       color: var(--ink);
-      letter-spacing: 0.5px;
+      line-height: 1.25;
     }
     .feature .copy h2 .accent { color: var(--accent); }
     .feature .copy p {
       color: var(--muted);
       font-size: 1.05rem;
       margin: 0 0 16px;
-      max-width: 50ch;
+      max-width: 52ch;
     }
     .feature .copy ul {
       list-style: none;
@@ -264,14 +264,14 @@
       gap: 8px;
     }
     .feature .copy li {
-      font-family: "Tajawal", "Amiri", sans-serif;
+      font-family: "Tajawal", "Noto Naskh Arabic", sans-serif;
       font-size: 0.9rem;
       padding: 6px 12px;
       border-radius: 999px;
       background: var(--accent-soft);
       border: 1px solid var(--gold);
       color: var(--wood-dark);
-      font-weight: 600;
+      font-weight: 700;
     }
 
     .closer {
@@ -281,14 +281,15 @@
       border-radius: 24px;
       border: 2px solid var(--line);
       background:
-        radial-gradient(circle at 20% 0%, rgba(211,165,91,0.25), transparent 60%),
-        radial-gradient(circle at 100% 100%, rgba(179,88,42,0.18), transparent 60%),
+        radial-gradient(circle at 80% 0%, rgba(211,165,91,0.25), transparent 60%),
+        radial-gradient(circle at 0% 100%, rgba(179,88,42,0.18), transparent 60%),
         linear-gradient(180deg, var(--card), #f6e1c6);
       box-shadow: 0 24px 36px rgba(98,60,18,0.16);
     }
     .closer h2 {
-      font-family: "Gloock", "Amiri", serif;
-      font-size: clamp(1.8rem, 3vw, 2.6rem);
+      font-family: "Amiri", "Noto Naskh Arabic", serif;
+      font-weight: 700;
+      font-size: clamp(1.8rem, 3vw, 2.5rem);
       margin: 0 0 12px;
     }
     .closer p { color: var(--muted); margin: 0 auto 24px; max-width: 56ch; }
@@ -306,38 +307,38 @@
 </head>
 <body>
   <nav class="nav">
-    <a class="brand" href="./">Maqam Notes Player</a>
+    <a class="brand" href="./ar.html">مشغّل المقامات</a>
     <span class="spacer"></span>
-    <a class="link" href="#features">Features</a>
-    <a class="link" href="app.html#/exercises">Exercises</a>
-    <a class="link" href="app.html#/quiz">Quiz</a>
+    <a class="link" href="#features">المميّزات</a>
+    <a class="link" href="app.html#/ar/exercises">التمارين</a>
+    <a class="link" href="app.html#/ar/quiz">الاختبار</a>
     <span class="langChips" aria-label="Language">
-      <a href="index.html" hreflang="en" class="active" title="English">EN</a>
+      <a href="index.html" hreflang="en" title="English">EN</a>
       <a href="he.html" hreflang="he" title="עברית">HE</a>
-      <a href="ar.html" hreflang="ar" title="العربية">AR</a>
+      <a href="ar.html" hreflang="ar" class="active" title="العربية">AR</a>
     </span>
-    <a class="cta" href="app.html#/">Open the app →</a>
+    <a class="cta" href="app.html#/ar">افتح التطبيق ←</a>
   </nav>
 
   <main>
     <section class="hero">
       <div>
         <h1>
-          Hear every <span class="accent">microtone</span>.<br />
-          Learn every maqām.
+          اسمع كل <span class="accent">نغمة دقيقة</span>.<br />
+          تعلّم كل مقام.
         </h1>
         <p class="lead">
-          A free, browser-based player for Arabic maqamat. Tap notes, loop
-          phrases, run guided exercises, and switch between English, Hebrew,
-          and Arabic instantly — no install, no account.
+          مشغّل مقامات مجاني داخل متصفّحك. انقر النغمات، كرّر العبارات، شغّل
+          تمارين موجّهة، وانتقل بين العربية والعبرية والإنجليزية فورًا — بلا
+          تثبيت، وبلا تسجيل.
         </p>
         <div class="ctaRow">
-          <a class="btn primary" href="app.html#/">Try it free →</a>
-          <a class="btn ghost" href="#features">See how it works</a>
+          <a class="btn primary" href="app.html#/ar">ابدأ الآن ←</a>
+          <a class="btn ghost" href="#features">كيف يعمل</a>
         </div>
       </div>
       <div class="videoFrame">
-        <span class="frameTag">Intro</span>
+        <span class="frameTag">المقدّمة</span>
         <video
           src="public/videos/hero.mp4"
           autoplay
@@ -353,20 +354,20 @@
     <section id="features" class="features">
       <div class="feature">
         <div class="copy">
-          <h2>Walk the scale, <span class="accent">note by note</span></h2>
+          <h2>اِسلك السلّم <span class="accent">نغمةً نغمة</span></h2>
           <p>
-            Every maqam in the catalog is built from precise frequencies — so
-            quartertones, kornas, and sikkas sound the way they should. Click a
-            note pad to play it; click again to chain it into a phrase.
+            كل مقام في الفهرس مبنيٌّ على ترددات دقيقة — لذلك تظهر أرباع
+            النغمة والكورن والسيكا كما يجب أن تُسمع. انقر مفتاحًا لتشغيله؛
+            انقر مرة أخرى لربطه في عبارة.
           </p>
           <ul>
-            <li>Microtone-accurate</li>
-            <li>Maqam Rast, Bayati, Hijaz…</li>
-            <li>Adjustable tempo</li>
+            <li>دقّة بأرباع النغمة</li>
+            <li>مقام راست، بياتي، حجاز…</li>
+            <li>إيقاع قابل للتعديل</li>
           </ul>
         </div>
         <div class="videoFrame">
-          <span class="frameTag">Scale demo</span>
+          <span class="frameTag">عرض السلّم</span>
           <video
             src="public/videos/scale.mp4"
             autoplay
@@ -380,20 +381,20 @@
 
       <div class="feature reverse">
         <div class="copy">
-          <h2>Practice with <span class="accent">guided exercises</span></h2>
+          <h2>تدرّب <span class="accent">بتمارين موجّهة</span></h2>
           <p>
-            Five-note runs, broken thirds, octave leaps, neighbor tones —
-            preset patterns animate over the scale and play back at your
-            tempo. Loop them until the maqam lives in your fingers.
+            ركضات من خمس نغمات، ثوالث متكسّرة، قفزات أوكتاف، نغمات مجاورة —
+            أنماط جاهزة تتحرّك على السلّم وتُعزف بإيقاعك. كرّرها حتى يستقرّ
+            المقام في أصابعك.
           </p>
           <ul>
-            <li>10+ exercise patterns</li>
-            <li>Loop &amp; tempo controls</li>
-            <li>Quiz mode included</li>
+            <li>أكثر من 10 أنماط تمارين</li>
+            <li>تحكّم بالتكرار والإيقاع</li>
+            <li>وضع اختبار مدمج</li>
           </ul>
         </div>
         <div class="videoFrame">
-          <span class="frameTag">Exercises</span>
+          <span class="frameTag">التمارين</span>
           <video
             src="public/videos/exercises.mp4"
             autoplay
@@ -407,11 +408,10 @@
 
       <div class="feature">
         <div class="copy">
-          <h2>One app, <span class="accent">three languages</span></h2>
+          <h2>تطبيق واحد، <span class="accent">بثلاث لغات</span></h2>
           <p>
-            Full UI translations and proper RTL layout for Hebrew and Arabic.
-            Maqam and jins names render in their native script, every screen,
-            every time.
+            ترجمة كاملة للواجهة وتخطيط RTL سليم للعربية والعبرية. أسماء
+            المقامات والأجناس بحروفها الأصلية، في كل شاشة وفي كل مرة.
           </p>
           <ul>
             <li>English</li>
@@ -434,17 +434,17 @@
     </section>
 
     <section class="closer">
-      <h2>Open the player and start exploring</h2>
+      <h2>افتح المشغّل وابدأ الاستكشاف</h2>
       <p>
-        No sign-up, no download — runs entirely in your browser. Works great
-        on phones, tablets, and laptops.
+        بلا تسجيل ولا تنزيل — يعمل بالكامل داخل متصفّحك. متوافق تمامًا مع
+        الهواتف والأجهزة اللوحية والحواسيب المحمولة.
       </p>
-      <a class="btn primary" href="app.html#/">Launch Maqam Notes Player →</a>
+      <a class="btn primary" href="app.html#/ar">شغّل مشغّل المقامات ←</a>
     </section>
   </main>
 
   <footer>
-    Created by Ygal Bellaiche · <a href="mailto:ygalbel@proton.me">ygalbel@proton.me</a>
+    أنشأه Ygal Bellaiche · <a href="mailto:ygalbel@proton.me">ygalbel@proton.me</a>
   </footer>
 </body>
 </html>
