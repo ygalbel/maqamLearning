@@ -1,4 +1,4 @@
-const CACHE_NAME = "maqam-pwa-v2";
+const CACHE_NAME = "maqam-pwa-v3";
 
 const normalizeBase = (base) => (base.endsWith("/") ? base : `${base}/`);
 
@@ -17,6 +17,7 @@ function getCoreAssets() {
   return [
     base,
     withBase("index.html"),
+    withBase("he.html"),
     withBase("app.html"),
     withBase("app.js"),
     withBase("config.js"),
