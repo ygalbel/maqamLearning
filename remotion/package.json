@@ -1,0 +1,24 @@
+{
+  "name": "maqam-learning-remotion",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Remotion compositions for the Maqam Notes Player landing page",
+  "scripts": {
+    "start": "remotion studio src/index.ts",
+    "render": "node render.mjs",
+    "render:hero": "remotion render src/index.ts Hero ../public/videos/hero.mp4",
+    "render:scale": "remotion render src/index.ts ScaleDemo ../public/videos/scale.mp4",
+    "render:exercises": "remotion render src/index.ts Exercises ../public/videos/exercises.mp4",
+    "render:languages": "remotion render src/index.ts Languages ../public/videos/languages.mp4"
+  },
+  "dependencies": {
+    "@remotion/cli": "4.0.290",
+    "remotion": "4.0.290",
+    "react": "18.3.1",
+    "react-dom": "18.3.1"
+  },
+  "devDependencies": {
+    "@types/react": "18.3.12",
+    "typescript": "5.5.4"
+  }
+}

@@ -4,9 +4,22 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width,initial-scale=1" />
   <meta name="theme-color" content="#b3582a" />
-  <title>Maqam Notes Player</title>
+  <title>Maqam Notes Player — Learn Maqamat in Your Browser</title>
+  <meta
+    name="description"
+    content="A free, browser-based player for Arabic maqamat. Hear every microtone, practice with guided exercises, and switch instantly between English, Hebrew, and Arabic."
+  />
   <link rel="icon" href="favicon.svg" type="image/svg+xml" />
   <link rel="manifest" href="manifest.json" />
+  <link rel="preload" as="video" href="public/videos/hero.mp4" type="video/mp4" />
+
+  <meta property="og:title" content="Maqam Notes Player" />
+  <meta
+    property="og:description"
+    content="Learn maqamat in the browser — every microtone, guided exercises, EN/HE/AR."
+  />
+  <meta property="og:type" content="website" />
+
   <script async src="https://www.googletagmanager.com/gtag/js?id=G-7823BS2G20"></script>
   <script>
     window.dataLayer = window.dataLayer || [];
@@ -14,8 +27,9 @@
     gtag("js", new Date());
     gtag("config", "G-7823BS2G20");
   </script>
+
   <style>
-    @import url("https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Gloock&family=Tajawal:wght@400;600&family=Heebo:wght@400;600;700&display=swap");
+    @import url("https://fonts.googleapis.com/css2?family=Amiri:wght@400;700&family=Gloock&family=Tajawal:wght@400;600;700&family=Heebo:wght@400;600;700&display=swap");
 
     :root {
       --ink: #2f2013;
@@ -33,484 +47,387 @@
     }
 
     * { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; }
     body {
       font-family: "Amiri", "Noto Naskh Arabic", "Georgia", serif;
-      margin: 0;
-      padding: 0;
       color: var(--ink);
       background: var(--parchment);
       overflow-x: hidden;
+      line-height: 1.5;
     }
 
-    header {
-      padding: 16px;
-      padding-top: calc(16px + env(safe-area-inset-top, 0px));
-      border-bottom: 1px solid var(--line);
-      display:flex;
-      gap:12px;
-      align-items:center;
-      background: linear-gradient(90deg, rgba(255, 248, 238, 0.95), rgba(244, 227, 206, 0.9));
+    a { color: var(--accent); }
+    a:hover { color: var(--gold-strong); }
+
+    .nav {
       position: sticky;
-      top: env(safe-area-inset-top, 0px);
+      top: 0;
       z-index: 5;
-      box-sizing: border-box;
+      display: flex;
+      gap: 16px;
+      align-items: center;
+      padding: 14px 24px;
+      padding-top: calc(14px + env(safe-area-inset-top, 0px));
+      background: linear-gradient(90deg, rgba(255,248,238,0.95), rgba(244,227,206,0.9));
+      border-bottom: 1px solid var(--line);
+      backdrop-filter: blur(6px);
     }
+    .nav .brand {
+      font-family: "Gloock", "Amiri", serif;
+      letter-spacing: 0.4px;
+      color: var(--ink);
+      text-decoration: none;
+      font-size: 1.15rem;
+    }
+    .nav .spacer { flex: 1; }
+    .nav a.link {
+      color: var(--muted);
+      text-decoration: none;
+      font-family: "Tajawal", "Amiri", sans-serif;
+      font-weight: 600;
+      font-size: 0.95rem;
+    }
+    .nav a.link:hover { color: var(--ink); }
+    .nav a.cta {
+      padding: 8px 16px;
+      border-radius: 999px;
+      background: linear-gradient(180deg, var(--accent), var(--gold-strong));
+      color: #fff;
+      text-decoration: none;
+      font-weight: 700;
+      font-family: "Tajawal", "Amiri", sans-serif;
+      box-shadow: 0 8px 16px rgba(98,60,18,0.18);
+    }
+    .nav a.cta:hover { color: #fff; filter: brightness(1.05); }
 
-    header a { text-decoration: none; color: inherit; }
-    a.card { text-decoration: none; }
-    .titleGroup { display:flex; align-items:baseline; gap:8px; flex-wrap:wrap; }
-    .compactHeader .headerTagline { display: none; }
-    .compactHeader #headerMaqam { font-size: 1.05rem; font-weight: 700; }
-    .langSwitch { display:flex; gap:6px; align-items:center; }
-    .langSwitch a {
-      font-size: 0.8rem;
-      padding: 2px 6px;
+    main { max-width: 1180px; margin: 0 auto; padding: 0 24px 80px; }
+
+    .hero {
+      padding: 56px 0 40px;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 32px;
+      align-items: center;
+    }
+    @media (min-width: 980px) {
+      .hero { grid-template-columns: 1.05fr 1fr; gap: 60px; padding: 80px 0 56px; }
+    }
+    .hero h1 {
+      font-family: "Gloock", "Amiri", serif;
+      font-size: clamp(2.4rem, 5vw, 4rem);
+      line-height: 1.05;
+      margin: 0 0 18px;
+      color: var(--ink);
+    }
+    .hero h1 .accent { color: var(--accent); }
+    .hero p.lead {
+      font-size: clamp(1.05rem, 1.4vw, 1.3rem);
+      color: var(--muted);
+      margin: 0 0 28px;
+      max-width: 52ch;
+    }
+    .hero .ctaRow {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      align-items: center;
+    }
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 22px;
+      border-radius: 12px;
+      font-family: "Tajawal", "Amiri", sans-serif;
+      font-weight: 700;
+      font-size: 1rem;
+      text-decoration: none;
+      cursor: pointer;
+      border: 2px solid transparent;
+      box-shadow: 0 8px 18px rgba(98,60,18,0.18);
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+    .btn:hover { transform: translateY(-1px); box-shadow: 0 10px 22px rgba(98,60,18,0.22); }
+    .btn.primary {
+      background: linear-gradient(180deg, var(--accent), var(--gold-strong));
+      color: #fff;
+      border-color: var(--gold-strong);
+    }
+    .btn.ghost {
+      background: linear-gradient(180deg, #fff4e3, #f6e1c6);
+      color: var(--ink);
+      border-color: var(--wood);
+    }
+    .langChips {
+      display: flex;
+      gap: 6px;
+      margin-left: 4px;
+    }
+    .langChips a {
+      font-size: 0.85rem;
+      padding: 4px 10px;
       border-radius: 999px;
       border: 1px solid var(--line);
       color: var(--muted);
       text-decoration: none;
+      background: rgba(255,248,238,0.8);
     }
-    .langSwitch a.active { color: var(--ink); border-color: var(--gold); background: var(--accent-soft); }
-    .navLink { text-decoration: none; }
-    .siteFooter {
-      position: sticky;
-      bottom: 0;
-      width: 100%;
-      padding: 8px 12px;
-      text-align: center;
-      font-size: 0.85rem;
-      color: var(--muted);
-      background: rgba(251, 242, 229, 0.96);
-      border-top: 1px solid var(--line);
-      backdrop-filter: blur(6px);
-      z-index: 4;
-    }
-    .siteFooter a { color: var(--accent); text-decoration: none; }
+    .langChips a:hover { color: var(--ink); border-color: var(--gold); }
 
-    html[dir="rtl"] body { direction: rtl; }
-    html[dir="rtl"] body { font-family: "Heebo", "Tajawal", "Arial", sans-serif; }
-    html[lang="ar"] body { font-family: "Amiri", "Noto Naskh Arabic", "Tajawal", serif; }
-    html[lang="he"] body { font-family: "Amiri", "Heebo", "Tajawal", "Arial", sans-serif; }
-    html[dir="rtl"] .row { flex-direction: row-reverse; }
-    html[dir="rtl"] .titleGroup { flex-direction: row-reverse; }
-    html[dir="rtl"] .langSwitch { flex-direction: row-reverse; }
-    html[dir="rtl"] .card,
-    html[dir="rtl"] .notePad { text-align: right; }
-    .pageMaqam .card,
-    .pageMaqam .controls,
-    .pageMaqam .notePad,
-    .pageExercises .card,
-    .pageExercises .controls,
-    .pageExercises .notePad,
-    .pageQuiz .card,
-    .pageQuiz .controls,
-    .pageQuiz .notePad,
-    .pageLooper .card,
-    .pageLooper .controls,
-    .pageLooper .notePad {
-      background: rgba(255, 248, 238, 0.7);
-      box-shadow: none;
-    }
-    .pageMaqam .notePad.selected,
-    .pageExercises .notePad.selected,
-    .pageLooper .notePad.selected {
-      background: var(--accent-soft);
-      box-shadow: 0 0 0 4px rgba(211, 165, 91, 0.35);
-    }
-    .pageMaqam .notePad .pill,
-    .pageExercises .notePad .pill,
-    .pageLooper .notePad .pill {
-      background: transparent;
-      border-color: var(--line);
-      color: var(--muted);
-    }
-    header strong {
-      font-family: "Gloock", "Amiri", serif;
-      letter-spacing: 0.4px;
-    }
-
-    main { padding: 16px; padding-bottom: 80px; max-width: 980px; margin: 0 auto; }
-
-    a { color: var(--accent); }
-    a:hover { color: var(--gold-strong); }
-    code { background: #f7e6d1; padding: 2px 6px; border-radius: 6px; }
-
-    h2 {
-      font-family: "Gloock", "Amiri", serif;
-      letter-spacing: 0.6px;
-    }
-
-    .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(220px, 1fr)); gap: 12px; }
-    .card {
-      border: 1px solid var(--line);
-      border-radius: 14px;
-      padding: 12px;
+    .videoFrame {
+      position: relative;
+      border-radius: 20px;
+      overflow: hidden;
+      border: 2px solid var(--line);
       background: var(--card);
-      box-shadow: 0 10px 20px rgba(83, 49, 15, 0.08);
+      box-shadow: 0 28px 48px rgba(98,60,18,0.18);
+      aspect-ratio: 16 / 9;
     }
-    .cardHeaderRow {
-      display: flex;
-      align-items: flex-start;
-      justify-content: space-between;
-      gap: 8px;
-    }
-    .cardTitle { flex: 1; min-width: 0; }
-    .cardPill { white-space: nowrap; }
-    .card:hover { border-color: var(--gold); }
-    .muted { color: var(--muted); font-size: 0.95rem; }
-    .row { display:flex; gap:12px; flex-wrap: wrap; align-items: center; }
-    .controls {
-      display:flex;
-      gap:10px;
-      flex-wrap: wrap;
-      align-items: center;
-      padding: 12px;
-      border: 1px solid var(--line);
-      border-radius: 14px;
-      background: linear-gradient(180deg, rgba(255, 248, 238, 0.95), rgba(244, 226, 203, 0.85));
-    }
-    button {
-      padding: 8px 12px;
-      border-radius: 10px;
-      border: 1px solid var(--wood);
-      background: linear-gradient(180deg, #f7e1c8, #e7bf8b);
-      color: var(--ink);
-      cursor: pointer;
-      font-family: "Tajawal", "Amiri", serif;
-      font-weight: 600;
-      box-shadow: 0 6px 12px rgba(98, 60, 18, 0.18);
-      transition: transform 0.15s ease, box-shadow 0.15s ease, background 0.2s ease;
-    }
-    .miniControls { flex-wrap: nowrap; gap: 10px; }
-    .miniGroup { flex-wrap: nowrap; gap: 6px; }
-    .miniBtn {
-      padding: 4px 8px;
-      min-width: 32px;
-      border-radius: 8px;
-      font-size: 0.95rem;
-      line-height: 1;
-    }
-    .miniActions { gap: 8px; }
-    .miniToggle {
-      padding: 0;
-      border-radius: 999px;
-      font-size: 0.65rem;
-      min-width: 14px;
-      width: 14px;
-      height: 14px;
-      line-height: 1;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      box-shadow: none;
-    }
-    .controlsHeader { flex-wrap: nowrap; gap: 10px; }
-    select {
-      padding: 6px 10px;
-      border-radius: 10px;
-      border: 1px solid var(--wood);
-      background: #fff4e3;
-      color: var(--ink);
-      font-family: "Tajawal", "Amiri", serif;
-      font-weight: 600;
-    }
-    button:hover { box-shadow: 0 8px 16px rgba(98, 60, 18, 0.22); }
-    button:active { transform: translateY(1px); }
-    button:disabled { opacity: 0.5; cursor: not-allowed; box-shadow: none; }
-
-    input[type="range"] { width: 220px; accent-color: var(--gold-strong); }
-    input, select, button { font-family: inherit; }
-    input[type="search"] {
-      padding: 6px 10px;
-      border-radius: 10px;
-      border: 1px solid var(--wood);
-      background: #fff4e3;
-      color: var(--ink);
-      min-width: 200px;
-    }
-
-    .notes {
-      --noteScale: 1;
-      display:grid;
-      grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
-      column-gap: calc(8px * var(--noteScale));
-      row-gap: calc(16px * var(--noteScale));
-      margin-top: 12px;
-      align-items: stretch;
-    }
-    .notesGroupTitle {
-      grid-column: 1 / -1;
-      margin-top: 6px;
-      font-weight: 700;
-      color: var(--muted);
-    }
-    .notesGroupTitle:first-child { margin-top: 0; }
-    .noteItem {
-      display: grid;
-      grid-template-rows: 1fr minmax(18px, auto);
-      align-items: stretch;
-      position: relative;
-      height: 100%;
-    }
-    .notePad { height: 100%; }
-    .notePad {
+    .videoFrame video {
       width: 100%;
-      height: 68%;
-      text-align: left;
-      border-radius: 14px;
-      border: 1px solid var(--line);
-      background: linear-gradient(180deg, #fff4e3, #f6e1c6);
-      padding: 12px;
-      display: flex;
-      flex-direction: column;
-      gap: 6px;
-      box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+      height: 100%;
+      display: block;
+      object-fit: cover;
     }
-    .notePad .noteTitle { font-size: 1rem; text-align: center; width: 100%; }
-    .notePad .noteIndex { font-size: 0.7em; color: var(--muted); display: block; }
-    .notePad .noteName { display: block; text-align: center; width: 100%; }
-    .notePad .noteSuffix { font-size: 0.62em; margin-left: 0.05em; }
-    .notePad .noteKey { font-size: 0.7em; color: var(--gold-strong); opacity: 0.9; }
-    .notePad .noteMeta {
-      font-size: 0.9rem;
+    .videoFrame .frameTag {
+      position: absolute;
+      top: 12px;
+      left: 12px;
+      padding: 4px 10px;
+      border-radius: 999px;
+      background: rgba(255,248,238,0.92);
+      border: 1px solid var(--line);
       color: var(--muted);
-      display: flex;
-      justify-content: flex-start;
+      font-family: "Tajawal", "Amiri", sans-serif;
+      font-size: 0.75rem;
+      font-weight: 600;
+      letter-spacing: 0.4px;
+      text-transform: uppercase;
+    }
+
+    .features {
+      margin-top: 24px;
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 32px;
+    }
+    .feature {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 24px;
       align-items: center;
+      padding: 24px 0;
+      border-top: 1px solid var(--line);
+    }
+    .feature:first-child { border-top: 0; }
+    @media (min-width: 900px) {
+      .feature { grid-template-columns: 1fr 1fr; gap: 56px; padding: 56px 0; }
+      .feature.reverse .copy { order: 2; }
+    }
+    .feature .copy h2 {
+      font-family: "Gloock", "Amiri", serif;
+      font-size: clamp(1.6rem, 3vw, 2.4rem);
+      margin: 0 0 12px;
+      color: var(--ink);
+      letter-spacing: 0.5px;
+    }
+    .feature .copy h2 .accent { color: var(--accent); }
+    .feature .copy p {
+      color: var(--muted);
+      font-size: 1.05rem;
+      margin: 0 0 16px;
+      max-width: 50ch;
+    }
+    .feature .copy ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: flex;
+      flex-wrap: wrap;
       gap: 8px;
     }
-    .notePad .noteInterval { font-size: 0.85rem; color: var(--muted); }
-    .notePad .noteInterval {
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-    }
-    .looperTimeline {
-      position: relative;
-      height: 44px;
-      border-radius: 999px;
-      border: 1px solid var(--line);
-      background: rgba(255, 248, 238, 0.8);
-      overflow: hidden;
-    }
-    .looperEvent {
-      position: absolute;
-      top: 50%;
-      transform: translate(-50%, -50%);
-      padding: 2px 6px;
-      border-radius: 999px;
-      font-size: 0.75rem;
-      background: var(--accent-soft);
-      border: 1px solid var(--line);
-      color: var(--muted);
-      white-space: nowrap;
-    }
-    .looperEvent.active {
-      background: var(--accent);
-      color: #fff;
-      border-color: var(--accent);
-    }
-    .looperPlayhead {
-      position: absolute;
-      top: 6px;
-      bottom: 6px;
-      width: 2px;
-      background: var(--accent);
-      opacity: 0.85;
-      left: 0%;
-    }
-    .noteJinsOutside {
-      font-size: 0.85rem;
-      color: var(--muted);
-      margin-top: 6px;
-      text-align: center;
-      white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      min-height: 18px;
-    }
-    .notePad.selected {
-      background: linear-gradient(180deg, #fff0da, #f0cda0);
-      border-color: var(--gold);
-      box-shadow: 0 0 0 4px rgba(211, 165, 91, 0.35);
-    }
-    .notePad.active {
-      border-color: var(--accent);
-      outline: 6px solid var(--accent);
-      outline-offset: -6px;
-    }
-    .notePad.blocked {
-      opacity: 0.55;
-      filter: grayscale(0.2);
-    }
-    .pill {
-      font-size: 0.85rem;
-      padding: 2px 8px;
+    .feature .copy li {
+      font-family: "Tajawal", "Amiri", sans-serif;
+      font-size: 0.9rem;
+      padding: 6px 12px;
       border-radius: 999px;
       background: var(--accent-soft);
       border: 1px solid var(--gold);
       color: var(--wood-dark);
+      font-weight: 600;
     }
-    .exerciseSteps {
-      margin-top: 12px;
-      display: flex;
-      flex-wrap: wrap;
-      gap: 6px;
+
+    .closer {
+      margin-top: 56px;
+      text-align: center;
+      padding: 56px 24px;
+      border-radius: 24px;
+      border: 2px solid var(--line);
+      background:
+        radial-gradient(circle at 20% 0%, rgba(211,165,91,0.25), transparent 60%),
+        radial-gradient(circle at 100% 100%, rgba(179,88,42,0.18), transparent 60%),
+        linear-gradient(180deg, var(--card), #f6e1c6);
+      box-shadow: 0 24px 36px rgba(98,60,18,0.16);
     }
-    .exerciseStep {
-      padding: 4px 8px;
-      border-radius: 999px;
-      border: 1px solid var(--line);
-      background: #fff4e3;
-      font-size: 0.85rem;
+    .closer h2 {
+      font-family: "Gloock", "Amiri", serif;
+      font-size: clamp(1.8rem, 3vw, 2.6rem);
+      margin: 0 0 12px;
+    }
+    .closer p { color: var(--muted); margin: 0 auto 24px; max-width: 56ch; }
+
+    footer {
+      text-align: center;
+      padding: 24px;
       color: var(--muted);
+      font-size: 0.9rem;
+      border-top: 1px solid var(--line);
+      background: rgba(251,242,229,0.9);
     }
-    .exerciseStep.active {
-      border-color: var(--accent);
-      color: var(--ink);
-      background: var(--accent-soft);
-      box-shadow: 0 0 0 3px rgba(179, 88, 42, 0.18);
-    }
-    .quizMeta { gap: 8px; }
-    .quizOptions {
-      display: grid;
-      grid-template-columns: repeat(2, minmax(0, 1fr));
-      gap: 10px;
-    }
-    .quizOption {
-      text-align: start;
-      padding: 12px 14px;
-    }
-    .quizOption.correct {
-      border-color: #3a7f4c;
-      background: linear-gradient(180deg, #dff2e4, #c9e8d2);
-      color: #234f2e;
-    }
-    .quizOption.incorrect {
-      border-color: #b34b4b;
-      background: linear-gradient(180deg, #f6d8d8, #f2c0c0);
-      color: #5b1f1f;
-    }
-    .quizOption:disabled {
-      opacity: 0.75;
-      cursor: not-allowed;
-      box-shadow: none;
-    }
-    .danger { border-color:#f2c2c2; background:#fff6f6; }
-    .small { font-size: 0.9rem; }
-    .spacer { flex: 1; }
-    .mobileBar { display: none; }
-
-    @media (max-width: 720px) {
-      header {
-        flex-wrap: wrap;
-        gap: 8px;
-        padding-top: calc(20px + env(safe-area-inset-top, 0px));
-        position: fixed;
-        top: var(--safe-top, 0px);
-        left: 0;
-        right: 0;
-        z-index: 20;
-      }
-      header .spacer { display: none; }
-      main { padding: 12px; padding-top: calc(12px + var(--header-offset, 0px) + var(--safe-top, 0px)); }
-      .controls { flex-direction: column; align-items: stretch; }
-      .controls button { width: 100%; padding: 12px 14px; font-size: 1rem; }
-      .controls input[type="range"] { width: 100%; }
-
-      .grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
-
-      .notes {
-        --noteScale: 1;
-        grid-template-columns: repeat(4, minmax(0, 1fr));
-        column-gap: calc(8px * var(--noteScale));
-        row-gap: calc(16px * var(--noteScale));
-      }
-      .noteItem { flex-direction: column; align-items: stretch; }
-      .notePad {
-        padding: calc(10px * var(--noteScale));
-        font-size: calc(1.55rem * var(--noteScale));
-        text-align: center;
-        align-items: center;
-        min-height: calc(100px * var(--noteScale));
-      }
-      .notePad .noteTitle {
-        text-align: center;
-        width: 100%;
-        font-size: calc(2.1rem * var(--noteScale));
-        line-height: 1.05;
-      }
-      .notePad .noteIndex { font-size: 0.42em; }
-      .notePad .noteName { white-space: nowrap; line-height: 1.05; margin-top: 6px; }
-      .notePad .noteTitle,
-      .notePad .noteName,
-      .notePad .noteMeta,
-      .notePad .noteInterval,
-      .noteJinsOutside {
-        max-width: 100%;
-        overflow: hidden;
-        text-overflow: ellipsis;
-      }
-      .notePad .noteSuffix { font-size: 0.6em; }
-      .notePad .noteMeta {
-        display: flex;
-        justify-content: space-between;
-        width: 100%;
-        font-size: calc(1.65rem * var(--noteScale));
-      }
-      .notePad .noteInterval {
-        font-size: calc(0.95rem * var(--noteScale));
-      }
-      .notePad .noteJins {
-        text-align: center;
-        font-size: calc(0.9rem * var(--noteScale));
-      }
-      .miniActions { display: none; }
-
-      .mobileBar {
-        display: flex;
-        position: sticky;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        gap: 10px;
-        padding: 10px;
-        margin: 12px 0 0;
-        background: rgba(251, 242, 229, 0.96);
-        border-top: 1px solid var(--line);
-        backdrop-filter: blur(6px);
-        z-index: 10;
-      }
-      .mobileBar button { flex: 1; padding: 12px 14px; font-size: 1rem; }
-      .quizOptions { grid-template-columns: 1fr; }
-    }
+    footer a { color: var(--accent); text-decoration: none; }
   </style>
 </head>
 <body>
-  <header id="siteHeader">
-    <div class="titleGroup">
-      <a href="#/" id="headerTitle"><strong>Maqam Notes Player</strong></a>
-      <span class="muted small" id="headerMaqam"></span>
-    </div>
-    <span class="muted headerTagline" id="headerTagline">Pick a maqam → choose notes → play with tempo/repeat</span>
-    <div class="langSwitch" id="langSwitch">
-      <a href="#/" data-lang="en">EN</a>
-      <a href="#/he" data-lang="he">HE</a>
-      <a href="#/ar" data-lang="ar">AR</a>
-    </div>
-    <a class="pill navLink" id="navExercises" href="#/exercises">Exercises</a>
-    <a class="pill navLink" id="navQuiz" href="#/quiz">Quiz</a>
-    <a class="pill navLink" id="navLooper" href="#/looper">Looper</a>
+  <nav class="nav">
+    <a class="brand" href="./">Maqam Notes Player</a>
     <span class="spacer"></span>
-    <span class="muted small" id="audioStatus"></span>
-  </header>
+    <a class="link" href="#features">Features</a>
+    <a class="link" href="app.html#/exercises">Exercises</a>
+    <a class="link" href="app.html#/quiz">Quiz</a>
+    <span class="langChips">
+      <a href="app.html#/" title="English">EN</a>
+      <a href="app.html#/he" title="Hebrew">HE</a>
+      <a href="app.html#/ar" title="Arabic">AR</a>
+    </span>
+    <a class="cta" href="app.html#/">Open the app →</a>
+  </nav>
 
-  <main id="app"></main>
-  <footer class="siteFooter">
-    <span>Created by Ygal Bellaiche · <a href="mailto:ygalbel@proton.me">ygalbel@proton.me</a></span>
+  <main>
+    <section class="hero">
+      <div>
+        <h1>
+          Hear every <span class="accent">microtone</span>.<br />
+          Learn every maqām.
+        </h1>
+        <p class="lead">
+          A free, browser-based player for Arabic maqamat. Tap notes, loop
+          phrases, run guided exercises, and switch between English, Hebrew,
+          and Arabic instantly — no install, no account.
+        </p>
+        <div class="ctaRow">
+          <a class="btn primary" href="app.html#/">Try it free →</a>
+          <a class="btn ghost" href="#features">See how it works</a>
+        </div>
+      </div>
+      <div class="videoFrame">
+        <span class="frameTag">Intro</span>
+        <video
+          src="public/videos/hero.mp4"
+          autoplay
+          muted
+          loop
+          playsinline
+          preload="auto"
+          poster="favicon.svg"
+        ></video>
+      </div>
+    </section>
+
+    <section id="features" class="features">
+      <div class="feature">
+        <div class="copy">
+          <h2>Walk the scale, <span class="accent">note by note</span></h2>
+          <p>
+            Every maqam in the catalog is built from precise frequencies — so
+            quartertones, kornas, and sikkas sound the way they should. Click a
+            note pad to play it; click again to chain it into a phrase.
+          </p>
+          <ul>
+            <li>Microtone-accurate</li>
+            <li>Maqam Rast, Bayati, Hijaz…</li>
+            <li>Adjustable tempo</li>
+          </ul>
+        </div>
+        <div class="videoFrame">
+          <span class="frameTag">Scale demo</span>
+          <video
+            src="public/videos/scale.mp4"
+            autoplay
+            muted
+            loop
+            playsinline
+            preload="auto"
+          ></video>
+        </div>
+      </div>
+
+      <div class="feature reverse">
+        <div class="copy">
+          <h2>Practice with <span class="accent">guided exercises</span></h2>
+          <p>
+            Five-note runs, broken thirds, octave leaps, neighbor tones —
+            preset patterns animate over the scale and play back at your
+            tempo. Loop them until the maqam lives in your fingers.
+          </p>
+          <ul>
+            <li>10+ exercise patterns</li>
+            <li>Loop &amp; tempo controls</li>
+            <li>Quiz mode included</li>
+          </ul>
+        </div>
+        <div class="videoFrame">
+          <span class="frameTag">Exercises</span>
+          <video
+            src="public/videos/exercises.mp4"
+            autoplay
+            muted
+            loop
+            playsinline
+            preload="auto"
+          ></video>
+        </div>
+      </div>
+
+      <div class="feature">
+        <div class="copy">
+          <h2>One app, <span class="accent">three languages</span></h2>
+          <p>
+            Full UI translations and proper RTL layout for Hebrew and Arabic.
+            Maqam and jins names render in their native script, every screen,
+            every time.
+          </p>
+          <ul>
+            <li>English</li>
+            <li>עברית</li>
+            <li>العربية</li>
+          </ul>
+        </div>
+        <div class="videoFrame">
+          <span class="frameTag">EN · HE · AR</span>
+          <video
+            src="public/videos/languages.mp4"
+            autoplay
+            muted
+            loop
+            playsinline
+            preload="auto"
+          ></video>
+        </div>
+      </div>
+    </section>
+
+    <section class="closer">
+      <h2>Open the player and start exploring</h2>
+      <p>
+        No sign-up, no download — runs entirely in your browser. Works great
+        on phones, tablets, and laptops.
+      </p>
+      <a class="btn primary" href="app.html#/">Launch Maqam Notes Player →</a>
+    </section>
+  </main>
+
+  <footer>
+    Created by Ygal Bellaiche · <a href="mailto:ygalbel@proton.me">ygalbel@proton.me</a>
   </footer>
-
-  <script src="https://cdn.jsdelivr.net/npm/soundfont-player@0.15.7/dist/soundfont-player.min.js"></script>
-  <script type="module" src="app.js"></script>
 </body>
 </html>

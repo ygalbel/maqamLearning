@@ -1,4 +1,4 @@
-const CACHE_NAME = "maqam-pwa-v1";
+const CACHE_NAME = "maqam-pwa-v2";
 
 const normalizeBase = (base) => (base.endsWith("/") ? base : `${base}/`);
 
@@ -17,6 +17,7 @@ function getCoreAssets() {
   return [
     base,
     withBase("index.html"),
+    withBase("app.html"),
     withBase("app.js"),
     withBase("config.js"),
     withBase("data.js"),
@@ -56,8 +57,11 @@ self.addEventListener("fetch", (event) => {
   if (url.origin !== self.location.origin) return;
 
   if (request.mode === "navigate") {
+    const base = getBasePath();
+    const isAppNav = url.pathname === `${base}app.html`;
+    const fallback = isAppNav ? `${base}app.html` : base;
     event.respondWith(
-      caches.match(getBasePath()).then((cached) => cached || fetch(request))
+      caches.match(fallback).then((cached) => cached || fetch(request))
     );
     return;
   }

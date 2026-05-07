@@ -2,7 +2,7 @@
   "name": "Maqam Notes Player",
   "short_name": "Maqam Notes",
   "description": "Learn maqams with notes, exercises, and a looper.",
-  "start_url": "./#/",
+  "start_url": "./app.html#/",
   "scope": "./",
   "display": "standalone",
   "background_color": "#fbf2e5",
