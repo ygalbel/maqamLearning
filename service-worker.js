@@ -1,82 +1,21 @@
-const CACHE_NAME = "maqam-pwa-v4";
+// Kill-switch service worker.
+//
+// The old player (app.html) registered a service worker at this scope and
+// precached the old app. The site has since migrated: the landing pages live
+// at the root and the rebuilt app lives under /app/ (with its own worker).
+// This replacement unregisters the stale worker and purges its caches so
+// returning visitors are not served outdated, cached pages.
 
-const normalizeBase = (base) => (base.endsWith("/") ? base : `${base}/`);
+self.addEventListener('install', () => self.skipWaiting());
 
-function getBasePath() {
-  try {
-    const base = new URL(self.registration.scope).pathname;
-    return normalizeBase(base || "/");
-  } catch {
-    return "/";
-  }
-}
-
-function getCoreAssets() {
-  const base = getBasePath();
-  const withBase = (path) => `${base}${path}`;
-  return [
-    base,
-    withBase("index.html"),
-    withBase("he.html"),
-    withBase("ar.html"),
-    withBase("app.html"),
-    withBase("app.js"),
-    withBase("config.js"),
-    withBase("data.js"),
-    withBase("audio.js"),
-    withBase("i18n.json"),
-    withBase("maqam-compact.json"),
-    withBase("manifest.json"),
-    withBase("favicon.svg"),
-    withBase("icons/icon-192.svg"),
-    withBase("icons/icon-512.svg")
-  ];
-}
-
-self.addEventListener("install", (event) => {
+self.addEventListener('activate', (event) => {
   event.waitUntil(
-    caches
-      .open(CACHE_NAME)
-      .then((cache) => cache.addAll(getCoreAssets()))
-      .then(() => self.skipWaiting())
-  );
-});
-
-self.addEventListener("activate", (event) => {
-  event.waitUntil(
-    caches
-      .keys()
-      .then((keys) => Promise.all(keys.filter((key) => key !== CACHE_NAME).map((key) => caches.delete(key))))
-      .then(() => self.clients.claim())
-  );
-});
-
-self.addEventListener("fetch", (event) => {
-  const request = event.request;
-  if (request.method !== "GET") return;
-
-  const url = new URL(request.url);
-  if (url.origin !== self.location.origin) return;
-
-  if (request.mode === "navigate") {
-    const base = getBasePath();
-    const isAppNav = url.pathname === `${base}app.html`;
-    const fallback = isAppNav ? `${base}app.html` : base;
-    event.respondWith(
-      caches.match(fallback).then((cached) => cached || fetch(request))
-    );
-    return;
-  }
-
-  event.respondWith(
-    caches.match(request).then((cached) => {
-      if (cached) return cached;
-      return fetch(request).then((response) => {
-        if (!response || response.status !== 200) return response;
-        const copy = response.clone();
-        caches.open(CACHE_NAME).then((cache) => cache.put(request, copy));
-        return response;
-      });
-    })
+    (async () => {
+      const keys = await caches.keys();
+      await Promise.all(keys.map((key) => caches.delete(key)));
+      await self.registration.unregister();
+      const clients = await self.clients.matchAll({ type: 'window' });
+      clients.forEach((client) => client.navigate(client.url));
+    })()
   );
 });

@@ -1,35 +1,38 @@
-import {
-  USE_SOUNDFONT,
-  SOUNDFONT_NAME,
-  SOUNDFONT_INSTRUMENT,
-  SOUNDFONT_BASE_URL
-} from "./config.js";
+// Web Audio playback: a sampled instrument (soundfont) when loaded, otherwise a
+// synthesized oud-like tone. Ported from the original audio.js.
+import Soundfont, { type Player } from 'soundfont-player';
 
-let audioCtx = null;
-let masterGain = null;
-let sampleInstrument = null;
-let sampleInstrumentPromise = null;
-const activeOscillators = new Set();
+const USE_SOUNDFONT = true;
+const SOUNDFONT_NAME = 'MusyngKite';
+const SOUNDFONT_INSTRUMENT = 'acoustic_guitar_nylon';
+const SOUNDFONT_BASE_URL = 'https://gleitz.github.io/midi-js-soundfonts/';
 
-export function getAudioContext() {
+let audioCtx: AudioContext | null = null;
+let masterGain: GainNode | null = null;
+let sampleInstrument: Player | null = null;
+let sampleInstrumentPromise: Promise<Player | null> | null = null;
+const activeOscillators = new Set<OscillatorNode>();
+
+export function getAudioContext(): AudioContext | null {
   return audioCtx;
 }
 
-export function ensureAudio() {
+export function ensureAudio(): boolean {
   let created = false;
   if (!audioCtx) {
-    audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+    const Ctx = window.AudioContext || (window as unknown as { webkitAudioContext: typeof AudioContext }).webkitAudioContext;
+    audioCtx = new Ctx();
     masterGain = audioCtx.createGain();
     masterGain.gain.value = 0.6;
     masterGain.connect(audioCtx.destination);
     created = true;
   }
   if (USE_SOUNDFONT) loadSampleInstrument();
-  if (audioCtx.state === "suspended") audioCtx.resume();
+  if (audioCtx.state === 'suspended') void audioCtx.resume();
   return created;
 }
 
-function frequencyToMidiAndDetune(frequency) {
+function frequencyToMidiAndDetune(frequency: number): { midi: number; detune: number } | null {
   if (!Number.isFinite(frequency) || frequency <= 0) return null;
   const midiFloat = 69 + 12 * Math.log2(frequency / 440);
   const midi = Math.round(midiFloat);
@@ -37,22 +40,22 @@ function frequencyToMidiAndDetune(frequency) {
   return { midi, detune };
 }
 
-function loadSampleInstrument() {
-  if (!window.Soundfont || !audioCtx || !masterGain) return null;
+function loadSampleInstrument(): Promise<Player | null> | null {
+  if (!audioCtx || !masterGain) return null;
   if (sampleInstrument) return Promise.resolve(sampleInstrument);
   if (!sampleInstrumentPromise) {
-    sampleInstrumentPromise = window.Soundfont.instrument(audioCtx, SOUNDFONT_INSTRUMENT, {
+    sampleInstrumentPromise = Soundfont.instrument(audioCtx, SOUNDFONT_INSTRUMENT, {
       soundfont: SOUNDFONT_NAME,
-      format: "mp3",
+      format: 'mp3',
       baseUrl: SOUNDFONT_BASE_URL,
-      destination: masterGain
+      destination: masterGain,
     })
       .then((inst) => {
         sampleInstrument = inst;
         return inst;
       })
       .catch((err) => {
-        console.warn("Soundfont load failed, falling back to synth.", err);
+        console.warn('Soundfont load failed, falling back to synth.', err);
         sampleInstrumentPromise = null;
         return null;
       });
@@ -60,16 +63,18 @@ function loadSampleInstrument() {
   return sampleInstrumentPromise;
 }
 
-export function stopActiveOscillators() {
+export function stopActiveOscillators(): void {
   for (const osc of activeOscillators) {
     try {
       osc.stop();
-    } catch {}
+    } catch {
+      /* already stopped */
+    }
   }
   activeOscillators.clear();
 }
 
-export function playTone(frequency, durationMs, pitchOffsetSemitones = 0) {
+export function playTone(frequency: number, durationMs: number, pitchOffsetSemitones = 0): void {
   ensureAudio();
   if (!audioCtx || !masterGain) return;
 
@@ -84,7 +89,7 @@ export function playTone(frequency, durationMs, pitchOffsetSemitones = 0) {
       sampleInstrument.play(midiData.midi, now, {
         gain: 0.7,
         duration: durSec,
-        detune: midiData.detune
+        detune: midiData.detune,
       });
       return;
     }
@@ -99,17 +104,16 @@ export function playTone(frequency, durationMs, pitchOffsetSemitones = 0) {
   const amp = audioCtx.createGain();
   const filter = audioCtx.createBiquadFilter();
 
-  osc.type = "triangle";
+  osc.type = 'triangle';
   osc.frequency.value = adjustedFrequency;
 
-  osc2.type = "sine";
+  osc2.type = 'sine';
   osc2.frequency.value = adjustedFrequency * 2;
   osc2.detune.value = 6;
 
   gain1.gain.value = 0.9;
   gain2.gain.value = 0.25;
 
-  // Plucked envelope + gentle low-pass for an oud-like timbre
   const attack = 0.005;
   const decay = Math.min(0.2, Math.max(0.06, durSec * 0.6));
   const endTime = now + durSec;
@@ -118,7 +122,7 @@ export function playTone(frequency, durationMs, pitchOffsetSemitones = 0) {
   amp.gain.exponentialRampToValueAtTime(0.35, now + attack);
   amp.gain.exponentialRampToValueAtTime(0.0001, endTime);
 
-  filter.type = "lowpass";
+  filter.type = 'lowpass';
   filter.Q.value = 0.6;
   filter.frequency.setValueAtTime(1600, now);
   filter.frequency.exponentialRampToValueAtTime(900, now + decay);
@@ -130,13 +134,12 @@ export function playTone(frequency, durationMs, pitchOffsetSemitones = 0) {
   amp.connect(filter);
   filter.connect(masterGain);
 
-  function registerOscillator(node) {
+  const register = (node: OscillatorNode) => {
     activeOscillators.add(node);
     node.onended = () => activeOscillators.delete(node);
-  }
-
-  registerOscillator(osc);
-  registerOscillator(osc2);
+  };
+  register(osc);
+  register(osc2);
 
   osc.start(now);
   osc2.start(now);
@@ -144,13 +147,13 @@ export function playTone(frequency, durationMs, pitchOffsetSemitones = 0) {
   osc2.stop(endTime + 0.02);
 }
 
-export function playClick() {
+export function playClick(): void {
   ensureAudio();
   if (!audioCtx || !masterGain) return;
   const now = audioCtx.currentTime;
   const osc = audioCtx.createOscillator();
   const gain = audioCtx.createGain();
-  osc.type = "square";
+  osc.type = 'square';
   osc.frequency.value = 1200;
   gain.gain.setValueAtTime(0.001, now);
   gain.gain.exponentialRampToValueAtTime(0.12, now + 0.01);
@@ -159,4 +162,18 @@ export function playClick() {
   gain.connect(masterGain);
   osc.start(now);
   osc.stop(now + 0.08);
+}
+
+/** Unlock audio on first user gesture (mobile browsers suspend contexts). */
+export function installAudioUnlock(): void {
+  const events = ['touchstart', 'touchend', 'click', 'keydown'];
+  const unlock = () => {
+    try {
+      ensureAudio();
+      if (audioCtx && audioCtx.state === 'suspended') void audioCtx.resume();
+    } finally {
+      events.forEach((e) => document.body.removeEventListener(e, unlock));
+    }
+  };
+  events.forEach((e) => document.body.addEventListener(e, unlock, { once: true }));
 }

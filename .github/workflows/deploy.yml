@@ -1,0 +1,65 @@
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# Allow one concurrent deployment; let an in-progress run finish.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+
+      - name: Build the Svelte app
+        working-directory: web
+        run: |
+          npm ci
+          npm run build
+
+      - name: Assemble the published site
+        run: |
+          rm -rf _site
+          mkdir -p _site/app
+          # Landing pages + their assets stay at the site root.
+          cp index.html he.html ar.html favicon.svg manifest.json _site/
+          cp -r icons _site/icons
+          cp -r public _site/public
+          # Kill-switch worker neutralizes the old root service worker.
+          cp service-worker.js _site/service-worker.js
+          # The rebuilt app is served from /app/.
+          cp -r web/dist/* _site/app/
+          # Skip Jekyll processing.
+          touch _site/.nojekyll
+
+      - uses: actions/configure-pages@v5
+
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: _site
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - id: deployment
+        uses: actions/deploy-pages@v4

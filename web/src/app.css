@@ -1,0 +1,247 @@
+/* ============================================================
+   Maqam Notes Player — "classical manuscript" theme
+   Warm espresso ink · parchment · gold & jade · per-script type
+   ============================================================ */
+
+:root {
+  /* Palette */
+  --bg: #15110d;
+  --bg-2: #1c1610;
+  --panel: rgba(40, 32, 23, 0.72);
+  --panel-solid: #241d15;
+  --ink: #f3e9d7;
+  --ink-dim: #d8c6a6;
+  --muted: #a8957298;
+  --muted-strong: #b9a47e;
+  --gold: #d8a657;
+  --gold-bright: #f1c97f;
+  --gold-deep: #a9783a;
+  --jade: #74b29c;
+  --jade-deep: #3f6f60;
+  --danger: #d98565;
+  --line: rgba(216, 166, 87, 0.16);
+  --line-strong: rgba(216, 166, 87, 0.34);
+
+  /* Type */
+  --font-display: 'Fraunces', Georgia, 'Times New Roman', serif;
+  --font-body: 'Spectral', Georgia, serif;
+
+  --radius: 14px;
+  --radius-lg: 22px;
+  --shadow: 0 18px 44px -22px rgba(0, 0, 0, 0.75);
+  --shadow-soft: 0 8px 24px -16px rgba(0, 0, 0, 0.7);
+
+  --safe-top: env(safe-area-inset-top, 0px);
+  --header-offset: 0px;
+
+  color-scheme: dark;
+  font-family: var(--font-body);
+  color: var(--ink);
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+}
+
+/* Per-script typography */
+html[lang='ar'] {
+  --font-display: 'Amiri', serif;
+  --font-body: 'Amiri', serif;
+}
+html[lang='he'] {
+  --font-display: 'Frank Ruhl Libre', serif;
+  --font-body: 'Frank Ruhl Libre', serif;
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  min-height: 100%;
+}
+
+body {
+  background-color: var(--bg);
+  /* Layered atmosphere: warm pools of light + deep vignette, not a flat fill */
+  background-image:
+    radial-gradient(120% 80% at 12% -10%, rgba(216, 166, 87, 0.13), transparent 55%),
+    radial-gradient(90% 70% at 95% 0%, rgba(116, 178, 156, 0.08), transparent 50%),
+    radial-gradient(140% 120% at 50% 120%, rgba(0, 0, 0, 0.55), transparent 60%),
+    linear-gradient(180deg, var(--bg) 0%, var(--bg-2) 100%);
+  background-attachment: fixed;
+  color: var(--ink);
+  font-size: 17px;
+  line-height: 1.55;
+}
+
+/* Subtle grain overlay for tactile depth */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.04;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+}
+
+#app {
+  position: relative;
+  z-index: 1;
+  min-height: 100vh;
+}
+
+h1,
+h2,
+h3 {
+  font-family: var(--font-display);
+  font-weight: 600;
+  letter-spacing: -0.01em;
+  margin: 0;
+}
+
+a {
+  color: var(--gold-bright);
+  text-decoration: none;
+  transition: color 0.18s ease;
+}
+a:hover {
+  color: var(--ink);
+}
+
+button,
+input,
+select {
+  font-family: inherit;
+  font-size: inherit;
+  color: inherit;
+}
+
+button {
+  cursor: pointer;
+}
+
+::selection {
+  background: rgba(216, 166, 87, 0.3);
+  color: var(--ink);
+}
+
+:focus-visible {
+  outline: 2px solid var(--gold);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* Thin gilt scrollbar */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: var(--gold-deep) transparent;
+}
+
+/* ---- Shared primitives ---- */
+.shell {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 0 clamp(16px, 4vw, 36px) 96px;
+}
+
+.eyebrow {
+  font-family: var(--font-body);
+  text-transform: uppercase;
+  letter-spacing: 0.32em;
+  font-size: 0.7rem;
+  color: var(--gold);
+  font-weight: 600;
+}
+html[lang='ar'] .eyebrow,
+html[lang='he'] .eyebrow {
+  letter-spacing: 0.12em;
+}
+
+.muted {
+  color: var(--muted-strong);
+}
+.small {
+  font-size: 0.85rem;
+}
+
+.panel {
+  background: var(--panel);
+  border: 1px solid var(--line);
+  border-radius: var(--radius-lg);
+  backdrop-filter: blur(8px);
+  box-shadow: var(--shadow-soft);
+}
+
+.btn {
+  appearance: none;
+  border: 1px solid var(--line-strong);
+  background: linear-gradient(180deg, rgba(216, 166, 87, 0.14), rgba(216, 166, 87, 0.04));
+  color: var(--ink);
+  padding: 0.55em 1.1em;
+  border-radius: 999px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  transition: transform 0.14s ease, border-color 0.18s ease, background 0.18s ease, box-shadow 0.18s ease;
+}
+.btn:hover {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px rgba(216, 166, 87, 0.12);
+  transform: translateY(-1px);
+}
+.btn:active {
+  transform: translateY(0);
+}
+.btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+.btn-primary {
+  background: linear-gradient(180deg, var(--gold-bright), var(--gold-deep));
+  color: #1a130a;
+  border-color: transparent;
+  font-weight: 600;
+}
+.btn-primary:hover {
+  box-shadow: 0 0 0 4px rgba(216, 166, 87, 0.18), var(--shadow-soft);
+}
+
+input[type='search'],
+input[type='text'],
+select {
+  background: rgba(0, 0, 0, 0.28);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  padding: 0.5em 0.95em;
+  color: var(--ink);
+  transition: border-color 0.18s ease, box-shadow 0.18s ease;
+}
+input[type='search']:focus,
+select:focus {
+  border-color: var(--gold);
+  box-shadow: 0 0 0 3px rgba(216, 166, 87, 0.12);
+  outline: none;
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(14px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    animation-duration: 0.001ms !important;
+    transition-duration: 0.001ms !important;
+  }
+}
