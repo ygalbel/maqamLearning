@@ -1,0 +1,6 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="192" height="192" viewBox="0 0 192 192" role="img" aria-label="Maqam Notes Player">
+  <rect width="192" height="192" rx="36" fill="#fbf2e5"/>
+  <circle cx="96" cy="96" r="62" fill="#d3a55b"/>
+  <circle cx="122" cy="70" r="12" fill="#b3582a"/>
+  <path d="M82 58c-6 0-10 4-10 10v46c0 9 7 16 16 16s16-7 16-16c0-7-4-13-10-15V78h26c6 0 10-4 10-10s-4-10-10-10H82z" fill="#2f2013"/>
+</svg>

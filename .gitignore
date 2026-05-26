@@ -1,0 +1,7 @@
+# Local skill tooling (installed via `npx skills add`)
+.agents/
+.claude/
+skills-lock.json
+
+# Node
+node_modules/
