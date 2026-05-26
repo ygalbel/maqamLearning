@@ -32,12 +32,12 @@ export function ensureAudio(): boolean {
   return created;
 }
 
-function frequencyToMidiAndDetune(frequency: number): { midi: number; detune: number } | null {
+function frequencyToMidiAndCents(frequency: number): { midi: number; cents: number } | null {
   if (!Number.isFinite(frequency) || frequency <= 0) return null;
   const midiFloat = 69 + 12 * Math.log2(frequency / 440);
   const midi = Math.round(midiFloat);
-  const detune = (midiFloat - midi) * 100;
-  return { midi, detune };
+  const cents = (midiFloat - midi) * 100;
+  return { midi, cents };
 }
 
 function loadSampleInstrument(): Promise<Player | null> | null {
@@ -84,12 +84,14 @@ export function playTone(frequency: number, durationMs: number, pitchOffsetSemit
   const durSec = Math.max(0.06, durationMs / 1000);
 
   if (USE_SOUNDFONT && sampleInstrument) {
-    const midiData = frequencyToMidiAndDetune(adjustedFrequency);
+    const midiData = frequencyToMidiAndCents(adjustedFrequency);
     if (midiData) {
+      // soundfont-player honors `cents` (applied to playbackRate), NOT `detune`.
+      // Passing cents is what renders quarter-tones (Koron/half-flat) correctly.
       sampleInstrument.play(midiData.midi, now, {
         gain: 0.7,
         duration: durSec,
-        detune: midiData.detune,
+        cents: midiData.cents,
       });
       return;
     }
