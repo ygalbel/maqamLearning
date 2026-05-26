@@ -3,7 +3,8 @@ declare module 'soundfont-player' {
     play(
       note: number | string,
       when?: number,
-      options?: { gain?: number; duration?: number; detune?: number }
+      // `cents` detunes the sample via playbackRate (used for quarter-tones).
+      options?: { gain?: number; duration?: number; cents?: number }
     ): unknown;
   }
   export interface InstrumentOptions {
