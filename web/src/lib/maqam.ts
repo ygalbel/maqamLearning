@@ -254,3 +254,90 @@ export function getBpmIntervalMs(bpm: number | string): number {
   if (!Number.isFinite(n) || n <= 0) return 600;
   return Math.round(60000 / n);
 }
+
+// ---- Quarter-tone note-name arithmetic (used by the tonic selector) ----
+//
+// The dataset is tuned per-maqam in just ratios, not 12-TET: C4 is 260.74 Hz,
+// "E4-Koron" is 320 Hz in sikah but 322 in huzam, and A4♭ spans 414–423 Hz
+// across maqams. So a transposition cannot aim at an absolute equal-tempered
+// pitch table — sikah's tonic alone sits 49 cents off the grid. Instead the
+// grid is anchored on the maqam's *own* tonic and shifted in whole
+// quarter-tones: playback keeps the native ratios (a uniform offset preserves
+// every interval), and target names are derived by name arithmetic rather than
+// by rounding frequencies, so they are exact by construction.
+
+const LETTER_SEMITONES: Record<string, number> = { c: 0, d: 2, e: 4, f: 5, g: 7, a: 9, b: 11 };
+
+/** Canonical spelling per semitone, following how maqam-compact.json writes them. */
+const SEMITONE_NAMES = ['C', 'D♭', 'D', 'E♭', 'E', 'F', 'F♯', 'G', 'A♭', 'A', 'B♭', 'B'];
+
+/**
+ * Quarter-tone steps a note name sits above C-1 (24 per octave), or null when
+ * the name cannot be parsed. Comma modifiers (the `↓` in `A4♮↓`) are ignored —
+ * they are a tuning nuance below the naming grid.
+ */
+export function noteToQuarterSteps(note: string): number | null {
+  const m = String(note ?? '').match(/^([A-Ga-g])(-?\d+)(.*)$/);
+  if (!m) return null;
+  const semitones = LETTER_SEMITONES[m[1].toLowerCase()];
+  if (semitones === undefined) return null;
+  const octave = Number(m[2]);
+  if (!Number.isFinite(octave)) return null;
+  const accidentals = m[3];
+  let quarters = 0;
+  if (accidentals.includes('♯')) quarters += 2;
+  if (accidentals.includes('♭')) quarters -= 2;
+  if (/koron/i.test(accidentals)) quarters -= 1;
+  return (octave + 1) * 24 + semitones * 2 + quarters;
+}
+
+/**
+ * Spell a quarter-step index back in the dataset's convention (`B4♭`,
+ * `E4-Koron`). Odd steps sit a quarter-tone below the semitone above them, so
+ * they are named after that note plus `-Koron` — which is exactly how the data
+ * names its own koron degrees.
+ */
+export function quarterStepsToNote(steps: number): string {
+  const s = Math.round(steps);
+  const octave = Math.floor(s / 24) - 1;
+  const within = ((s % 24) + 24) % 24;
+  const isKoron = within % 2 === 1;
+  const semitone = (isKoron ? (within + 1) / 2 : within / 2) % 12;
+  // The B–C midpoint is spelled as C-Koron of the octave above.
+  const carry = isKoron && within === 23 ? 1 : 0;
+  const name = SEMITONE_NAMES[semitone];
+  return `${name[0]}${octave + carry}${name.slice(1)}${isKoron ? '-Koron' : ''}`;
+}
+
+export interface TonicOption {
+  /** Quarter-tone offset from the maqam's own tonic. */
+  steps: number;
+  /** Semitone offset to feed playTone(). */
+  semitones: number;
+  /** Target tonic in the dataset's note spelling, e.g. `E4-Koron`. */
+  note: string;
+  isOriginal: boolean;
+}
+
+/**
+ * One octave of tonic choices centred on the maqam's own tonic, in quarter-tone
+ * steps. Even steps land on plain/chromatic degrees, odd steps on koron ones —
+ * so a maqam rooted on a koron degree (sikah, huzam, iraq, mustaar, bastanikar)
+ * lists its real home first and can still be moved to a plain note, and one
+ * rooted on a plain degree gets the mirror image.
+ */
+export function buildTonicOptions(tonicNote: string, span = 12): TonicOption[] {
+  const base = noteToQuarterSteps(tonicNote);
+  if (base === null) return [];
+  const options: TonicOption[] = [];
+  for (let steps = -span; steps <= span; steps++) {
+    options.push({
+      steps,
+      semitones: steps / 2,
+      // Keep the data's own spelling for home; enharmonics would rewrite it.
+      note: steps === 0 ? tonicNote : quarterStepsToNote(base + steps),
+      isOriginal: steps === 0,
+    });
+  }
+  return options;
+}

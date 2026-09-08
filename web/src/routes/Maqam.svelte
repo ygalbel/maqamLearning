@@ -2,7 +2,13 @@
   import { maqams } from '../lib/data';
   import { t, maqamName, jinsName } from '../lib/i18n.svelte';
   import { buildHash } from '../lib/router.svelte';
-  import { buildNoteSections, getUpperJinsNames, type RenderNote } from '../lib/maqam';
+  import {
+    buildNoteSections,
+    buildTonicOptions,
+    getTonicIndexFromScale,
+    getUpperJinsNames,
+    type RenderNote,
+  } from '../lib/maqam';
   import { playTone } from '../lib/audio';
   import NotePad from '../components/NotePad.svelte';
 
@@ -13,11 +19,19 @@
   const sections = $derived(maqam ? buildNoteSections(maqam) : []);
   const upper = $derived(maqam ? getUpperJinsNames(maqam.upper_jins) : []);
 
-  // The only control on the explore page: transpose the whole maqam up/down.
-  let semitones = $state(0);
+  // The only control on the explore page: which pitch the tonic sounds on.
+  // The shift is one uniform offset, so the maqam's native (just) intervals are
+  // preserved exactly; the pads keep the dataset's reference spelling, which the
+  // caption spells out whenever the tonic has been moved.
+  let tonicSteps = $state(0);
   const NOTE_MS = 760;
 
-  const offsetLabel = $derived(`${semitones > 0 ? '+' : ''}${semitones}`);
+  const scale = $derived(maqam?.scale ?? []);
+  const tonicNote = $derived(scale[getTonicIndexFromScale(scale, maqam?.tonic)]?.note ?? '');
+  const tonicOptions = $derived(buildTonicOptions(tonicNote));
+  const soundingNote = $derived(tonicOptions.find((o) => o.steps === tonicSteps)?.note ?? tonicNote);
+  const semitones = $derived(tonicSteps / 2);
+
 
   function play(note: RenderNote) {
     const f = Number(note.entry.frequency);
@@ -55,11 +69,29 @@
     </div>
   </header>
 
-  <div class="transpose panel">
-    <span class="lbl">{t('controls.pitchOffset')}</span>
-    <input type="range" min="-2" max="2" step="0.5" bind:value={semitones} aria-label={t('controls.pitchOffset')} />
-    <span class="val">{offsetLabel} <span class="unit">{t('controls.semitones')}</span></span>
-  </div>
+  {#if tonicOptions.length}
+    <div class="tonic panel">
+      <label class="field">
+        <span class="lbl">{t('controls.tonic')}</span>
+        <select bind:value={tonicSteps} dir="ltr">
+          {#each tonicOptions as option (option.steps)}
+            <option value={option.steps}
+              >{option.note}{option.isOriginal ? ` · ${t('controls.tonicOriginal')}` : ''}</option
+            >
+          {/each}
+        </select>
+      </label>
+      {#if tonicSteps !== 0}
+        <button class="btn reset" onclick={() => (tonicSteps = 0)}>{t('controls.tonicReset')}</button>
+      {/if}
+    </div>
+
+    {#if tonicSteps !== 0}
+      <p class="caption muted small">
+        {t('controls.tonicSounding', { written: tonicNote, sounding: soundingNote })}
+      </p>
+    {/if}
+  {/if}
 
   <p class="hint muted small">{t('header.tagline')}</p>
 
@@ -110,34 +142,38 @@
     margin-inline-end: 4px;
   }
 
-  .transpose {
+  .tonic {
     display: flex;
-    align-items: center;
+    align-items: end;
+    flex-wrap: wrap;
     gap: 14px;
     padding: 14px 18px;
-    margin-bottom: 16px;
+    margin-bottom: 10px;
   }
-  .transpose .lbl {
-    font-size: 0.78rem;
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 6px;
+  }
+  .field .lbl {
+    font-size: 0.7rem;
     text-transform: uppercase;
     letter-spacing: 0.16em;
     color: var(--gold);
     white-space: nowrap;
   }
-  .transpose input[type='range'] {
-    flex: 1;
-    accent-color: var(--gold);
-  }
-  .transpose .val {
+  .field select {
     font-family: var(--font-display);
-    font-size: 1.2rem;
-    min-width: 4ch;
-    text-align: end;
+    font-size: 1.05rem;
+    min-width: 12ch;
   }
-  .transpose .unit {
-    font-family: var(--font-body);
-    font-size: 0.78rem;
-    color: var(--muted-strong);
+  .reset {
+    padding: 0.45em 1em;
+    font-size: 0.82rem;
+  }
+
+  .caption {
+    margin: 0 2px 12px;
   }
 
   .hint {
